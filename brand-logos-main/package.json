@@ -1,0 +1,34 @@
+{
+  "name": "car-brand-logos",
+  "version": "1.0.0",
+  "description": "184 curated car brand logos in SVG & PNG — automotive manufacturer logos for web, apps, and design, with a brands.json manifest.",
+  "keywords": [
+    "car-logos",
+    "car-brand-logos",
+    "brand-logos",
+    "car-brands",
+    "automotive",
+    "vehicle-logos",
+    "manufacturer-logos",
+    "logos",
+    "svg",
+    "png",
+    "icons"
+  ],
+  "homepage": "https://vehiclespecs.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vehiclespecs/brand-logos.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vehiclespecs/brand-logos/issues"
+  },
+  "license": "MIT",
+  "author": "VehicleSpecs.io (https://vehiclespecs.io)",
+  "main": "brands.json",
+  "files": [
+    "*.svg",
+    "*.png",
+    "brands.json"
+  ]
+}

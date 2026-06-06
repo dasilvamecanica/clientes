@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "AutoTech MercadoLibre Integrator",
+  "version": "1.0",
+  "description": "Integra Mercado Libre Argentina en tiempo real con tu panel de cotización de AutoTech.",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://graph.facebook.com/*",
+    "https://pixeldrain.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://listado.mercadolibre.com.ar/*",
+        "https://www.mercadolibre.com.ar/*",
+        "https://articulo.mercadolibre.com.ar/*"
+      ],
+      "js": ["content_meli.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "file:///*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ],
+      "js": ["content_cotizador.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "icon.png"
+    }
+  },
+  "icons": {
+    "128": "icon.png"
+  }
+}
