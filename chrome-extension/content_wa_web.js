@@ -42,7 +42,7 @@ function removeDiagnosticStatus(delay = 3000) {
     if (diagnosticBadge) {
       diagnosticBadge.style.opacity = '0';
       setTimeout(() => {
-        if (diagnosticBadge && !diagnosticBadge.style.opacity || diagnosticBadge.style.opacity === '0') {
+        if (diagnosticBadge && (!diagnosticBadge.style.opacity || diagnosticBadge.style.opacity === '0')) {
           if (diagnosticBadge.parentNode) {
             diagnosticBadge.parentNode.removeChild(diagnosticBadge);
           }
@@ -59,8 +59,6 @@ function getPhoneFromUrl() {
   let phone = urlParams.get('phone');
   
   if (!phone) {
-    // A veces la URL se redirige pero el path conserva partes o el número se encuentra de otra manera
-    // Por ejemplo en web.whatsapp.com/send/?phone=XXXXXXXX
     const match = window.location.href.match(/phone=([0-9]+)/);
     if (match) phone = match[1];
   }
@@ -68,49 +66,23 @@ function getPhoneFromUrl() {
   return phone;
 }
 
-// Convertir base64 a Blob
-function base64ToBlob(base64, type = 'application/pdf') {
-  const byteCharacters = atob(base64);
-  const byteNumbers = new Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
+// Escuchar el estado de la inyección desde el main world
+window.addEventListener('message', (event) => {
+  if (event.source !== window || !event.data || event.data.type !== 'AUTOTECH_INJECTION_STATUS') {
+    return;
   }
-  const byteArray = new Uint8Array(byteNumbers);
-  return new Blob([byteArray], { type: type });
-}
-
-// Simular el Drag & Drop del archivo sobre el objetivo
-function simulateFileDrop(target, file) {
-  const dataTransfer = new DataTransfer();
-  dataTransfer.items.add(file);
   
-  try {
-    dataTransfer.effectAllowed = 'all';
-    dataTransfer.dropEffect = 'copy';
-  } catch (e) {
-    // Ignorar si el navegador restringe escritura directa
+  const status = event.data;
+  console.log('content_wa_web.js: Estado de inyección recibido desde Main World:', status);
+  
+  if (status.success) {
+    showDiagnosticStatus('¡PDF cargado con éxito! (' + status.message + ')', 'success');
+    removeDiagnosticStatus(4000);
+  } else {
+    showDiagnosticStatus('Fallo: ' + status.message, 'error');
+    removeDiagnosticStatus(6000);
   }
-
-  const createDragEvent = (type) => {
-    const event = new DragEvent(type, {
-      bubbles: true,
-      cancelable: true
-    });
-    // Forzar la inyección de dataTransfer ya que en Chrome suele ser de solo lectura en constructores
-    Object.defineProperty(event, 'dataTransfer', {
-      value: dataTransfer,
-      writable: false,
-      configurable: true
-    });
-    return event;
-  };
-
-  target.dispatchEvent(createDragEvent('dragenter'));
-  target.dispatchEvent(createDragEvent('dragover'));
-  target.dispatchEvent(createDragEvent('drop'));
-  
-  console.log('content_wa_web.js: Evento Drop despachado con éxito para:', file.name);
-}
+});
 
 // Función principal
 function init() {
@@ -147,46 +119,22 @@ function init() {
         
         if (mainChat && chatInput) {
           clearInterval(checkInterval);
-          showDiagnosticStatus('Chat cargado. Inyectando PDF...', 'success');
+          showDiagnosticStatus('Chat cargado. Inyectando PDF nativamente...', 'success');
           
           setTimeout(() => {
-            try {
-              // Convertir base64 de vuelta a File
-              const blob = base64ToBlob(fileData.pdfBase64, 'application/pdf');
-              const file = new File([blob], fileData.filename, { type: 'application/pdf' });
-              
-              // Intentar soltar el archivo en la ventana principal de chat, el panel de app o en el body
-              const targets = [
-                document.querySelector('#main'),
-                document.querySelector('#app'),
-                document.body
-              ];
-              
-              let dispatched = false;
-              targets.forEach(t => {
-                if (t) {
-                  simulateFileDrop(t, file);
-                  dispatched = true;
-                }
-              });
-              
-              if (dispatched) {
-                showDiagnosticStatus('¡PDF cargado con éxito!', 'success');
-              } else {
-                showDiagnosticStatus('Error: No se encontró objetivo para inyectar archivo.', 'error');
+            // Solicitar al background script que inyecte el archivo en el MAIN world
+            chrome.runtime.sendMessage({ type: 'WHATSAPP_INJECT_FILE' }, (injectRes) => {
+              if (chrome.runtime.lastError) {
+                showDiagnosticStatus('Error de inyección: ' + chrome.runtime.lastError.message, 'error');
+                removeDiagnosticStatus(5000);
+              } else if (injectRes && !injectRes.success) {
+                showDiagnosticStatus('Error: ' + injectRes.error, 'error');
+                removeDiagnosticStatus(5000);
               }
               
               // Limpiar de la memoria de la extensión para evitar duplicados si recarga
-              chrome.runtime.sendMessage({ type: 'WHATSAPP_CLEAR_STORED_FILE' }, (clearRes) => {
-                console.log('content_wa_web.js: Memoria temporal de la extensión limpiada.');
-              });
-              
-              removeDiagnosticStatus(4000);
-            } catch (err) {
-              console.error('content_wa_web.js: Error al inyectar el archivo:', err);
-              showDiagnosticStatus('Error al inyectar: ' + err.message, 'error');
-              removeDiagnosticStatus(5000);
-            }
+              chrome.runtime.sendMessage({ type: 'WHATSAPP_CLEAR_STORED_FILE' });
+            });
           }, 1500); // Pequeña espera para asegurar estabilidad en la interfaz React
         }
         
@@ -204,7 +152,7 @@ function init() {
   });
 }
 
-// Ejecutar init al cargar la página
+// Registrar init al cargar la página
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
