@@ -143,7 +143,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   });
                 };
 
-                // 1. Intentar buscar el input de tipo archivo directamente en el DOM
+                // Verificar si el menú ya está abierto
+                const isMenuOpen = document.querySelector('span[data-icon="attach-document"]') || 
+                                   document.querySelector('[data-testid="mi-document"]') ||
+                                   document.querySelector('ul li div[role="button"]');
+
                 let docInput = findDocInput();
 
                 if (docInput) {
@@ -160,7 +164,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   }
                 }
 
-                // 2. Si no se encontró, hacer clic en el botón de adjuntar (clip o plus)
+                if (isMenuOpen) {
+                  // Si el menú ya está abierto pero por alguna razón no se encontró el input, fallamos para ir a Drag & Drop
+                  reject(new Error('El menú ya estaba abierto pero no se encontró el input de documentos.'));
+                  return;
+                }
+
+                // 2. Si no se encontró y el menú está cerrado, hacer clic en el botón de adjuntar (clip o plus)
                 console.log('AutoTech Main World: Buscando botón de adjuntar...');
                 const attachSelectors = [
                   'button[title="Adjuntar"]',
@@ -192,29 +202,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         docInput.files = dataTransfer.files;
                         docInput.dispatchEvent(new Event('change', { bubbles: true }));
                         console.log('AutoTech Main World: Archivo inyectado tras abrir menú.');
-                        
-                        // Cerrar el menú de adjuntos para que no se quede abierto en pantalla
-                        setTimeout(() => {
-                          try {
-                            const menuOpen = document.querySelector('span[data-icon="attach-document"]') || 
-                                             document.querySelector('[data-testid="mi-document"]') ||
-                                             document.querySelector('ul li div[role="button"]');
-                            if (menuOpen) {
-                              let closeBtn = null;
-                              for (const sel of attachSelectors) {
-                                closeBtn = document.querySelector(sel);
-                                if (closeBtn) break;
-                              }
-                              if (closeBtn) {
-                                closeBtn.click();
-                                console.log('AutoTech Main World: Menú de adjuntar cerrado con éxito.');
-                              }
-                            }
-                          } catch (closeErr) {
-                            console.warn('AutoTech Main World: No se pudo cerrar el menú de adjuntar:', closeErr);
-                          }
-                        }, 100);
-
                         resolve(true);
                         return;
                       } catch (e) {
@@ -222,7 +209,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                       }
                     }
                     reject(new Error('No se encontró input de documentos tras abrir menú.'));
-                  }, 450);
+                  }, 600); // 600ms es seguro para dar tiempo de render
                 } else {
                   reject(new Error('No se encontró botón de adjuntar.'));
                 }
