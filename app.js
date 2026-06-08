@@ -7365,7 +7365,7 @@ window.openClientDetailsModal = function(clientId) {
     }
   }
 
-    openModal('client-details-modal');
+    document.getElementById('client-details-modal').classList.add('open');
     initLucide();
   } catch (err) {
     console.error("Error in openClientDetailsModal:", err);
