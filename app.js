@@ -10127,7 +10127,12 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
     }
     
     // Mostrar Toast de progreso
-    const progressMsg = isMeta ? 'Enviando documento por WhatsApp...' : 'Subiendo documento a la nube...';
+    let progressMsg = 'Enviando documento por WhatsApp...';
+    if (workshopConfig.waMethod === 'wa_link') {
+      progressMsg = 'Subiendo documento a la nube...';
+    } else if (workshopConfig.waMethod === 'wa_link_ext') {
+      progressMsg = 'Preparando documento para WhatsApp Web...';
+    }
     const toast = showToastNotification(progressMsg, 'progress');
     
     // Convertir Blob a Base64
@@ -10160,7 +10165,15 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
         
         const res = event.data.response;
         if (res && res.success) {
-          if (!isMeta) {
+          if (workshopConfig.waMethod === 'wa_link_ext') {
+            // WhatsApp Web + Extensión: abrimos el chat directo y la extensión inyectará el PDF
+            const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
+            const text = encodeURIComponent(`Hola! Le envío ${docType} de su vehículo.`);
+            const url = `https://web.whatsapp.com/send?phone=${clientPhone}&text=${text}`;
+            window.open(url, '_blank');
+            showToastNotification('✓ Documento preparado y chat abierto', 'success');
+            resolve(res);
+          } else if (workshopConfig.waMethod === 'wa_link') {
             // Si es Enlace Directo, abrimos WhatsApp Web con el link de Pixeldrain
             const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
             const text = encodeURIComponent(`Hola! Le envío ${docType} de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: ${res.downloadUrl}`);

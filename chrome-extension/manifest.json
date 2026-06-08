@@ -29,9 +29,17 @@
       "matches": [
         "file:///*",
         "http://localhost/*",
-        "http://127.0.0.1/*"
+        "http://127.0.0.1/*",
+        "https://enz091218.github.io/*"
       ],
       "js": ["content_cotizador.js"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ],
+      "js": ["content_wa_web.js"],
       "run_at": "document_end"
     }
   ],

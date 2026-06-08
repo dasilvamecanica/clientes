@@ -1,4 +1,6 @@
 // Service Worker de fondo para retransmitir mensajes entre pestañas
+let lastStoredFile = null;
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'ADD_PART') {
     const partData = message.data;
@@ -43,6 +45,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.type === 'WHATSAPP_SEND_REQUEST') {
     handleWhatsAppSendRequest(message.payload, sendResponse);
     return true; // Habilita respuesta asíncrona para sendResponse
+  } else if (message.type === 'WHATSAPP_GET_STORED_FILE') {
+    const { phone } = message;
+    console.log('background.js: Solicitud de archivo para el teléfono:', phone);
+    
+    if (lastStoredFile) {
+      const timeDiff = Date.now() - lastStoredFile.timestamp;
+      const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
+      const cleanStoredPhone = lastStoredFile.phone ? lastStoredFile.phone.replace(/\D/g, '') : '';
+      
+      // Coincide si el teléfono es igual o si se guardó hace menos de 2 minutos (para evitar pérdidas por redirecciones)
+      const phoneMatches = cleanPhone && (cleanPhone.includes(cleanStoredPhone) || cleanStoredPhone.includes(cleanPhone));
+      const isRecent = timeDiff < 120000; // 2 minutos
+      
+      if (phoneMatches || isRecent) {
+        console.log('background.js: Archivo encontrado y listo para enviar.', lastStoredFile.filename);
+        sendResponse({ success: true, file: lastStoredFile });
+      } else {
+        console.log('background.js: Teléfono no coincide o archivo muy antiguo.', { phoneMatches, isRecent });
+        sendResponse({ success: false, error: 'No hay archivos recientes para este número.' });
+      }
+    } else {
+      console.log('background.js: No hay ningún archivo guardado.');
+      sendResponse({ success: false, error: 'No hay archivos guardados.' });
+    }
+    return true;
+  } else if (message.type === 'WHATSAPP_CLEAR_STORED_FILE') {
+    console.log('background.js: Limpiando archivo guardado.');
+    lastStoredFile = null;
+    sendResponse({ success: true });
+    return true;
   }
   return true; // Habilita respuesta asíncrona
 });
@@ -51,6 +83,21 @@ async function handleWhatsAppSendRequest(payload, sendResponse) {
   const { token, phoneId, clientPhone, filename, pdfBase64, msgType, templateName, templateLang, method } = payload;
   
   try {
+    // Si el método es WhatsApp Web con Extensión, guardamos el archivo temporalmente en memoria
+    if (method === 'wa_link_ext') {
+      console.log('background.js: Guardando PDF temporalmente para auto-carga en WhatsApp Web...');
+      lastStoredFile = {
+        phone: clientPhone,
+        filename: filename,
+        pdfBase64: pdfBase64,
+        timestamp: Date.now()
+      };
+      sendResponse({
+        success: true
+      });
+      return;
+    }
+
     // 1. Convertir Base64 a Blob
     const byteCharacters = atob(pdfBase64);
     const byteNumbers = new Array(byteCharacters.length);
