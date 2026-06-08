@@ -187,6 +187,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                       docInput.files = dataTransfer.files;
                       docInput.dispatchEvent(new Event('change', { bubbles: true }));
                       console.log('AutoTech Main World: Archivo inyectado tras abrir menú.');
+                      
+                      // Cerrar el menú de adjuntos para que no se quede abierto en pantalla
+                      setTimeout(() => {
+                        try {
+                          const menuOpen = document.querySelector('span[data-icon="attach-document"]') || 
+                                           document.querySelector('[data-testid="mi-document"]') ||
+                                           document.querySelector('ul li div[role="button"]');
+                          if (menuOpen) {
+                            let closeBtn = null;
+                            for (const sel of attachSelectors) {
+                              closeBtn = document.querySelector(sel);
+                              if (closeBtn) break;
+                            }
+                            if (closeBtn) {
+                              closeBtn.click();
+                              console.log('AutoTech Main World: Menú de adjuntar cerrado con éxito.');
+                            }
+                          }
+                        } catch (closeErr) {
+                          console.warn('AutoTech Main World: No se pudo cerrar el menú de adjuntar:', closeErr);
+                        }
+                      }, 100);
+
                       resolve(true);
                       return;
                     } catch (e) {
