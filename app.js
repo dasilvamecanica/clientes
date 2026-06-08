@@ -10150,7 +10150,7 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
       const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
       const text = encodeURIComponent(`Hola! Le envío ${docType} de su vehículo. Saludos.`);
       const url = `https://api.whatsapp.com/send?phone=${clientPhone}&text=${text}`;
-      window.open(url, '_blank');
+      window.open(url, 'whatsapp_web_tab');
       resolve({ success: true, method: 'wa_link' });
       return;
     }
@@ -10209,7 +10209,7 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
             const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
             const text = encodeURIComponent(`Hola! Le envío ${docType} de su vehículo.`);
             const url = `https://web.whatsapp.com/send?phone=${clientPhone}&text=${text}`;
-            window.open(url, '_blank');
+            window.open(url, 'whatsapp_web_tab');
             showToastNotification('✓ Documento preparado y chat abierto', 'success');
             resolve(res);
           } else if (workshopConfig.waMethod === 'wa_link') {
@@ -10217,7 +10217,7 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
             const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
             const text = encodeURIComponent(`Hola! Le envío ${docType} de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: ${res.downloadUrl}`);
             const url = `https://api.whatsapp.com/send?phone=${clientPhone}&text=${text}`;
-            window.open(url, '_blank');
+            window.open(url, 'whatsapp_web_tab');
             showToastNotification('✓ Archivo subido y chat abierto', 'success');
             resolve(res);
           } else {
@@ -10232,7 +10232,7 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
             const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
             const text = encodeURIComponent(`Hola! Le envío ${docType} de su vehículo. Saludos.`);
             const url = `https://api.whatsapp.com/send?phone=${clientPhone}&text=${text}`;
-            window.open(url, '_blank');
+            window.open(url, 'whatsapp_web_tab');
             showToastNotification('⚠️ Chat abierto (Fallo al subir archivo)', 'error');
             resolve({ success: true, fallback: true });
           } else {
@@ -10254,7 +10254,7 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
           const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
           const text = encodeURIComponent(`Hola! Le envío ${docType} de su vehículo. Saludos.`);
           const url = `https://api.whatsapp.com/send?phone=${clientPhone}&text=${text}`;
-          window.open(url, '_blank');
+          window.open(url, 'whatsapp_web_tab');
           resolve({ success: true, fallback: true });
         }, 4000);
       }

@@ -32,26 +32,23 @@ function simulateFileDrop(target, file) {
   const dataTransfer = new DataTransfer();
   dataTransfer.items.add(file);
 
-  const dragEnterEvent = new DragEvent('dragenter', {
-    bubbles: true,
-    cancelable: true,
-    dataTransfer: dataTransfer
-  });
-  target.dispatchEvent(dragEnterEvent);
+  const createDragEvent = (type) => {
+    const event = new DragEvent(type, {
+      bubbles: true,
+      cancelable: true
+    });
+    // Forzar la inyección de dataTransfer ya que en Chrome suele ser de solo lectura en constructores
+    Object.defineProperty(event, 'dataTransfer', {
+      value: dataTransfer,
+      writable: false,
+      configurable: true
+    });
+    return event;
+  };
 
-  const dragOverEvent = new DragEvent('dragover', {
-    bubbles: true,
-    cancelable: true,
-    dataTransfer: dataTransfer
-  });
-  target.dispatchEvent(dragOverEvent);
-
-  const dropEvent = new DragEvent('drop', {
-    bubbles: true,
-    cancelable: true,
-    dataTransfer: dataTransfer
-  });
-  target.dispatchEvent(dropEvent);
+  target.dispatchEvent(createDragEvent('dragenter'));
+  target.dispatchEvent(createDragEvent('dragover'));
+  target.dispatchEvent(createDragEvent('drop'));
   
   console.log('content_wa_web.js: Evento Drop despachado con éxito para:', file.name);
 }
