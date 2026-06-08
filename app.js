@@ -10174,6 +10174,22 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
     // Convertir Blob a Base64
     const reader = new FileReader();
     reader.onloadend = function() {
+      // Descargar el archivo localmente en la computadora del usuario como respaldo y confirmación visual
+      if (!isMeta) {
+        try {
+          const downloadLink = document.createElement('a');
+          downloadLink.href = URL.createObjectURL(pdfBlob);
+          downloadLink.download = filename;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          setTimeout(() => URL.revokeObjectURL(downloadLink.href), 1500);
+          console.log("sendDocumentViaWhatsApp: PDF descargado localmente con éxito.");
+        } catch (e) {
+          console.error("Error al descargar PDF de respaldo:", e);
+        }
+      }
+      
       const dataUrl = reader.result;
       const base64Data = dataUrl.split(',')[1];
       
