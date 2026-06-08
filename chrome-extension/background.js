@@ -102,31 +102,63 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               return new Blob([byteArray], { type: type });
             }
 
-            function simulateFileDrop(target, file) {
-              const dataTransfer = new DataTransfer();
-              dataTransfer.items.add(file);
-              
-              try {
-                dataTransfer.effectAllowed = 'all';
-                dataTransfer.dropEffect = 'copy';
-              } catch (e) {}
+            function emulateDragAndDrop(file) {
+              return new Promise((resolve, reject) => {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                
+                try {
+                  Object.defineProperty(dataTransfer, 'files', {
+                    value: dataTransfer.files,
+                    writable: false,
+                    configurable: true
+                  });
+                } catch (e) {}
 
-              const createDragEvent = (type) => {
-                const event = new DragEvent(type, {
-                  bubbles: true,
-                  cancelable: true
-                });
-                Object.defineProperty(event, 'dataTransfer', {
-                  value: dataTransfer,
-                  writable: false,
-                  configurable: true
-                });
-                return event;
-              };
+                const createDragEvent = (type) => {
+                  const event = new DragEvent(type, {
+                    bubbles: true,
+                    cancelable: true,
+                    dataTransfer: dataTransfer
+                  });
+                  try {
+                    Object.defineProperty(event, 'dataTransfer', {
+                      value: dataTransfer,
+                      writable: false,
+                      configurable: true
+                    });
+                  } catch (e) {}
+                  return event;
+                };
 
-              target.dispatchEvent(createDragEvent('dragenter'));
-              target.dispatchEvent(createDragEvent('dragover'));
-              target.dispatchEvent(createDragEvent('drop'));
+                console.log('AutoTech Main World: Iniciando emulación de Drag & Drop...');
+                const target = document.querySelector('#main') || document.querySelector('#app') || document.body;
+                
+                if (!target) {
+                  reject(new Error('No se encontró objetivo de drop (#main, #app o body).'));
+                  return;
+                }
+
+                target.dispatchEvent(createDragEvent('dragenter'));
+                target.dispatchEvent(createDragEvent('dragover'));
+                
+                // Esperar a que React active/muestre la zona de drop
+                setTimeout(() => {
+                  const overlay = document.querySelector('[data-testid="drop-zone"]') || 
+                                  document.querySelector('.drop-zone') || 
+                                  document.querySelector('[class*="drop"]') ||
+                                  target;
+                                  
+                  console.log('AutoTech Main World: Despachando evento drop en:', overlay.tagName);
+                  overlay.dispatchEvent(createDragEvent('drop'));
+                  
+                  try {
+                    overlay.dispatchEvent(createDragEvent('dragleave'));
+                  } catch (e) {}
+                  
+                  resolve(true);
+                }, 180); // 180ms para asegurar renderizado
+              });
             }
 
             function uploadFileViaInput(file) {
@@ -304,35 +336,46 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               const blob = base64ToBlob(base64Data, 'application/pdf');
               const file = new File([blob], filename, { type: 'application/pdf' });
               
-              uploadFileViaInput(file)
+              emulateDragAndDrop(file)
                 .then(() => {
-                  console.log('AutoTech Main World: Inyección por input exitosa.');
-                  writeCaption(messageText);
+                  console.log('AutoTech Main World: Drag & Drop emulado. Esperando previsualización...');
+                  
+                  // Esperar para verificar si se abrió la ventana de previsualización (caption)
+                  setTimeout(() => {
+                    const editables = Array.from(document.querySelectorAll('div[contenteditable="true"]'));
+                    const hasPreview = editables.some(el => {
+                      const testId = el.getAttribute('data-testid') || '';
+                      const ariaPlaceholder = el.getAttribute('aria-placeholder') || '';
+                      return testId.includes('caption') || ariaPlaceholder.toLowerCase().includes('comentario');
+                    });
+                    
+                    if (hasPreview) {
+                      console.log('AutoTech Main World: Previsualización detectada tras Drag & Drop.');
+                      writeCaption(messageText);
+                    } else {
+                      console.warn('AutoTech Main World: Drag & Drop no activó la previsualización. Usando fallback de input...');
+                      
+                      uploadFileViaInput(file)
+                        .then(() => {
+                          console.log('AutoTech Main World: Inyección por input exitosa.');
+                          writeCaption(messageText);
+                        })
+                        .catch(err => {
+                          console.error('AutoTech Main World: Todos los métodos fallaron:', err.message);
+                          window.postMessage({ type: 'AUTOTECH_INJECTION_STATUS', success: false, message: 'Fallo al cargar archivo' }, '*');
+                        });
+                    }
+                  }, 1500);
                 })
                 .catch(err => {
-                  console.warn('AutoTech Main World: Falló método input, usando Drag & Drop:', err.message);
-                  
-                  const targets = [
-                    document.querySelector('#main'),
-                    document.querySelector('#app'),
-                    document.body
-                  ];
-                  
-                  let dispatched = false;
-                  targets.forEach(t => {
-                    if (t) {
-                      simulateFileDrop(t, file);
-                      dispatched = true;
-                    }
-                  });
-                  
-                  if (dispatched) {
-                    console.log('AutoTech Main World: Drag & Drop simulado.');
-                    writeCaption(messageText);
-                  } else {
-                    console.error('AutoTech Main World: No se pudo inyectar el archivo.');
-                    window.postMessage({ type: 'AUTOTECH_INJECTION_STATUS', success: false, message: 'No se pudo inyectar' }, '*');
-                  }
+                  console.error('AutoTech Main World: Error en Drag & Drop:', err);
+                  uploadFileViaInput(file)
+                    .then(() => {
+                      writeCaption(messageText);
+                    })
+                    .catch(inputErr => {
+                      window.postMessage({ type: 'AUTOTECH_INJECTION_STATUS', success: false, message: inputErr.message }, '*');
+                    });
                 });
             } catch (err) {
               console.error('AutoTech Main World: Excepción general:', err);
