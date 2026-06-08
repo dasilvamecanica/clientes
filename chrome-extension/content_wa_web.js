@@ -92,64 +92,82 @@ function init() {
   showDiagnosticStatus('Buscando archivo pendiente...', 'info');
   
   // Solicitar el archivo almacenado a la extensión (background.js)
-  chrome.runtime.sendMessage({
-    type: 'WHATSAPP_GET_STORED_FILE',
-    phone: phone
-  }, (response) => {
-    if (chrome.runtime.lastError) {
-      console.warn('content_wa_web.js: Error comunicándose con background.js:', chrome.runtime.lastError.message);
-      showDiagnosticStatus('Error de extensión: ' + chrome.runtime.lastError.message, 'error');
-      removeDiagnosticStatus(5000);
-      return;
+  try {
+    if (!chrome.runtime || !chrome.runtime.id) {
+      throw new Error('Extension context invalidated.');
     }
     
-    if (response && response.success && response.file) {
-      const fileData = response.file;
-      console.log('content_wa_web.js: Encontrado archivo para cargar:', fileData.filename);
-      showDiagnosticStatus(`Archivo detectado: ${fileData.filename}. Esperando chat...`, 'info');
+    chrome.runtime.sendMessage({
+      type: 'WHATSAPP_GET_STORED_FILE',
+      phone: phone
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.warn('content_wa_web.js: Error comunicándose con background.js:', chrome.runtime.lastError.message);
+        showDiagnosticStatus('Error de extensión: ' + chrome.runtime.lastError.message, 'error');
+        removeDiagnosticStatus(5000);
+        return;
+      }
       
-      // Esperar a que el chat esté cargado (buscamos el panel principal #main y el campo de entrada)
-      let attempts = 0;
-      const maxAttempts = 45; // 45 segundos de timeout
-      
-      const checkInterval = setInterval(() => {
-        attempts++;
-        const mainChat = document.querySelector('#main');
-        const chatInput = document.querySelector('div[contenteditable="true"]');
+      if (response && response.success && response.file) {
+        const fileData = response.file;
+        console.log('content_wa_web.js: Encontrado archivo para cargar:', fileData.filename);
+        showDiagnosticStatus(`Archivo detectado: ${fileData.filename}. Esperando chat...`, 'info');
         
-        if (mainChat && chatInput) {
-          clearInterval(checkInterval);
-          showDiagnosticStatus('Chat cargado. Inyectando PDF nativamente...', 'success');
+        // Esperar a que el chat esté cargado (buscamos el panel principal #main y el campo de entrada)
+        let attempts = 0;
+        const maxAttempts = 45; // 45 segundos de timeout
+        
+        const checkInterval = setInterval(() => {
+          attempts++;
+          const mainChat = document.querySelector('#main');
+          const chatInput = document.querySelector('div[contenteditable="true"]');
           
-          setTimeout(() => {
-            // Solicitar al background script que inyecte el archivo en el MAIN world
-            chrome.runtime.sendMessage({ type: 'WHATSAPP_INJECT_FILE' }, (injectRes) => {
-              if (chrome.runtime.lastError) {
-                showDiagnosticStatus('Error de inyección: ' + chrome.runtime.lastError.message, 'error');
-                removeDiagnosticStatus(5000);
-              } else if (injectRes && !injectRes.success) {
-                showDiagnosticStatus('Error: ' + injectRes.error, 'error');
-                removeDiagnosticStatus(5000);
+          if (mainChat && chatInput) {
+            clearInterval(checkInterval);
+            showDiagnosticStatus('Chat cargado. Inyectando PDF nativamente...', 'success');
+            
+            setTimeout(() => {
+              try {
+                if (!chrome.runtime || !chrome.runtime.id) {
+                  throw new Error('Extension context invalidated.');
+                }
+                
+                // Solicitar al background script que inyecte el archivo en el MAIN world
+                chrome.runtime.sendMessage({ type: 'WHATSAPP_INJECT_FILE' }, (injectRes) => {
+                  if (chrome.runtime.lastError) {
+                    showDiagnosticStatus('Error de inyección: ' + chrome.runtime.lastError.message, 'error');
+                    removeDiagnosticStatus(5000);
+                  } else if (injectRes && !injectRes.success) {
+                    showDiagnosticStatus('Error: ' + injectRes.error, 'error');
+                    removeDiagnosticStatus(5000);
+                  }
+                  
+                  // Limpiar de la memoria de la extensión para evitar duplicados si recarga
+                  chrome.runtime.sendMessage({ type: 'WHATSAPP_CLEAR_STORED_FILE' });
+                });
+              } catch (injectErr) {
+                console.error('content_wa_web.js: Error de conexión con la extensión:', injectErr);
+                showDiagnosticStatus('Error de conexión. Por favor recarga WhatsApp Web (F5).', 'error');
               }
-              
-              // Limpiar de la memoria de la extensión para evitar duplicados si recarga
-              chrome.runtime.sendMessage({ type: 'WHATSAPP_CLEAR_STORED_FILE' });
-            });
-          }, 1500); // Pequeña espera para asegurar estabilidad en la interfaz React
-        }
-        
-        if (attempts >= maxAttempts) {
-          clearInterval(checkInterval);
-          showDiagnosticStatus('Timeout: El chat tardó demasiado en cargar.', 'error');
-          removeDiagnosticStatus(5000);
-        }
-      }, 1000);
-    } else {
-      console.log('content_wa_web.js: No hay archivo almacenado para auto-cargar en este chat.');
-      showDiagnosticStatus('No hay archivos pendientes para este chat.', 'gray');
-      removeDiagnosticStatus(2000);
-    }
-  });
+            }, 1500); // Pequeña espera para asegurar estabilidad en la interfaz React
+          }
+          
+          if (attempts >= maxAttempts) {
+            clearInterval(checkInterval);
+            showDiagnosticStatus('Timeout: El chat tardó demasiado en cargar.', 'error');
+            removeDiagnosticStatus(5000);
+          }
+        }, 1000);
+      } else {
+        console.log('content_wa_web.js: No hay archivo almacenado para auto-cargar en este chat.');
+        showDiagnosticStatus('No hay archivos pendientes para este chat.', 'gray');
+        removeDiagnosticStatus(2000);
+      }
+    });
+  } catch (err) {
+    console.error('content_wa_web.js: El contexto de la extensión se invalidó.', err);
+    showDiagnosticStatus('Extensión actualizada. Por favor recarga esta pestaña (F5).', 'error');
+  }
 }
 
 // Registrar init al cargar la página
