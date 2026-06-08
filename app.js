@@ -10193,6 +10193,9 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
       const dataUrl = reader.result;
       const base64Data = dataUrl.split(',')[1];
       
+      const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
+      const messageText = `Hola! Le envío ${docType} de su vehículo.`;
+      
       // Preparar payload para la extension
       const payload = {
         token: workshopConfig.waToken,
@@ -10203,7 +10206,8 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
         msgType: workshopConfig.waMsgType || 'direct',
         templateName: workshopConfig.waTemplateName || '',
         templateLang: workshopConfig.waTemplateLang || 'es',
-        method: workshopConfig.waMethod
+        method: workshopConfig.waMethod,
+        messageText: messageText
       };
       
       // Escuchador de respuesta único

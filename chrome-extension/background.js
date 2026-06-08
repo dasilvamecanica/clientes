@@ -82,8 +82,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       chrome.scripting.executeScript({
         target: { tabId: sender.tab.id },
         world: 'MAIN',
-        args: [lastStoredFile.filename, lastStoredFile.pdfBase64],
-        func: (filename, base64Data) => {
+        args: [lastStoredFile.filename, lastStoredFile.pdfBase64, lastStoredFile.messageText],
+        func: (filename, base64Data, messageText) => {
           console.log('AutoTech Main World: Iniciando inyección de', filename);
           
           function base64ToBlob(base64, type = 'application/pdf') {
@@ -196,6 +196,82 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             });
           }
 
+          function writeCaption(text) {
+            if (!text) {
+              console.log('AutoTech Main World: No hay texto de pie de página para escribir.');
+              window.postMessage({ type: 'AUTOTECH_INJECTION_STATUS', success: true, message: 'Archivo cargado sin pie' }, '*');
+              return;
+            }
+            console.log('AutoTech Main World: Intentando escribir pie del archivo:', text);
+            let attempts = 0;
+            const maxAttempts = 25; // 5 segundos
+            const interval = setInterval(() => {
+              attempts++;
+              
+              // Buscar todos los div contenteditable
+              const editables = Array.from(document.querySelectorAll('div[contenteditable="true"]'));
+              
+              // Intentar identificar el input del caption
+              let captionInput = editables.find(el => {
+                const testId = el.getAttribute('data-testid');
+                const ariaPlaceholder = el.getAttribute('aria-placeholder') || '';
+                const dataPlaceholder = el.getAttribute('data-placeholder') || '';
+                const label = el.getAttribute('aria-label') || '';
+                
+                return testId === 'media-editor-caption-input' || 
+                       testId === 'caption-input-text-area' ||
+                       ariaPlaceholder.toLowerCase().includes('comentario') || 
+                       ariaPlaceholder.toLowerCase().includes('caption') || 
+                       ariaPlaceholder.toLowerCase().includes('añade') ||
+                       dataPlaceholder.toLowerCase().includes('comentario') || 
+                       dataPlaceholder.toLowerCase().includes('caption') ||
+                       label.toLowerCase().includes('comentario') || 
+                       label.toLowerCase().includes('caption');
+              });
+              
+              if (!captionInput && editables.length > 0) {
+                // Si no se encuentra específicamente, tomamos el que no coincida con el composer principal
+                captionInput = editables.find(el => {
+                  const testId = el.getAttribute('data-testid') || '';
+                  const id = el.id || '';
+                  const className = el.className || '';
+                  return !testId.includes('compose') && 
+                         !testId.includes('conversation') && 
+                         !className.includes('compose') && 
+                         !id.includes('compose');
+                });
+              }
+              
+              if (captionInput) {
+                clearInterval(interval);
+                console.log('AutoTech Main World: Campo de pie de archivo encontrado. Escribiendo...');
+                try {
+                  captionInput.focus();
+                  
+                  // Limpiar contenido existente
+                  captionInput.textContent = '';
+                  
+                  // Usar execCommand para simular la escritura de manera compatible con React
+                  document.execCommand('insertText', false, text);
+                  
+                  // Lanzar eventos para asegurar que React se entere de los cambios
+                  captionInput.dispatchEvent(new Event('input', { bubbles: true }));
+                  captionInput.dispatchEvent(new Event('change', { bubbles: true }));
+                  
+                  console.log('AutoTech Main World: Pie de archivo escrito con éxito.');
+                  window.postMessage({ type: 'AUTOTECH_INJECTION_STATUS', success: true, message: 'Archivo y pie cargados' }, '*');
+                } catch (e) {
+                  console.error('AutoTech Main World: Error al escribir pie de archivo:', e);
+                  window.postMessage({ type: 'AUTOTECH_INJECTION_STATUS', success: true, message: 'Archivo cargado, falló pie' }, '*');
+                }
+              } else if (attempts >= maxAttempts) {
+                clearInterval(interval);
+                console.warn('AutoTech Main World: No se encontró el campo de pie de archivo tras varios intentos.');
+                window.postMessage({ type: 'AUTOTECH_INJECTION_STATUS', success: true, message: 'Archivo cargado sin pie' }, '*');
+              }
+            }, 200);
+          }
+
           try {
             const blob = base64ToBlob(base64Data, 'application/pdf');
             const file = new File([blob], filename, { type: 'application/pdf' });
@@ -203,6 +279,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             uploadFileViaInput(file)
               .then(() => {
                 console.log('AutoTech Main World: Inyección por input exitosa.');
+                writeCaption(messageText);
               })
               .catch(err => {
                 console.warn('AutoTech Main World: Falló método input, usando Drag & Drop:', err.message);
@@ -223,10 +300,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 
                 if (dispatched) {
                   console.log('AutoTech Main World: Drag & Drop simulado.');
+                  writeCaption(messageText);
+                } else {
+                  console.error('AutoTech Main World: No se pudo inyectar el archivo.');
+                  window.postMessage({ type: 'AUTOTECH_INJECTION_STATUS', success: false, message: 'No se pudo inyectar' }, '*');
                 }
               });
           } catch (err) {
             console.error('AutoTech Main World: Excepción general:', err);
+            window.postMessage({ type: 'AUTOTECH_INJECTION_STATUS', success: false, message: err.message }, '*');
           }
         }
       }, (results) => {
@@ -256,6 +338,7 @@ async function handleWhatsAppSendRequest(payload, sendResponse) {
         phone: clientPhone,
         filename: filename,
         pdfBase64: pdfBase64,
+        messageText: payload.messageText || '',
         timestamp: Date.now()
       };
       sendResponse({
