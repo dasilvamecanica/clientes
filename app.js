@@ -5620,7 +5620,7 @@ window.renderCotizacionesTable = function() {
   if (searchVal) {
     list = list.filter(v => {
       const indexNum = v.id === 'mock-vehicle-gol-2026' ? '2' : v.id.substring(v.id.length - 2, v.id.length);
-      return v.client.toLowerCase().includes(searchVal) || 
+      return (v.client || '').toLowerCase().includes(searchVal) || 
              (v.clientPhone && v.clientPhone.includes(searchVal)) || 
              v.plate.toLowerCase().includes(searchVal) || 
              v.brand.toLowerCase().includes(searchVal) || 
@@ -7102,7 +7102,7 @@ function drawClientesTable() {
   // Filtros condicionales
   if (filterVal === 'Con saldo pendiente') {
     list = list.filter(c => {
-      const clientDebts = vehicles.filter(v => v.client.toLowerCase() === c.name.toLowerCase() && v.stage === 'reparacion').reduce((sum, v) => sum + v.value, 0);
+      const clientDebts = vehicles.filter(v => (v.client || '').toLowerCase() === c.name.toLowerCase() && v.stage === 'reparacion').reduce((sum, v) => sum + v.value, 0);
       let realPending = clientDebts;
       if (c.name === 'Silva') realPending += 90000;
       if (c.name === 'Juan García') realPending += 45000;
@@ -7110,7 +7110,7 @@ function drawClientesTable() {
     });
   } else if (filterVal === 'Sin vehículos activos') {
     list = list.filter(c => {
-      const activeVehicles = vehicles.filter(v => v.client.toLowerCase() === c.name.toLowerCase() && !v.delivered);
+      const activeVehicles = vehicles.filter(v => (v.client || '').toLowerCase() === c.name.toLowerCase() && !v.delivered);
       return activeVehicles.length === 0;
     });
   }
@@ -7121,7 +7121,7 @@ function drawClientesTable() {
   }
 
   tbody.innerHTML = list.map(c => {
-    const clientVehicles = vehicles.filter(v => v.client.toLowerCase() === c.name.toLowerCase());
+    const clientVehicles = vehicles.filter(v => (v.client || '').toLowerCase() === c.name.toLowerCase());
     const vehText = clientVehicles.length > 0 
       ? clientVehicles.map(v => `${v.brand} ${v.model} (${v.plate})`).join(', ') 
       : 'Sin vehículos registrados';
@@ -7245,7 +7245,7 @@ window.openClientDetailsModal = function(clientId) {
   document.getElementById('cd-iva').textContent = client.ivaCondition || 'Consumidor Final';
   document.getElementById('cd-address').textContent = client.address || '—';
 
-  const clientVehicles = vehicles.filter(v => v.client.toLowerCase() === client.name.toLowerCase());
+  const clientVehicles = vehicles.filter(v => (v.client || '').toLowerCase() === client.name.toLowerCase());
   const activeOTs = clientVehicles.filter(v => !v.delivered && v.stage !== 'listo');
   const completedOTs = clientVehicles.filter(v => v.delivered || v.stage === 'listo');
 
@@ -7352,7 +7352,7 @@ window.renderCuentasCobrarView = function() {
 
   // Generate accounts dynamically for all clients in database
   let accounts = clients.map(c => {
-    const clientVehicles = vehicles.filter(v => v.client.toLowerCase() === c.name.toLowerCase());
+    const clientVehicles = vehicles.filter(v => (v.client || '').toLowerCase() === c.name.toLowerCase());
     const finishedOTs = clientVehicles.filter(v => v.stage === 'listo' || v.delivered);
     const activeOTs = clientVehicles.filter(v => v.stage === 'reparacion');
 
@@ -7555,7 +7555,7 @@ window.renderVehiculosView = function() {
       v.plate.toLowerCase().includes(searchVal) || 
       v.brand.toLowerCase().includes(searchVal) || 
       v.model.toLowerCase().includes(searchVal) || 
-      v.client.toLowerCase().includes(searchVal)
+      (v.client || '').toLowerCase().includes(searchVal)
     );
   }
 
