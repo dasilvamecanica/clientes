@@ -40,26 +40,39 @@ if (isAutoTechDashboard()) {
     const payload = event.data.payload;
     console.log('content_cotizador.js: Recibida solicitud de envío de WhatsApp para retransmitir a background.js:', payload.filename);
 
-    // Reenviar a background.js
-    chrome.runtime.sendMessage({
-      type: 'WHATSAPP_SEND_REQUEST',
-      payload: payload
-    }, (response) => {
-      const responseData = response || { success: false, error: 'Respuesta vacía de la extensión.' };
-      if (chrome.runtime.lastError) {
-        console.error('Error de comunicación con background.js:', chrome.runtime.lastError.message);
-        window.postMessage({
-          type: 'WHATSAPP_SEND_RESPONSE',
-          response: { success: false, error: 'Error en la extensión: ' + chrome.runtime.lastError.message }
-        }, '*');
-      } else {
-        console.log('content_cotizador.js: Respuesta de envío recibida de background.js y retransmitida:', responseData);
-        window.postMessage({
-          type: 'WHATSAPP_SEND_RESPONSE',
-          response: responseData
-        }, '*');
+    // Reenviar a background.js con manejo de contexto invalidado
+    try {
+      if (!chrome.runtime || !chrome.runtime.id) {
+        throw new Error('Extension context invalidated.');
       }
-    });
+      
+      chrome.runtime.sendMessage({
+        type: 'WHATSAPP_SEND_REQUEST',
+        payload: payload
+      }, (response) => {
+        const responseData = response || { success: false, error: 'Respuesta vacía de la extensión.' };
+        if (chrome.runtime.lastError) {
+          console.error('Error de comunicación con background.js:', chrome.runtime.lastError.message);
+          window.postMessage({
+            type: 'WHATSAPP_SEND_RESPONSE',
+            response: { success: false, error: 'Error en la extensión: ' + chrome.runtime.lastError.message }
+          }, '*');
+        } else {
+          console.log('content_cotizador.js: Respuesta de envío recibida de background.js y retransmitida:', responseData);
+          window.postMessage({
+            type: 'WHATSAPP_SEND_RESPONSE',
+            response: responseData
+          }, '*');
+        }
+      });
+    } catch (err) {
+      console.error('content_cotizador.js: El contexto de la extensión se invalidó.', err);
+      alert('La extensión de Chrome se ha recargado o actualizado. Por favor, refresca esta página (F5) para restablecer la conexión.');
+      window.postMessage({
+        type: 'WHATSAPP_SEND_RESPONSE',
+        response: { success: false, error: 'Extensión desactualizada. Por favor recarga la página.' }
+      }, '*');
+    }
   });
 } else {
   console.log('Página local detectada pero no corresponde al Panel Operativo AutoTech. Listener inactivo.');
