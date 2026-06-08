@@ -3125,32 +3125,40 @@ window.exitDetailedReception = function() {
 };
 
 window.openFichaClienteFromBanner = function() {
-  const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
-  if (!vehicle) return;
-  
-  // Buscar por nombre (ignorando mayúsculas/minúsculas y espacios de sobra)
-  let clientObj = clients.find(c => c.name.trim().toLowerCase() === (vehicle.client || '').trim().toLowerCase());
-  
-  // Si no coincide, buscar por teléfono
-  if (!clientObj && vehicle.clientPhone) {
-    const cleanPhone = vehicle.clientPhone.replace(/\D/g, '');
-    if (cleanPhone) {
-      clientObj = clients.find(c => (c.phone || '').replace(/\D/g, '') === cleanPhone);
+  try {
+    const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+    if (!vehicle) {
+      alert("Error: No se encontró el vehículo activo.");
+      return;
     }
-  }
-  
-  // Si no coincide, buscar por email
-  if (!clientObj && vehicle.clientEmail) {
-    const cleanEmail = vehicle.clientEmail.trim().toLowerCase();
-    if (cleanEmail) {
-      clientObj = clients.find(c => (c.email || '').trim().toLowerCase() === cleanEmail);
+    
+    // Buscar por nombre (ignorando mayúsculas/minúsculas y espacios de sobra)
+    let clientObj = clients.find(c => c.name && c.name.trim().toLowerCase() === (vehicle.client || '').trim().toLowerCase());
+    
+    // Si no coincide, buscar por teléfono
+    if (!clientObj && vehicle.clientPhone) {
+      const cleanPhone = vehicle.clientPhone.replace(/\D/g, '');
+      if (cleanPhone) {
+        clientObj = clients.find(c => (c.phone || '').replace(/\D/g, '') === cleanPhone);
+      }
     }
-  }
-  
-  if (clientObj) {
-    openClientDetailsModal(clientObj.id);
-  } else {
-    alert(`El cliente "${vehicle.client || 'Asociado'}" no está registrado en la base de datos de Clientes. Regístrelo primero desde la pestaña de Clientes.`);
+    
+    // Si no coincide, buscar por email
+    if (!clientObj && vehicle.clientEmail) {
+      const cleanEmail = vehicle.clientEmail.trim().toLowerCase();
+      if (cleanEmail) {
+        clientObj = clients.find(c => (c.email || '').trim().toLowerCase() === cleanEmail);
+      }
+    }
+    
+    if (clientObj) {
+      openClientDetailsModal(clientObj.id);
+    } else {
+      alert(`El cliente "${vehicle.client || 'Asociado'}" no está registrado en la base de datos de Clientes. Regístrelo primero desde la pestaña de Clientes.`);
+    }
+  } catch (err) {
+    console.error("Error in openFichaClienteFromBanner:", err);
+    alert("Error crítico en openFichaClienteFromBanner: " + err.message + "\n" + err.stack);
   }
 };
 
@@ -7245,11 +7253,15 @@ window.openClientActionsMenu = function(event, clientId) {
 };
 
 window.openClientDetailsModal = function(clientId) {
-  const client = clients.find(c => String(c.id) === String(clientId));
-  if (!client) return;
+  try {
+    const client = clients.find(c => String(c.id) === String(clientId));
+    if (!client) {
+      alert("Error: Cliente no encontrado con ID " + clientId);
+      return;
+    }
 
-  const menu = document.getElementById('client-dropdown-menu');
-  if (menu) menu.classList.remove('show');
+    const menu = document.getElementById('client-dropdown-menu');
+    if (menu) menu.classList.remove('show');
 
   document.getElementById('cd-avatar').textContent = client.name ? client.name.charAt(0).toUpperCase() : 'C';
   document.getElementById('cd-name').textContent = client.name || 'Sin Nombre';
@@ -7265,19 +7277,19 @@ window.openClientDetailsModal = function(clientId) {
   document.getElementById('cd-iva').textContent = client.ivaCondition || 'Consumidor Final';
   document.getElementById('cd-address').textContent = client.address || '—';
 
-  const clientVehicles = vehicles.filter(v => (v.client || '').toLowerCase() === client.name.toLowerCase());
-  const activeOTs = clientVehicles.filter(v => !v.delivered && v.stage !== 'listo');
-  const completedOTs = clientVehicles.filter(v => v.delivered || v.stage === 'listo');
+    const clientVehicles = vehicles.filter(v => (v.client || '').toLowerCase() === (client.name || '').toLowerCase());
+    const activeOTs = clientVehicles.filter(v => !v.delivered && v.stage !== 'listo');
+    const completedOTs = clientVehicles.filter(v => v.delivered || v.stage === 'listo');
 
-  let pendingDebt = activeOTs.reduce((sum, v) => sum + (v.value || 0), 0);
-  let totalRevenue = completedOTs.reduce((sum, v) => sum + (v.value || 0), 0);
+    let pendingDebt = activeOTs.reduce((sum, v) => sum + (v.value || 0), 0);
+    let totalRevenue = completedOTs.reduce((sum, v) => sum + (v.value || 0), 0);
 
-  if (client.name === 'Silva') {
-    pendingDebt += 90000;
-  } else if (client.name === 'Juan García') {
-    pendingDebt += 45000;
-    totalRevenue += 10000;
-  }
+    if (client.name && client.name.trim() === 'Silva') {
+      pendingDebt += 90000;
+    } else if (client.name && client.name.trim() === 'Juan García') {
+      pendingDebt += 45000;
+      totalRevenue += 10000;
+    }
 
   document.getElementById('cd-total-revenue').textContent = formatCurrency(totalRevenue);
   document.getElementById('cd-total-debt').textContent = formatCurrency(pendingDebt);
@@ -7353,8 +7365,12 @@ window.openClientDetailsModal = function(clientId) {
     }
   }
 
-  openModal('client-details-modal');
-  initLucide();
+    openModal('client-details-modal');
+    initLucide();
+  } catch (err) {
+    console.error("Error in openClientDetailsModal:", err);
+    alert("Error crítico al abrir modal de detalles del cliente: " + err.message + "\n" + err.stack);
+  }
 };
 
 window.renderCuentasCobrarView = function() {
