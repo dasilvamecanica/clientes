@@ -50,6 +50,10 @@ window.toggleWaConfigFields = function(method) {
   if (container) {
     container.style.display = (method === 'meta_api') ? 'flex' : 'none';
   }
+  const selfContainer = document.getElementById('self-wa-config-fields');
+  if (selfContainer) {
+    selfContainer.style.display = (method === 'wa_link_self') ? 'flex' : 'none';
+  }
 };
 
 window.toggleWaTemplateFields = function(type) {
@@ -107,6 +111,11 @@ function loadWorkshopConfig() {
       document.getElementById('config-workshop-wa-msg-type').value = workshopConfig.waMsgType || 'direct';
       document.getElementById('config-workshop-wa-template-name').value = workshopConfig.waTemplateName || '';
       document.getElementById('config-workshop-wa-template-lang').value = workshopConfig.waTemplateLang || 'es';
+      
+      const waBaseUrlEl = document.getElementById('config-workshop-wa-base-url');
+      if (waBaseUrlEl) {
+        waBaseUrlEl.value = workshopConfig.waBaseUrl || 'http://localhost:8000';
+      }
       
       toggleWaConfigFields(savedMethod);
       toggleWaTemplateFields(workshopConfig.waMsgType || 'direct');
@@ -169,6 +178,7 @@ window.saveWorkshopConfig = function() {
   const waMsgTypeVal = document.getElementById('config-workshop-wa-msg-type') ? document.getElementById('config-workshop-wa-msg-type').value : 'direct';
   const waTemplateNameVal = document.getElementById('config-workshop-wa-template-name') ? document.getElementById('config-workshop-wa-template-name').value.trim() : '';
   const waTemplateLangVal = document.getElementById('config-workshop-wa-template-lang') ? document.getElementById('config-workshop-wa-template-lang').value.trim() : 'es';
+  const waBaseUrlVal = document.getElementById('config-workshop-wa-base-url') ? document.getElementById('config-workshop-wa-base-url').value.trim() : 'http://localhost:8000';
 
   workshopConfig = {
     name: nameVal || 'sdfds',
@@ -186,7 +196,8 @@ window.saveWorkshopConfig = function() {
     waPhoneId: waPhoneIdVal,
     waMsgType: waMsgTypeVal,
     waTemplateName: waTemplateNameVal,
-    waTemplateLang: waTemplateLangVal
+    waTemplateLang: waTemplateLangVal,
+    waBaseUrl: waBaseUrlVal
   };
   
   localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
@@ -10168,6 +10179,8 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
       progressMsg = 'Subiendo documento a la nube...';
     } else if (workshopConfig.waMethod === 'wa_link_ext') {
       progressMsg = 'Preparando documento para WhatsApp Web...';
+    } else if (workshopConfig.waMethod === 'wa_link_self') {
+      progressMsg = 'Guardando PDF localmente y abriendo WhatsApp...';
     }
     const toast = showToastNotification(progressMsg, 'progress');
     
@@ -10192,6 +10205,33 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
       
       const dataUrl = reader.result;
       const base64Data = dataUrl.split(',')[1];
+      
+      // Enlace Local / Autoalojado
+      if (workshopConfig.waMethod === 'wa_link_self') {
+        toast.remove();
+        const baseUrl = (workshopConfig.waBaseUrl || 'http://localhost:8000').replace(/\/$/, '');
+        const docLink = `${baseUrl}/pdfs/${filename}`;
+        const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
+        const text = encodeURIComponent(`Hola! Le envío ${docType} de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: ${docLink}`);
+        
+        // Guardar físicamente el PDF en disco local si estamos en Electron
+        if (window.electronAPI && window.electronAPI.savePDF) {
+          window.electronAPI.savePDF(filename, base64Data)
+            .then(res => {
+              console.log("sendDocumentViaWhatsApp (Electron): PDF guardado en filesystem con éxito:", res);
+            })
+            .catch(err => {
+              console.error("sendDocumentViaWhatsApp (Electron): Error al guardar PDF:", err);
+              alert("Error al guardar el archivo PDF físicamente en el disco.");
+            });
+        }
+        
+        const url = `https://api.whatsapp.com/send?phone=${clientPhone}&text=${text}`;
+        window.open(url, 'whatsapp_web_tab');
+        showToastNotification('✓ Chat abierto con el enlace al PDF', 'success');
+        resolve({ success: true, method: 'wa_link_self', downloadUrl: docLink });
+        return;
+      }
       
       const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
       const messageText = `Hola! Le envío ${docType} de su vehículo.`;

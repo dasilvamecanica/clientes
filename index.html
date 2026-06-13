@@ -1467,8 +1467,19 @@
             <select id="config-workshop-wa-method" onchange="toggleWaConfigFields(this.value)" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--text-primary);">
               <option value="wa_link" selected>WhatsApp Web / Enlace Directo (Gratuito - Adjunto manual)</option>
               <option value="wa_link_ext">WhatsApp Web + Extensión (Auto-cargar PDF)</option>
+              <option value="wa_link_self">WhatsApp Web + Enlace Local/Autoalojado (Solo texto + Link)</option>
               <option value="meta_api">Meta WhatsApp Cloud API (Oficial - Envío automático del PDF)</option>
             </select>
+          </div>
+
+          <div id="self-wa-config-fields" style="display: none; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background-color: var(--card-bg-hover); margin-bottom: 8px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">URL Base del Servidor / Dominio (para el enlace PDF)</label>
+              <input type="text" id="config-workshop-wa-base-url" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--text-primary);" placeholder="Ej: http://localhost:8000 o https://taller.midominio.com">
+              <span style="font-size: 10px; color: var(--text-muted);">
+                Si usas la versión nativa de Windows (Electron), el PDF se guardará automáticamente en la carpeta local <code>/pdfs</code> de tu proyecto, y el enlace de WhatsApp se formará usando esta URL base.
+              </span>
+            </div>
           </div>
 
           <div id="meta-wa-config-fields" style="display: none; flex-direction: column; gap: 12px; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background-color: var(--card-bg-hover);">
