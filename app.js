@@ -3466,12 +3466,16 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
 
   // Dynamic header based on Stage
   if (vehicle.stage === 'reparacion') {
-    document.getElementById('det-vehicle-name').innerHTML = `<i data-lucide="wrench" style="width: 18px; color: #dc2626; display: inline-block; vertical-align: middle; margin-right: 6px;"></i> Reparaci\u00f3n`;
-    document.getElementById('det-vehicle-id-sub').textContent = 'Ficha de trabajo en taller';
+    const nameEl = document.getElementById('det-vehicle-name');
+    const subEl = document.getElementById('det-vehicle-id-sub');
+    if (nameEl) nameEl.innerHTML = `<i data-lucide="wrench" style="width: 18px; color: #dc2626; display: inline-block; vertical-align: middle; margin-right: 6px;"></i> Reparación`;
+    if (subEl) subEl.textContent = 'Ficha de trabajo en taller';
   } else {
     const motorStr = vehicle.motor ? ` · Motor: ${vehicle.motor}` : '';
-    document.getElementById('det-vehicle-name').textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}`;
-    document.getElementById('det-vehicle-id-sub').textContent = `N\u00ba ${indexNum}`;
+    const nameEl = document.getElementById('det-vehicle-name');
+    const subEl = document.getElementById('det-vehicle-id-sub');
+    if (nameEl) nameEl.textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}`;
+    if (subEl) subEl.textContent = `Nº ${indexNum}`;
   }
   
   // Dynamic Tab Selection based on vehicle stage
