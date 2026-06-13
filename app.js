@@ -10428,14 +10428,8 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
       const dataUrl = reader.result;
       const base64Data = dataUrl.split(',')[1];
       
-      // Enlace Local / Autoalojado
+      // Enlace Local / Autoalojado (con subida automática a Supabase Storage)
       if (workshopConfig.waMethod === 'wa_link_self') {
-        toast.remove();
-        const baseUrl = (workshopConfig.waBaseUrl || 'http://localhost:8000').replace(/\/$/, '');
-        const docLink = `${baseUrl}/pdfs/${filename}`;
-        const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
-        const text = encodeURIComponent(`Hola! Le envío ${docType} de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: ${docLink}`);
-        
         // Guardar físicamente el PDF en disco local si estamos en Electron
         if (window.electronAPI && window.electronAPI.savePDF) {
           window.electronAPI.savePDF(filename, base64Data)
@@ -10448,10 +10442,51 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
             });
         }
         
-        const url = `https://api.whatsapp.com/send?phone=${clientPhone}&text=${text}`;
-        window.open(url, 'whatsapp_web_tab');
-        showToastNotification('✓ Chat abierto con el enlace al PDF', 'success');
-        resolve({ success: true, method: 'wa_link_self', downloadUrl: docLink });
+        // Intentar subir a Supabase Storage
+        if (supabaseClient) {
+          const uploadToast = showToastNotification('Subiendo PDF a Supabase...', 'progress');
+          supabaseClient.storage
+            .from('pdfs')
+            .upload(filename, pdfBlob, {
+              cacheControl: '3600',
+              upsert: true
+            })
+            .then(({ data, error }) => {
+              uploadToast.remove();
+              toast.remove();
+              if (error) {
+                console.error("Error al subir a Supabase Storage:", error);
+                useLocalLink();
+              } else {
+                const docLink = `${supabaseUrl}/storage/v1/object/public/pdfs/${filename}`;
+                openWhatsAppWithLink(docLink);
+              }
+            })
+            .catch(err => {
+              uploadToast.remove();
+              toast.remove();
+              console.error("Error en subida Supabase:", err);
+              useLocalLink();
+            });
+        } else {
+          toast.remove();
+          useLocalLink();
+        }
+
+        function useLocalLink() {
+          const baseUrl = (workshopConfig.waBaseUrl || 'http://localhost:8000').replace(/\/$/, '');
+          const docLink = `${baseUrl}/pdfs/${filename}`;
+          openWhatsAppWithLink(docLink);
+        }
+
+        function openWhatsAppWithLink(docLink) {
+          const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
+          const text = encodeURIComponent(`Hola! Le envío ${docType} de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: ${docLink}`);
+          const url = `https://api.whatsapp.com/send?phone=${clientPhone}&text=${text}`;
+          window.open(url, 'whatsapp_web_tab');
+          showToastNotification('✓ Chat abierto con el enlace al PDF', 'success');
+          resolve({ success: true, method: 'wa_link_self', downloadUrl: docLink });
+        }
         return;
       }
       
