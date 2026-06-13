@@ -4905,16 +4905,14 @@ window.updateCalculatedTotals = function() {
   const total = vatInclusive ? net : net * 1.19;
   document.getElementById('calc-total').textContent = formatCurrency(Math.round(total));
 
-  // Actualizar visibilidad reactiva del botÃ³n de descarga de cotizaciÃ³n y factura
-  const downloadBtn = document.getElementById('btn-download-pdf-quote');
-  const waQuoteBtn = document.getElementById('btn-whatsapp-quote');
-  const invoiceContainer = document.getElementById('container-download-invoice');
-  if (downloadBtn) {
+  // Actualizar visibilidad reactiva del botón de descarga de cotización y factura
+  const groupQuoteActionsReact = document.getElementById('group-quote-actions');
+  const groupInvoiceActionsReact = document.getElementById('group-invoice-actions');
+  if (groupQuoteActionsReact) {
     const hasItems = activeQuoteServices.length > 0 || activeQuoteParts.length > 0;
     if (hasItems) {
-      downloadBtn.style.display = 'flex';
-      if (waQuoteBtn) waQuoteBtn.style.display = 'flex';
-      if (invoiceContainer) invoiceContainer.style.display = 'inline-block';
+      groupQuoteActionsReact.style.display = 'flex';
+      if (groupInvoiceActionsReact) groupInvoiceActionsReact.style.display = 'flex';
     } else {
       const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
       const isQuoteStageOrLater = vehicle && ['cotizacion', 'reparacion', 'listo'].includes(vehicle.stage);
