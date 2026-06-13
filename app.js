@@ -44,7 +44,11 @@ let workshopConfig = {
   waMethod: 'wa_link_self',
   waPhoneId: '1179474771896317',
   waMsgQuote: 'Hola! Le envío el presupuesto de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}',
-  waMsgInvoice: 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}'
+  waMsgInvoice: 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}',
+  expMaster: false,
+  expHideCertificate: false,
+  expHideParts: false,
+  expHideExcel: false
 };
 
 // --- INICIALIZACIÓN DE SUPABASE ---
@@ -121,7 +125,11 @@ async function syncWithSupabase(tableName, data) {
         wa_msg_quote: data.waMsgQuote,
         wa_msg_invoice: data.waMsgInvoice,
         logo_wide: localStorage.getItem('taller_logo_wide') || null,
-        logo_square: localStorage.getItem('taller_logo_square') || null
+        logo_square: localStorage.getItem('taller_logo_square') || null,
+        exp_master: data.expMaster || false,
+        exp_hide_certificate: data.expHideCertificate || false,
+        exp_hide_parts: data.expHideParts || false,
+        exp_hide_excel: data.expHideExcel || false
       };
       const { error } = await supabaseClient.from(tableName).upsert(configItem);
       if (error) console.error(`Error de sync en ${tableName}:`, error);
@@ -169,7 +177,11 @@ async function loadStateFromSupabase() {
         waTemplateLang: dbConfig.wa_template_lang || workshopConfig.waTemplateLang,
         waBaseUrl: dbConfig.wa_base_url || workshopConfig.waBaseUrl,
         waMsgQuote: dbConfig.wa_msg_quote || workshopConfig.waMsgQuote,
-        waMsgInvoice: dbConfig.wa_msg_invoice || workshopConfig.waMsgInvoice
+        waMsgInvoice: dbConfig.wa_msg_invoice || workshopConfig.waMsgInvoice,
+        expMaster: dbConfig.exp_master !== undefined ? dbConfig.exp_master : false,
+        expHideCertificate: dbConfig.exp_hide_certificate !== undefined ? dbConfig.exp_hide_certificate : false,
+        expHideParts: dbConfig.exp_hide_parts !== undefined ? dbConfig.exp_hide_parts : false,
+        expHideExcel: dbConfig.exp_hide_excel !== undefined ? dbConfig.exp_hide_excel : false
       };
 
       // Rescatar logos de la base de datos si existen y guardarlos en localStorage
@@ -364,6 +376,18 @@ function loadWorkshopConfig() {
     logoSwitch.checked = localStorage.getItem('taller_logos_enabled') !== 'false'; // Default to true!
   }
 
+  const expMasterSwitch = document.getElementById('config-exp-master');
+  if (expMasterSwitch) {
+    expMasterSwitch.checked = workshopConfig.expMaster || false;
+    document.getElementById('config-exp-hide-certificate').checked = workshopConfig.expHideCertificate || false;
+    document.getElementById('config-exp-hide-parts').checked = workshopConfig.expHideParts || false;
+    document.getElementById('config-exp-hide-excel').checked = workshopConfig.expHideExcel || false;
+    
+    toggleExperimentalSection(workshopConfig.expMaster || false);
+  } else {
+    applyExperimentalFeatures();
+  }
+
   const meliSwitch = document.getElementById('meli-search-switch');
   if (meliSwitch) {
     meliSwitch.checked = localStorage.getItem('taller_meli_search_enabled') !== 'false'; // Default to true!
@@ -433,11 +457,17 @@ window.saveWorkshopConfig = function() {
     waTemplateLang: waTemplateLangVal,
     waBaseUrl: waBaseUrlVal,
     waMsgQuote: waMsgQuoteVal || 'Hola! Le envío el presupuesto de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}',
-    waMsgInvoice: waMsgInvoiceVal || 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}'
+    waMsgInvoice: waMsgInvoiceVal || 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}',
+    expMaster: document.getElementById('config-exp-master') ? document.getElementById('config-exp-master').checked : false,
+    expHideCertificate: document.getElementById('config-exp-hide-certificate') ? document.getElementById('config-exp-hide-certificate').checked : false,
+    expHideParts: document.getElementById('config-exp-hide-parts') ? document.getElementById('config-exp-hide-parts').checked : false,
+    expHideExcel: document.getElementById('config-exp-hide-excel') ? document.getElementById('config-exp-hide-excel').checked : false
   };
   
   localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
   syncWithSupabase('taller_config', workshopConfig);
+  
+  applyExperimentalFeatures();
   
   // Re-inicializar iconos Lucide si es necesario
   if (typeof initLucide === 'function') initLucide();
@@ -1830,6 +1860,75 @@ window.toggleLogoVisibility = function(enabled) {
 
 window.toggleMeliSearchButton = function(enabled) {
   localStorage.setItem('taller_meli_search_enabled', enabled ? 'true' : 'false');
+};
+
+window.toggleExperimentalSection = function(enabled) {
+  const container = document.getElementById('exp-options-container');
+  if (container) {
+    container.style.display = enabled ? 'flex' : 'none';
+  }
+  workshopConfig.expMaster = enabled;
+  localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
+  syncWithSupabase('taller_config', workshopConfig);
+  applyExperimentalFeatures();
+};
+
+window.toggleExperimentalFeature = function(feature, enabled) {
+  if (feature === 'hideCertificate') {
+    workshopConfig.expHideCertificate = enabled;
+  } else if (feature === 'hideParts') {
+    workshopConfig.expHideParts = enabled;
+  } else if (feature === 'hideExcel') {
+    workshopConfig.expHideExcel = enabled;
+  }
+  localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
+  syncWithSupabase('taller_config', workshopConfig);
+  applyExperimentalFeatures();
+};
+
+window.applyExperimentalFeatures = function() {
+  const isMaster = !!workshopConfig.expMaster;
+  
+  // 1. Pestaña de Repuestos
+  const menuParts = document.getElementById('menu-repuestos');
+  if (menuParts) {
+    const hideParts = isMaster && !!workshopConfig.expHideParts;
+    menuParts.style.display = hideParts ? 'none' : 'flex';
+  }
+  
+  // 2. Botones de Importar Excel
+  const btnExcelServices = document.getElementById('btn-import-excel-services');
+  const btnExcelParts = document.getElementById('btn-import-excel-parts');
+  const hideExcel = isMaster && !!workshopConfig.expHideExcel;
+  if (btnExcelServices) {
+    btnExcelServices.style.display = hideExcel ? 'none' : 'flex';
+  }
+  if (btnExcelParts) {
+    btnExcelParts.style.display = hideExcel ? 'none' : 'flex';
+  }
+
+  // 3. Ocultar en caliente botones en Ficha de Recepción detallada si estuviera abierta
+  const receptionPanel = document.getElementById('reception-panel-view');
+  if (receptionPanel && receptionPanel.style.display !== 'none' && activeReceptionVehicleId) {
+    const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+    if (vehicle) {
+      const deliveryBtn = document.getElementById('btn-download-pdf-delivery');
+      const waDeliveryBtn = document.getElementById('btn-whatsapp-delivery');
+      if (deliveryBtn) {
+        if (isMaster && workshopConfig.expHideCertificate) {
+          deliveryBtn.style.setProperty('display', 'none', 'important');
+          if (waDeliveryBtn) waDeliveryBtn.style.setProperty('display', 'none', 'important');
+        } else {
+          // Re-calcular la visibilidad normal
+          const hasQuoteItems = (vehicle.quoteServices && vehicle.quoteServices.length > 0) || (vehicle.quoteParts && vehicle.quoteParts.length > 0);
+          const isQuoteStageOrLater = ['cotizacion', 'reparacion', 'listo', 'entregado'].includes(vehicle.stage);
+          const shouldShow = hasQuoteItems || isQuoteStageOrLater;
+          deliveryBtn.style.display = shouldShow ? 'flex' : 'none';
+          if (waDeliveryBtn) waDeliveryBtn.style.display = shouldShow ? 'flex' : 'none';
+        }
+      }
+    }
+  }
 };
 
 // ============================================================
@@ -3254,8 +3353,13 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
     const hasQuoteItems = (vehicle.quoteServices && vehicle.quoteServices.length > 0) || (vehicle.quoteParts && vehicle.quoteParts.length > 0);
     const isQuoteStageOrLater = ['cotizacion', 'reparacion', 'listo', 'entregado'].includes(vehicle.stage);
     const shouldShow = hasQuoteItems || isQuoteStageOrLater;
-    deliveryBtn.style.display = shouldShow ? 'flex' : 'none';
-    if (waDeliveryBtn) waDeliveryBtn.style.display = shouldShow ? 'flex' : 'none';
+    if (workshopConfig.expMaster && workshopConfig.expHideCertificate) {
+      deliveryBtn.style.setProperty('display', 'none', 'important');
+      if (waDeliveryBtn) waDeliveryBtn.style.setProperty('display', 'none', 'important');
+    } else {
+      deliveryBtn.style.display = shouldShow ? 'flex' : 'none';
+      if (waDeliveryBtn) waDeliveryBtn.style.display = shouldShow ? 'flex' : 'none';
+    }
     
     if (vehicle.stage === 'listo' || vehicle.stage === 'entregado' || vehicle.delivered) {
       deliveryBtn.disabled = false;

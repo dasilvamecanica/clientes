@@ -824,7 +824,7 @@
           <span style="font-size: 13px; color: var(--text-secondary);">Gestiona los servicios disponibles en el taller</span>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button class="btn-secondary" style="background-color: white; border: 1.5px solid var(--border-color); color: var(--text-primary); font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 13px;" onclick="alert('Importando catálogo de servicios desde plantilla de Excel...')">
+          <button id="btn-import-excel-services" class="btn-secondary" style="background-color: white; border: 1.5px solid var(--border-color); color: var(--text-primary); font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 13px;" onclick="alert('Importando catálogo de servicios desde plantilla de Excel...')">
             <i data-lucide="upload" style="width: 14px;"></i> Importar Excel
           </button>
           <button class="btn-primary" style="background-color: var(--color-accent); color: white; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; padding: 10px 18px;" onclick="openNewServiceModal()">
@@ -868,7 +868,7 @@
           <span style="font-size: 13px; color: var(--text-secondary);">Gestiona los repuestos e insumos disponibles en el taller</span>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button class="btn-secondary" style="background-color: white; border: 1.5px solid var(--border-color); color: var(--text-primary); font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 13px;" onclick="alert('Importando catálogo de repuestos desde plantilla de Excel...')">
+          <button id="btn-import-excel-parts" class="btn-secondary" style="background-color: white; border: 1.5px solid var(--border-color); color: var(--text-primary); font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 13px;" onclick="alert('Importando catálogo de repuestos desde plantilla de Excel...')">
             <i data-lucide="upload" style="width: 14px;"></i> Importar Excel
           </button>
           <button class="btn-primary" style="background-color: var(--color-accent); color: white; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; padding: 10px 18px;" onclick="openNewPartModal()">
@@ -1178,53 +1178,7 @@
         </div>
       </header>
 
-      <!-- SECCIÓN: MODO DEMOSTRACIÓN / DATOS DE PRUEBA -->
-      <section class="reception-form-card" style="padding: 24px; max-width: 600px; display: flex; flex-direction: column; gap: 14px;">
-        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 4px;">
-          <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-            <i data-lucide="database" style="color: var(--color-accent); width: 20px; height: 20px;"></i>
-            Modo Demostración / Datos de Prueba
-          </h2>
-          <p style="font-size: 13px; color: var(--text-muted); margin: 6px 0 0 0;">
-            Habilite este interruptor para generar clientes, vehículos, servicios, repuestos y órdenes de trabajo (OTs) simulados de forma instantánea. Al desactivarlo, se eliminará toda la información de prueba de su base de datos.
-          </p>
-        </div>
 
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
-          <div style="display: flex; flex-direction: column; gap: 4px;">
-            <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Habilitar Datos Simulados (Testing)</span>
-            <span style="font-size: 11px; color: var(--text-muted);">Popula el taller con datos realistas e historial financiero</span>
-          </div>
-          <label class="ios-switch">
-            <input type="checkbox" id="demo-mode-switch" onchange="toggleDemoMode(this.checked)">
-            <span class="switch-slider"></span>
-          </label>
-        </div>
-      </section>
-
-      <!-- SECCIÓN: LOGOS DE VEHÍCULOS (BETA) -->
-      <section class="reception-form-card" style="padding: 24px; max-width: 600px; display: flex; flex-direction: column; gap: 14px;">
-        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 4px;">
-          <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-            <i data-lucide="image" style="color: #3b82f6; width: 20px; height: 20px;"></i>
-            Logos de Vehículos <span style="font-size: 11px; font-weight: 700; background-color: hsla(var(--color-accent-hsl), 0.15); color: var(--color-accent); padding: 2px 8px; border-radius: 12px; margin-left: 6px; border: 1px solid hsla(var(--color-accent-hsl), 0.25);">BETA</span>
-          </h2>
-          <p style="font-size: 13px; color: var(--text-muted); margin: 6px 0 0 0;">
-            Habilite o deshabilite la visualización de los logotipos de las marcas de vehículos de forma global en la aplicación (tarjetas de ingresos, fichas de detalles, etc.).
-          </p>
-        </div>
-
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
-          <div style="display: flex; flex-direction: column; gap: 4px;">
-            <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Visualizar Logos de Marcas</span>
-            <span style="font-size: 11px; color: var(--text-muted);">Muestra logotipos e imagotipos oficiales de los fabricantes</span>
-          </div>
-          <label class="ios-switch">
-            <input type="checkbox" id="logo-visibility-switch" onchange="toggleLogoVisibility(this.checked)">
-            <span class="switch-slider"></span>
-          </label>
-        </div>
-      </section>
 
       <!-- SECCIÓN: INTEGRACIÓN CON MERCADO LIBRE -->
       <section class="reception-form-card" style="padding: 24px; max-width: 600px; display: flex; flex-direction: column; gap: 14px;">
@@ -1572,29 +1526,125 @@
         </div>
       </section>
 
-      <!-- SECCIÓN: MANTENIMIENTO -->
+      <!-- SECCIÓN: FUNCIONES EXPERIMENTALES -->
       <section class="reception-form-card" style="padding: 24px; max-width: 600px; display: flex; flex-direction: column; gap: 16px;">
-        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 8px;">
+        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 4px;">
           <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-            <i data-lucide="database" style="color: #ef4444; width: 20px; height: 20px;"></i>
-            Mantenimiento y Base de Datos
+            <i data-lucide="flask-conical" style="color: #a855f7; width: 20px; height: 20px;"></i>
+            Funciones Experimentales
           </h2>
           <p style="font-size: 13px; color: var(--text-muted); margin: 6px 0 0 0;">
-            Administre la base de datos local y realice acciones de mantenimiento general del sistema.
+            Habilite características y pruebas técnicas adicionales en la plataforma.
           </p>
         </div>
 
-        <div style="display: flex; align-items: center; justify-content: space-between; background-color: rgba(239, 68, 68, 0.04); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: var(--radius-md); padding: 16px; gap: 16px;">
-          <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
-            <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Eliminar base de datos del taller</span>
-            <span style="font-size: 12px; color: var(--text-muted);">
-              Borrara permanentemente todos los vehículos, citas, clientes y catálogos de servicios e insumos.
-            </span>
+        <!-- Switch Maestro -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);">Activar opciones experimentales</span>
+            <span style="font-size: 11px; color: var(--text-muted);">Desbloquea el acceso al panel de control de funciones en desarrollo</span>
           </div>
-          <button class="service-remove-btn" onclick="clearDatabase()" style="background-color: #ef4444; color: white; border: none; font-weight: 600; padding: 10px 16px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#dc2626';" onmouseout="this.style.backgroundColor='#ef4444';">
-            <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i>
-            Eliminar todo
-          </button>
+          <label class="ios-switch">
+            <input type="checkbox" id="config-exp-master" onchange="toggleExperimentalSection(this.checked)">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <!-- Contenedor de Opciones (oculto por defecto) -->
+        <div id="exp-options-container" style="display: none; flex-direction: column; gap: 16px; border-top: 1px dashed var(--border-color); padding-top: 16px;">
+          
+          <!-- 1. Botón de Certificado -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 12px;">
+              <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Ocultar botón de "Certificado"</span>
+                <span style="font-size: 9px; font-weight: 700; background-color: rgba(249, 115, 22, 0.12); color: #f97316; padding: 2px 6px; border-radius: 10px; margin-left: 8px; border: 1px solid rgba(249, 115, 22, 0.2); text-transform: uppercase;">Beta</span>
+              </div>
+              <span style="font-size: 11px; color: var(--text-muted);">Oculta los botones de descarga y envío de certificado de entrega en el panel de recepción detallada.</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="config-exp-hide-certificate" onchange="toggleExperimentalFeature('hideCertificate', this.checked)">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <!-- 2. Pestaña de Repuestos -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 12px;">
+              <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Ocultar sección de "Repuestos"</span>
+                <span style="font-size: 9px; font-weight: 700; background-color: rgba(249, 115, 22, 0.12); color: #f97316; padding: 2px 6px; border-radius: 10px; margin-left: 8px; border: 1px solid rgba(249, 115, 22, 0.2); text-transform: uppercase;">Beta</span>
+              </div>
+              <span style="font-size: 11px; color: var(--text-muted);">Muestra u oculta la pestaña de Repuestos de la barra de navegación lateral.</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="config-exp-hide-parts" onchange="toggleExperimentalFeature('hideParts', this.checked)">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <!-- 3. Botones Importar Excel -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 12px;">
+              <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Ocultar botón "Importar Excel"</span>
+                <span style="font-size: 9px; font-weight: 700; background-color: rgba(249, 115, 22, 0.12); color: #f97316; padding: 2px 6px; border-radius: 10px; margin-left: 8px; border: 1px solid rgba(249, 115, 22, 0.2); text-transform: uppercase;">Beta</span>
+              </div>
+              <span style="font-size: 11px; color: var(--text-muted);">Muestra u oculta los botones de importación desde plantillas Excel en catálogos.</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="config-exp-hide-excel" onchange="toggleExperimentalFeature('hideExcel', this.checked)">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <!-- 4. Mostrar logos de vehículos -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 12px;">
+              <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Visualizar Logos de Marcas</span>
+                <span style="font-size: 9px; font-weight: 700; background-color: rgba(249, 115, 22, 0.12); color: #f97316; padding: 2px 6px; border-radius: 10px; margin-left: 8px; border: 1px solid rgba(249, 115, 22, 0.2); text-transform: uppercase;">Beta</span>
+              </div>
+              <span style="font-size: 11px; color: var(--text-muted);">Muestra logotipos oficiales de los fabricantes de vehículos en las tarjetas e ingresos.</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="logo-visibility-switch" onchange="toggleLogoVisibility(this.checked)">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <!-- 5. Datos de prueba -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 12px;">
+              <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Habilitar Datos Simulados (Testing)</span>
+                <span style="font-size: 9px; font-weight: 700; background-color: rgba(249, 115, 22, 0.12); color: #f97316; padding: 2px 6px; border-radius: 10px; margin-left: 8px; border: 1px solid rgba(249, 115, 22, 0.2); text-transform: uppercase;">Beta</span>
+              </div>
+              <span style="font-size: 11px; color: var(--text-muted);">Popula el taller con clientes, vehículos y finanzas ficticias para pruebas del sistema.</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="demo-mode-switch" onchange="toggleDemoMode(this.checked)">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <!-- Separador destructivo -->
+          <hr style="border: 0; border-top: 1px dashed var(--border-color); margin: 8px 0;">
+
+          <!-- 6. Eliminar Base de Datos -->
+          <div style="display: flex; align-items: center; justify-content: space-between; background-color: rgba(239, 68, 68, 0.04); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: var(--radius-md); padding: 16px; gap: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+              <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Eliminar base de datos del taller</span>
+              <span style="font-size: 12px; color: var(--text-muted);">
+                Borrará permanentemente todos los vehículos, citas, clientes y catálogos de servicios e insumos.
+              </span>
+            </div>
+            <button class="service-remove-btn" onclick="clearDatabase()" style="background-color: #ef4444; color: white; border: none; font-weight: 600; padding: 10px 16px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#dc2626';" onmouseout="this.style.backgroundColor='#ef4444';">
+              <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i>
+              Eliminar todo
+            </button>
+          </div>
+
         </div>
       </section>
     </main>
