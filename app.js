@@ -119,7 +119,9 @@ async function syncWithSupabase(tableName, data) {
         wa_template_lang: data.waTemplateLang,
         wa_base_url: data.waBaseUrl,
         wa_msg_quote: data.waMsgQuote,
-        wa_msg_invoice: data.waMsgInvoice
+        wa_msg_invoice: data.waMsgInvoice,
+        logo_wide: localStorage.getItem('taller_logo_wide') || null,
+        logo_square: localStorage.getItem('taller_logo_square') || null
       };
       const { error } = await supabaseClient.from(tableName).upsert(configItem);
       if (error) console.error(`Error de sync en ${tableName}:`, error);
@@ -169,6 +171,24 @@ async function loadStateFromSupabase() {
         waMsgQuote: dbConfig.wa_msg_quote || workshopConfig.waMsgQuote,
         waMsgInvoice: dbConfig.wa_msg_invoice || workshopConfig.waMsgInvoice
       };
+
+      // Rescatar logos de la base de datos si existen y guardarlos en localStorage
+      if (dbConfig.logo_wide !== undefined) {
+        if (dbConfig.logo_wide) {
+          localStorage.setItem('taller_logo_wide', dbConfig.logo_wide);
+        } else {
+          localStorage.removeItem('taller_logo_wide');
+        }
+      }
+      if (dbConfig.logo_square !== undefined) {
+        if (dbConfig.logo_square) {
+          localStorage.setItem('taller_logo_square', dbConfig.logo_square);
+        } else {
+          localStorage.removeItem('taller_logo_square');
+        }
+      }
+      if (typeof initLogos === 'function') initLogos();
+
       localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
       loadWorkshopConfig();
     }
@@ -729,6 +749,8 @@ window.handleLogoUpload = function(inputEl, type) {
         localStorage.setItem('taller_logo_square', base64);
       }
       initLogos();
+      // Sincronizar taller_config con base de datos de Supabase de inmediato
+      syncWithSupabase('taller_config', workshopConfig);
     };
     reader.readAsDataURL(file);
   }
@@ -747,6 +769,8 @@ window.deleteLogo = function(type) {
     }
   }
   initLogos();
+  // Sincronizar taller_config con base de datos de Supabase de inmediato
+  syncWithSupabase('taller_config', workshopConfig);
 };
 
 window.toggleThirdPartyFields = function(show) {
