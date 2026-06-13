@@ -32,9 +32,9 @@ let vehicleRegistry = {
 // ConfiguraciÃ³n global del Perfil de Taller
 let workshopConfig = {
   name: 'sdfds',
-  phone1: '+5602235041116',
-  phone2: '+5602235041116',
-  address: 'DirecciÃ³n de Ejemplo 123',
+  phone1: '+5492235041116',
+  phone2: '+5492235041116',
+  address: 'Dirección de Ejemplo 123',
   rut: '12345678-9',
   cuit: '30-12345678-9',
   ivaCondition: 'Responsable Inscripto',
@@ -377,9 +377,9 @@ window.saveWorkshopConfig = function() {
 
   workshopConfig = {
     name: nameVal || 'sdfds',
-    phone1: phone1Val || '+5602235041116',
-    phone2: phone2Val || '+5602235041116',
-    address: addressVal || 'DirecciÃ³n de Ejemplo 123',
+    phone1: phone1Val || '+5492235041116',
+    phone2: phone2Val || '+5492235041116',
+    address: addressVal || 'Dirección de Ejemplo 123',
     rut: rutVal || '12345678-9',
     cuit: cuitVal || '30-12345678-9',
     ivaCondition: ivaVal || 'Responsable Inscripto',
@@ -1190,9 +1190,9 @@ function loadState() {
     }
   } catch(e) {
     clients = [
-      { id: 'c-1', name: 'Enzo Da Silva', phone: '+5602235041116', email: 'enzo@gmail.com', createdAt: '2026-05-23' },
-      { id: 'c-2', name: 'Silva', phone: '+56987654321', email: 'silva@email.com', createdAt: '2026-05-24' },
-      { id: 'c-3', name: 'Juan GarcÃ­a', phone: '+56911223344', email: 'garcia@email.com', createdAt: '2026-05-25' }
+      { id: 'c-1', name: 'Enzo Da Silva', phone: '+5492235041116', email: 'enzo@gmail.com', createdAt: '2026-05-23' },
+      { id: 'c-2', name: 'Silva', phone: '+549987654321', email: 'silva@email.com', createdAt: '2026-05-24' },
+      { id: 'c-3', name: 'Juan García', phone: '+54911223344', email: 'garcia@email.com', createdAt: '2026-05-25' }
     ];
     saveClients();
   }
@@ -1219,7 +1219,7 @@ function loadState() {
         color: 'Gris Plata',
         motor: '1.6 8V',
         client: 'Enzo Da Silva',
-        clientPhone: '+5602235041116',
+        clientPhone: '+5492235041116',
         clientEmail: 'enzo@gmail.com',
         stage: 'cotizacion',
         value: 30018.45,
@@ -1297,9 +1297,9 @@ function loadState() {
     }
   } catch(e) {
     teamMembers = [
-      { id: 't-1', name: 'Laura GÃ³mez', phone: '+56987654321', email: 'laura@taller.com', role: 'Administrador', specialty: 'GestiÃ³n General', salary: 1200000, active: true },
-      { id: 't-2', name: 'Carlos PÃ©rez', phone: '+56912345678', email: 'carlos@taller.com', role: 'MecÃ¡nico', specialty: 'Motores y Embragues', salary: 850000, active: true },
-      { id: 't-3', name: 'AndrÃ©s Silva', phone: '+56911223344', email: 'andres@taller.com', role: 'Vendedor', specialty: 'AtenciÃ³n al Cliente', salary: 700000, active: true }
+      { id: 't-1', name: 'Laura Gómez', phone: '+549987654321', email: 'laura@taller.com', role: 'Administrador', specialty: 'Gestión General', salary: 1200000, active: true },
+      { id: 't-2', name: 'Carlos Pérez', phone: '+549112345678', email: 'carlos@taller.com', role: 'Mecánico', specialty: 'Motores y Embragues', salary: 850000, active: true },
+      { id: 't-3', name: 'Andrés Silva', phone: '+54911223344', email: 'andres@taller.com', role: 'Vendedor', specialty: 'Atención al Cliente', salary: 700000, active: true }
     ];
     saveTeam();
   }
