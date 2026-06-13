@@ -1892,22 +1892,22 @@ window.applyExperimentalFeatures = function() {
   // 1. Pestaña de Repuestos
   const menuParts = document.getElementById('menu-repuestos');
   if (menuParts) {
-    const hideParts = isMaster && !!workshopConfig.expHideParts;
-    menuParts.style.display = hideParts ? 'none' : 'flex';
+    const showParts = isMaster && !!workshopConfig.expHideParts;
+    menuParts.style.display = showParts ? 'flex' : 'none';
   }
   
   // 2. Botones de Importar Excel
   const btnExcelServices = document.getElementById('btn-import-excel-services');
   const btnExcelParts = document.getElementById('btn-import-excel-parts');
-  const hideExcel = isMaster && !!workshopConfig.expHideExcel;
+  const showExcel = isMaster && !!workshopConfig.expHideExcel;
   if (btnExcelServices) {
-    btnExcelServices.style.display = hideExcel ? 'none' : 'flex';
+    btnExcelServices.style.display = showExcel ? 'flex' : 'none';
   }
   if (btnExcelParts) {
-    btnExcelParts.style.display = hideExcel ? 'none' : 'flex';
+    btnExcelParts.style.display = showExcel ? 'flex' : 'none';
   }
 
-  // 3. Ocultar en caliente botones en Ficha de Recepción detallada si estuviera abierta
+  // 3. Ocultar/mostrar en caliente botones en Ficha de Recepción detallada si estuviera abierta
   const receptionPanel = document.getElementById('reception-panel-view');
   if (receptionPanel && receptionPanel.style.display !== 'none' && activeReceptionVehicleId) {
     const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
@@ -1915,16 +1915,17 @@ window.applyExperimentalFeatures = function() {
       const deliveryBtn = document.getElementById('btn-download-pdf-delivery');
       const waDeliveryBtn = document.getElementById('btn-whatsapp-delivery');
       if (deliveryBtn) {
-        if (isMaster && workshopConfig.expHideCertificate) {
-          deliveryBtn.style.setProperty('display', 'none', 'important');
-          if (waDeliveryBtn) waDeliveryBtn.style.setProperty('display', 'none', 'important');
-        } else {
+        const showCertificate = isMaster && !!workshopConfig.expHideCertificate;
+        if (showCertificate) {
           // Re-calcular la visibilidad normal
           const hasQuoteItems = (vehicle.quoteServices && vehicle.quoteServices.length > 0) || (vehicle.quoteParts && vehicle.quoteParts.length > 0);
           const isQuoteStageOrLater = ['cotizacion', 'reparacion', 'listo', 'entregado'].includes(vehicle.stage);
           const shouldShow = hasQuoteItems || isQuoteStageOrLater;
           deliveryBtn.style.display = shouldShow ? 'flex' : 'none';
           if (waDeliveryBtn) waDeliveryBtn.style.display = shouldShow ? 'flex' : 'none';
+        } else {
+          deliveryBtn.style.setProperty('display', 'none', 'important');
+          if (waDeliveryBtn) waDeliveryBtn.style.setProperty('display', 'none', 'important');
         }
       }
     }
@@ -3353,12 +3354,13 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
     const hasQuoteItems = (vehicle.quoteServices && vehicle.quoteServices.length > 0) || (vehicle.quoteParts && vehicle.quoteParts.length > 0);
     const isQuoteStageOrLater = ['cotizacion', 'reparacion', 'listo', 'entregado'].includes(vehicle.stage);
     const shouldShow = hasQuoteItems || isQuoteStageOrLater;
-    if (workshopConfig.expMaster && workshopConfig.expHideCertificate) {
-      deliveryBtn.style.setProperty('display', 'none', 'important');
-      if (waDeliveryBtn) waDeliveryBtn.style.setProperty('display', 'none', 'important');
-    } else {
+    const showCertificate = workshopConfig.expMaster && !!workshopConfig.expHideCertificate;
+    if (showCertificate) {
       deliveryBtn.style.display = shouldShow ? 'flex' : 'none';
       if (waDeliveryBtn) waDeliveryBtn.style.display = shouldShow ? 'flex' : 'none';
+    } else {
+      deliveryBtn.style.setProperty('display', 'none', 'important');
+      if (waDeliveryBtn) waDeliveryBtn.style.setProperty('display', 'none', 'important');
     }
     
     if (vehicle.stage === 'listo' || vehicle.stage === 'entregado' || vehicle.delivered) {
