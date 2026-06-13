@@ -1465,10 +1465,7 @@
           <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;">
             <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Método de Envío</label>
             <select id="config-workshop-wa-method" onchange="toggleWaConfigFields(this.value)" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--text-primary);">
-              <option value="wa_link" selected>WhatsApp Web / Enlace Directo (Gratuito - Adjunto manual)</option>
-              <option value="wa_link_ext">WhatsApp Web + Extensión (Auto-cargar PDF)</option>
-              <option value="wa_link_self">WhatsApp Web + Enlace Local/Autoalojado (Solo texto + Link)</option>
-              <option value="meta_api">Meta WhatsApp Cloud API (Oficial - Envío automático del PDF)</option>
+              <option value="wa_link_self" selected>WhatsApp Web + Enlace en la Nube (Supabase)</option>
             </select>
           </div>
 
@@ -3504,7 +3501,7 @@
   <!-- Cliente de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=4.1"></script>
+  <script src="app.js?v=4.2"></script>
 </body>
 </html>
 

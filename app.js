@@ -41,7 +41,7 @@ let workshopConfig = {
   iibb: '901-123456-7',
   inicioAct: '2018-03-01',
   pv: '0005',
-  waMethod: 'meta_api',
+  waMethod: 'wa_link_self',
   waPhoneId: '1179474771896317'
 };
 
@@ -297,7 +297,7 @@ function loadWorkshopConfig() {
     // Cargar configuraciones de WhatsApp
     const waMethodEl = document.getElementById('config-workshop-wa-method');
     if (waMethodEl) {
-      const savedMethod = workshopConfig.waMethod || 'meta_api';
+      const savedMethod = workshopConfig.waMethod || 'wa_link_self';
       const savedPhoneId = workshopConfig.waPhoneId || '1179474771896317';
       
       waMethodEl.value = savedMethod;
@@ -367,7 +367,7 @@ window.saveWorkshopConfig = function() {
     localStorage.removeItem('meli_access_token');
   }
 
-  const waMethodVal = document.getElementById('config-workshop-wa-method') ? document.getElementById('config-workshop-wa-method').value : 'wa_link';
+  const waMethodVal = document.getElementById('config-workshop-wa-method') ? document.getElementById('config-workshop-wa-method').value : 'wa_link_self';
   const waTokenVal = document.getElementById('config-workshop-wa-token') ? document.getElementById('config-workshop-wa-token').value.trim() : '';
   const waPhoneIdVal = document.getElementById('config-workshop-wa-phone-id') ? document.getElementById('config-workshop-wa-phone-id').value.trim() : '';
   const waMsgTypeVal = document.getElementById('config-workshop-wa-msg-type') ? document.getElementById('config-workshop-wa-msg-type').value : 'direct';
