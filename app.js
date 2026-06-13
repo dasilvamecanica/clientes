@@ -3258,16 +3258,16 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
 
   activeReceptionVehicleId = vehicle.id;
   
-  const downloadBtn = document.getElementById('btn-download-pdf-quote');
-  const waQuoteBtn = document.getElementById('btn-whatsapp-quote');
-  const invoiceContainer = document.getElementById('container-download-invoice');
-  if (downloadBtn) {
+  const groupQuoteActions = document.getElementById('group-quote-actions');
+  const groupInvoiceActions = document.getElementById('group-invoice-actions');
+  if (groupQuoteActions) {
     const hasQuoteItems = (vehicle.quoteServices && vehicle.quoteServices.length > 0) || (vehicle.quoteParts && vehicle.quoteParts.length > 0);
     const isQuoteStageOrLater = ['cotizacion', 'reparacion', 'listo'].includes(vehicle.stage);
     const shouldShow = hasQuoteItems || isQuoteStageOrLater;
-    downloadBtn.style.display = shouldShow ? 'flex' : 'none';
-    if (waQuoteBtn) waQuoteBtn.style.display = shouldShow ? 'flex' : 'none';
-    if (invoiceContainer) invoiceContainer.style.display = shouldShow ? 'inline-block' : 'none';
+    groupQuoteActions.style.display = shouldShow ? 'flex' : 'none';
+    if (groupInvoiceActions) {
+      groupInvoiceActions.style.display = shouldShow ? 'flex' : 'none';
+    }
   }
 
   activeReceptionServices = typeof vehicle.services === 'string' ? vehicle.services : (vehicle.services || []).join('\n');
@@ -9198,11 +9198,46 @@ window.toggleInvoiceDropdown = function(event) {
   }
 };
 
+window.toggleInvoicePdfDropdown = function(event) {
+  event.stopPropagation();
+  const menu = document.getElementById('invoice-pdf-dropdown-menu');
+  if (!menu) return;
+  const isOpen = menu.style.display === 'block';
+  document.querySelectorAll('.invoice-dropdown-menu').forEach(m => m.style.display = 'none');
+  if (!isOpen) {
+    menu.style.display = 'block';
+    const closeHandler = function(e) {
+      if (!menu.contains(e.target)) {
+        menu.style.display = 'none';
+        document.removeEventListener('click', closeHandler);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closeHandler), 50);
+  }
+};
+
+window.toggleInvoiceWaDropdown = function(event) {
+  event.stopPropagation();
+  const menu = document.getElementById('invoice-wa-dropdown-menu');
+  if (!menu) return;
+  const isOpen = menu.style.display === 'block';
+  document.querySelectorAll('.invoice-dropdown-menu').forEach(m => m.style.display = 'none');
+  if (!isOpen) {
+    menu.style.display = 'block';
+    const closeHandler = function(e) {
+      if (!menu.contains(e.target)) {
+        menu.style.display = 'none';
+        document.removeEventListener('click', closeHandler);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closeHandler), 50);
+  }
+};
+
 // --- Motor de Facturación ARCA (ex-AFIP) ---
 window.downloadTaxInvoicePDF = function(invoiceType, event, returnBlob = false) {
   if (event) event.stopPropagation();
-  const menu = document.getElementById('invoice-dropdown-menu');
-  if (menu) menu.style.display = 'none';
+  document.querySelectorAll('.invoice-dropdown-menu').forEach(m => m.style.display = 'none');
 
   const id = activeReceptionVehicleId;
   if (!id) { alert('No hay ningún vehículo activo para generar la factura.'); return; }
@@ -10938,8 +10973,7 @@ window.sendDeliveryWhatsApp = function() {
 
 window.sendTaxInvoiceWhatsApp = function(invoiceType, event) {
   if (event) event.stopPropagation();
-  const menu = document.getElementById('invoice-dropdown-menu');
-  if (menu) menu.style.display = 'none';
+  document.querySelectorAll('.invoice-dropdown-menu').forEach(m => m.style.display = 'none');
   
   const id = activeReceptionVehicleId;
   if (!id) {

@@ -1733,41 +1733,55 @@
                 <span class="status-badge theme-red" id="det-status-badge" style="font-size: 11px; width: fit-content; align-self: flex-start;">En reparaci&oacute;n</span>
                 
                 <!-- Subtítulo oculto para compatibilidad con JS -->
-                <span class="reception-vehicle-sub" id="det-vehicle-id-sub" style="display: none !important;">...</span>
-              </div>
-            </div>
-            <div class="reception-header-right" style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-grow: 1;">
-               <!-- Cotización (Descargar PDF) -->
-               <button class="history-btn" id="btn-download-pdf-quote" onclick="downloadQuotePDF()" style="display: none; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600;" title="Descargar presupuesto en PDF">
-                 <i data-lucide="download" style="width: 14px;"></i> Cotización
-               </button>
-               <button class="history-btn" id="btn-whatsapp-quote" onclick="sendQuoteWhatsApp()" style="display: none; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: var(--radius-md); font-size: 13px; background-color: rgba(37, 211, 102, 0.1); border: 1.5px solid #25d366; color: #25d366; cursor: pointer; transition: all 0.2s;" title="Enviar presupuesto por WhatsApp" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.2)';" onmouseout="this.style.backgroundColor='rgba(37, 211, 102, 0.1)';">
-                 <i data-lucide="message-square" style="width: 16px; height: 16px;"></i>
-               </button>
-               
-               <!-- Certificado de Entrega (Descargar PDF) -->
-               <button class="history-btn" id="btn-download-pdf-delivery" onclick="downloadDeliveryPDF()" disabled style="display: none; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; opacity: 0.4; cursor: not-allowed; pointer-events: none;" title="El vehículo debe estar en la sección 'Listo' para descargar el certificado">
-                 <i data-lucide="award" style="width: 14px;"></i> Certificado
-               </button>
-               <button class="history-btn" id="btn-whatsapp-delivery" onclick="sendDeliveryWhatsApp()" disabled style="display: none; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: var(--radius-md); font-size: 13px; background-color: rgba(37, 211, 102, 0.1); border: 1.5px solid #25d366; color: #25d366; opacity: 0.4; cursor: not-allowed; pointer-events: none; transition: all 0.2s;" title="El vehículo debe estar en la sección 'Listo' para enviar el certificado por WhatsApp">
-                 <i data-lucide="message-square" style="width: 16px; height: 16px;"></i>
-               </button>
-               
-               <!-- Factura (Con dropdown para A, B, C) -->
-               <div id="container-download-invoice" style="display: none; position: relative;">
-                 <button class="history-btn" onclick="toggleInvoiceDropdown(event)" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600;">
-                   <i data-lucide="receipt" style="width: 14px;"></i> Factura <i data-lucide="chevron-down" style="width: 12px; margin-left: 2px;"></i>
-                 </button>
-                 <div class="invoice-dropdown-menu" id="invoice-dropdown-menu" style="top: 100%; right: 0; z-index: 110; min-width: 200px;">
-                   <a onclick="downloadTaxInvoicePDF('A', event)" style="display: flex; align-items: center; gap: 6px;"><i data-lucide="download" style="width: 12px;"></i> Descargar Factura A</a>
-                   <a onclick="downloadTaxInvoicePDF('B', event)" style="display: flex; align-items: center; gap: 6px;"><i data-lucide="download" style="width: 12px;"></i> Descargar Factura B</a>
-                   <a onclick="downloadTaxInvoicePDF('C', event)" style="display: flex; align-items: center; gap: 6px;"><i data-lucide="download" style="width: 12px;"></i> Descargar Factura C</a>
-                   <div style="border-top: 1px dashed var(--border-color); margin: 4px 0;"></div>
-                   <a onclick="sendTaxInvoiceWhatsApp('A', event)" style="display: flex; align-items: center; gap: 6px; color: #25d366;"><i data-lucide="message-square" style="width: 12px; color: #25d366;"></i> Enviar Factura A (WA)</a>
-                   <a onclick="sendTaxInvoiceWhatsApp('B', event)" style="display: flex; align-items: center; gap: 6px; color: #25d366;"><i data-lucide="message-square" style="width: 12px; color: #25d366;"></i> Enviar Factura B (WA)</a>
-                   <a onclick="sendTaxInvoiceWhatsApp('C', event)" style="display: flex; align-items: center; gap: 6px; color: #25d366;"><i data-lucide="message-square" style="width: 12px; color: #25d366;"></i> Enviar Factura C (WA)</a>
-                 </div>
-               </div>
+                       <!-- Grupo Cotización -->
+                <div id="group-quote-actions" style="display: none; align-items: center; gap: 0;">
+                  <button class="history-btn" id="btn-download-pdf-quote" onclick="downloadQuotePDF()" style="align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-md) 0 0 var(--radius-md); border-right: none; font-size: 13px; font-weight: 600;" title="Descargar presupuesto en PDF">
+                    <i data-lucide="download" style="width: 14px;"></i> Cotización
+                  </button>
+                  <button class="history-btn" id="btn-whatsapp-quote" onclick="sendQuoteWhatsApp()" style="align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; font-size: 13px; background-color: rgba(37, 211, 102, 0.1); border: 1.5px solid #25d366; color: #25d366; cursor: pointer; transition: all 0.2s;" title="Enviar presupuesto por WhatsApp" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.2)';" onmouseout="this.style.backgroundColor='rgba(37, 211, 102, 0.1)';">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.498 1.452 5.418 1.453 5.767 0 10.457-4.693 10.46-10.462.002-2.796-1.085-5.422-3.06-7.399C17.45 1.77 14.818.775 12.013.775c-5.77 0-10.46 4.693-10.463 10.465-.002 1.82.478 3.597 1.39 5.162L1.97 21.547l5.215-1.368L6.647 19.16l.001.001zM18.12 14.51c-.33-.165-1.951-.963-2.25-1.072-.3-.109-.519-.163-.738.164-.219.327-.847 1.072-1.037 1.29-.19.219-.38.246-.71.082-.33-.164-1.393-.513-2.653-1.636-.98-.874-1.64-1.953-1.832-2.28-.192-.327-.02-.504.144-.668.148-.147.33-.382.495-.573.165-.19.219-.327.329-.545.109-.219.055-.409-.028-.573-.082-.164-.738-1.782-1.01-2.438-.266-.64-.537-.552-.738-.563-.19-.011-.409-.013-.627-.013-.219 0-.573.082-.873.409-.3.327-1.147 1.118-1.147 2.727 0 1.61 1.173 3.162 1.336 3.38.164.22 2.31 3.52 5.596 4.94 1.353.586 2.378.892 3.166 1.14.8.256 1.53.22 2.106.136.64-.096 1.951-.798 2.224-1.528.273-.73.273-1.364.19-1.49-.082-.125-.3-.218-.63-.383z"/></svg>
+                  </button>
+                </div>
+                
+                <!-- Certificado de Entrega (Descargar PDF) -->
+                <button class="history-btn" id="btn-download-pdf-delivery" onclick="downloadDeliveryPDF()" disabled style="display: none; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; opacity: 0.4; cursor: not-allowed; pointer-events: none;" title="El vehículo debe estar en la sección 'Listo' para descargar el certificado">
+                  <i data-lucide="award" style="width: 14px;"></i> Certificado
+                </button>
+                <button class="history-btn" id="btn-whatsapp-delivery" onclick="sendDeliveryWhatsApp()" disabled style="display: none; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: var(--radius-md); font-size: 13px; background-color: rgba(37, 211, 102, 0.1); border: 1.5px solid #25d366; color: #25d366; opacity: 0.4; cursor: not-allowed; pointer-events: none; transition: all 0.2s;" title="El vehículo debe estar en la sección 'Listo' para enviar el certificado por WhatsApp">
+                  <i data-lucide="message-square" style="width: 16px; height: 16px;"></i>
+                </button>
+                
+                <!-- Grupo Factura -->
+                <div id="group-invoice-actions" style="display: none; align-items: center; gap: 0; position: relative;">
+                  <!-- Dropdown Descargar Factura -->
+                  <div style="position: relative;">
+                    <button class="history-btn" onclick="toggleInvoicePdfDropdown(event)" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-md) 0 0 var(--radius-md); border-right: none; font-size: 13px; font-weight: 600;">
+                      <i data-lucide="receipt" style="width: 14px;"></i> Factura <i data-lucide="chevron-down" style="width: 12px; margin-left: 2px;"></i>
+                    </button>
+                    <div class="invoice-dropdown-menu" id="invoice-pdf-dropdown-menu" style="display: none; top: 100%; left: 0; z-index: 110; min-width: 180px;">
+                      <a onclick="downloadTaxInvoicePDF('A', event)" style="display: flex; align-items: center; gap: 6px;"><i data-lucide="download" style="width: 12px;"></i> Descargar Factura A</a>
+                      <a onclick="downloadTaxInvoicePDF('B', event)" style="display: flex; align-items: center; gap: 6px;"><i data-lucide="download" style="width: 12px;"></i> Descargar Factura B</a>
+                      <a onclick="downloadTaxInvoicePDF('C', event)" style="display: flex; align-items: center; gap: 6px;"><i data-lucide="download" style="width: 12px;"></i> Descargar Factura C</a>
+                    </div>
+                  </div>
+                  <!-- Dropdown Enviar Factura WhatsApp -->
+                  <div style="position: relative;">
+                    <button class="history-btn" onclick="toggleInvoiceWaDropdown(event)" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; font-size: 13px; background-color: rgba(37, 211, 102, 0.1); border: 1.5px solid #25d366; color: #25d366; cursor: pointer; transition: all 0.2s;" title="Enviar factura por WhatsApp" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.2)';" onmouseout="this.style.backgroundColor='rgba(37, 211, 102, 0.1)';">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.498 1.452 5.418 1.453 5.767 0 10.457-4.693 10.46-10.462.002-2.796-1.085-5.422-3.06-7.399C17.45 1.77 14.818.775 12.013.775c-5.77 0-10.46 4.693-10.463 10.465-.002 1.82.478 3.597 1.39 5.162L1.97 21.547l5.215-1.368L6.647 19.16l.001.001zM18.12 14.51c-.33-.165-1.951-.963-2.25-1.072-.3-.109-.519-.163-.738.164-.219.327-.847 1.072-1.037 1.29-.19.219-.38.246-.71.082-.33-.164-1.393-.513-2.653-1.636-.98-.874-1.64-1.953-1.832-2.28-.192-.327-.02-.504.144-.668.148-.147.33-.382.495-.573.165-.19.219-.327.329-.545.109-.219.055-.409-.028-.573-.082-.164-.738-1.782-1.01-2.438-.266-.64-.537-.552-.738-.563-.19-.011-.409-.013-.627-.013-.219 0-.573.082-.873.409-.3.327-1.147 1.118-1.147 2.727 0 1.61 1.173 3.162 1.336 3.38.164.22 2.31 3.52 5.596 4.94 1.353.586 2.378.892 3.166 1.14.8.256 1.53.22 2.106.136.64-.096 1.951-.798 2.224-1.528.273-.73.273-1.364.19-1.49-.082-.125-.3-.218-.63-.383z"/></svg>
+                    </button>
+                    <div class="invoice-dropdown-menu" id="invoice-wa-dropdown-menu" style="display: none; top: 100%; right: 0; z-index: 110; min-width: 180px;">
+                      <a onclick="sendTaxInvoiceWhatsApp('A', event)" style="display: flex; align-items: center; gap: 6px; color: #25d366;">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="color: #25d366; margin-right: 2px;"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.498 1.452 5.418 1.453 5.767 0 10.457-4.693 10.46-10.462.002-2.796-1.085-5.422-3.06-7.399C17.45 1.77 14.818.775 12.013.775c-5.77 0-10.46 4.693-10.463 10.465-.002 1.82.478 3.597 1.39 5.162L1.97 21.547l5.215-1.368L6.647 19.16l.001.001zM18.12 14.51c-.33-.165-1.951-.963-2.25-1.072-.3-.109-.519-.163-.738.164-.219.327-.847 1.072-1.037 1.29-.19.219-.38.246-.71.082-.33-.164-1.393-.513-2.653-1.636-.98-.874-1.64-1.953-1.832-2.28-.192-.327-.02-.504.144-.668.148-.147.33-.382.495-.573.165-.19.219-.327.329-.545.109-.219.055-.409-.028-.573-.082-.164-.738-1.782-1.01-2.438-.266-.64-.537-.552-.738-.563-.19-.011-.409-.013-.627-.013-.219 0-.573.082-.873.409-.3.327-1.147 1.118-1.147 2.727 0 1.61 1.173 3.162 1.336 3.38.164.22 2.31 3.52 5.596 4.94 1.353.586 2.378.892 3.166 1.14.8.256 1.53.22 2.106.136.64-.096 1.951-.798 2.224-1.528.273-.73.273-1.364.19-1.49-.082-.125-.3-.218-.63-.383z"/></svg> Enviar Factura A (WA)
+                      </a>
+                      <a onclick="sendTaxInvoiceWhatsApp('B', event)" style="display: flex; align-items: center; gap: 6px; color: #25d366;">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="color: #25d366; margin-right: 2px;"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.498 1.452 5.418 1.453 5.767 0 10.457-4.693 10.46-10.462.002-2.796-1.085-5.422-3.06-7.399C17.45 1.77 14.818.775 12.013.775c-5.77 0-10.46 4.693-10.463 10.465-.002 1.82.478 3.597 1.39 5.162L1.97 21.547l5.215-1.368L6.647 19.16l.001.001zM18.12 14.51c-.33-.165-1.951-.963-2.25-1.072-.3-.109-.519-.163-.738.164-.219.327-.847 1.072-1.037 1.29-.19.219-.38.246-.71.082-.33-.164-1.393-.513-2.653-1.636-.98-.874-1.64-1.953-1.832-2.28-.192-.327-.02-.504.144-.668.148-.147.33-.382.495-.573.165-.19.219-.327.329-.545.109-.219.055-.409-.028-.573-.082-.164-.738-1.782-1.01-2.438-.266-.64-.537-.552-.738-.563-.19-.011-.409-.013-.627-.013-.219 0-.573.082-.873.409-.3.327-1.147 1.118-1.147 2.727 0 1.61 1.173 3.162 1.336 3.38.164.22 2.31 3.52 5.596 4.94 1.353.586 2.378.892 3.166 1.14.8.256 1.53.22 2.106.136.64-.096 1.951-.798 2.224-1.528.273-.73.273-1.364.19-1.49-.082-.125-.3-.218-.63-.383z"/></svg> Enviar Factura B (WA)
+                      </a>
+                      <a onclick="sendTaxInvoiceWhatsApp('C', event)" style="display: flex; align-items: center; gap: 6px; color: #25d366;">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="color: #25d366; margin-right: 2px;"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.498 1.452 5.418 1.453 5.767 0 10.457-4.693 10.46-10.462.002-2.796-1.085-5.422-3.06-7.399C17.45 1.77 14.818.775 12.013.775c-5.77 0-10.46 4.693-10.463 10.465-.002 1.82.478 3.597 1.39 5.162L1.97 21.547l5.215-1.368L6.647 19.16l.001.001zM18.12 14.51c-.33-.165-1.951-.963-2.25-1.072-.3-.109-.519-.163-.738.164-.219.327-.847 1.072-1.037 1.29-.19.219-.38.246-.71.082-.33-.164-1.393-.513-2.653-1.636-.98-.874-1.64-1.953-1.832-2.28-.192-.327-.02-.504.144-.668.148-.147.33-.382.495-.573.165-.19.219-.327.329-.545.109-.219.055-.409-.028-.573-.082-.164-.738-1.782-1.01-2.438-.266-.64-.537-.552-.738-.563-.19-.011-.409-.013-.627-.013-.219 0-.573.082-.873.409-.3.327-1.147 1.118-1.147 2.727 0 1.61 1.173 3.162 1.336 3.38.164.22 2.31 3.52 5.596 4.94 1.353.586 2.378.892 3.166 1.14.8.256 1.53.22 2.106.136.64-.096 1.951-.798 2.224-1.528.273-.73.273-1.364.19-1.49-.082-.125-.3-.218-.63-.383z"/></svg> Enviar Factura C (WA)
+                      </a>
+                    </div>
+                  </div>
+                </div>
 
                <!-- Historial -->
                <button class="history-btn" onclick="viewWorkOrderHistoryOfActiveVehicle()" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600;">
