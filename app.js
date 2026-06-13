@@ -707,6 +707,19 @@ window.initLogos = function() {
 window.handleLogoUpload = function(inputEl, type) {
   if (inputEl.files && inputEl.files[0]) {
     const file = inputEl.files[0];
+    
+    // Subir a Supabase Storage si está disponible
+    if (supabaseClient) {
+      const storageFilename = type === 'wide' ? 'logo_wide.png' : 'logo_square.png';
+      supabaseClient.storage
+        .from('pdfs')
+        .upload(storageFilename, file, { upsert: true })
+        .then(({ error }) => {
+          if (error) console.error(`Error al subir ${storageFilename} a Supabase Storage:`, error);
+        })
+        .catch(err => console.error("Error de red en subida de logo a Supabase:", err));
+    }
+
     const reader = new FileReader();
     reader.onload = function(e) {
       const base64 = e.target.result;
@@ -724,9 +737,16 @@ window.handleLogoUpload = function(inputEl, type) {
 window.deleteLogo = function(type) {
   if (type === 'wide') {
     localStorage.removeItem('taller_logo_wide');
+    if (supabaseClient) {
+      supabaseClient.storage.from('pdfs').remove(['logo_wide.png']).catch(err => {});
+    }
   } else if (type === 'square') {
     localStorage.removeItem('taller_logo_square');
+    if (supabaseClient) {
+      supabaseClient.storage.from('pdfs').remove(['logo_square.png']).catch(err => {});
+    }
   }
+  initLogos();
 };
 
 window.toggleThirdPartyFields = function(show) {
