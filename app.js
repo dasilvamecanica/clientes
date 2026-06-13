@@ -10477,6 +10477,7 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
               toast.remove();
               if (error) {
                 console.error("Error al subir a Supabase Storage:", error);
+                showToastNotification(`⚠️ Error al subir a Supabase: ${error.message || JSON.stringify(error)}`, 'error');
                 useLocalLink();
               } else {
                 const docLink = `${supabaseUrl}/storage/v1/object/public/pdfs/${filename}`;
@@ -10487,10 +10488,12 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
               uploadToast.remove();
               toast.remove();
               console.error("Error en subida Supabase:", err);
+              showToastNotification(`⚠️ Error de red al subir a Supabase: ${err.message || err}`, 'error');
               useLocalLink();
             });
         } else {
           toast.remove();
+          showToastNotification('⚠️ Supabase no conectado. Usando enlace local.', 'error');
           useLocalLink();
         }
 
