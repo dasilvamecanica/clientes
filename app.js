@@ -10480,7 +10480,7 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
                 showToastNotification(`⚠️ Error al subir a Supabase: ${error.message || JSON.stringify(error)}`, 'error');
                 useLocalLink();
               } else {
-                const docLink = `${supabaseUrl}/storage/v1/object/public/pdfs/${filename}`;
+                const docLink = `https://dasilvamecanica.github.io/clientes/ver.html?file=${encodeURIComponent(filename)}`;
                 openWhatsAppWithLink(docLink);
               }
             })
