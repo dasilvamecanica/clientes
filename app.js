@@ -42,7 +42,9 @@ let workshopConfig = {
   inicioAct: '2018-03-01',
   pv: '0005',
   waMethod: 'wa_link_self',
-  waPhoneId: '1179474771896317'
+  waPhoneId: '1179474771896317',
+  waMsgQuote: 'Hola! Le envío el presupuesto de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}',
+  waMsgInvoice: 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}'
 };
 
 // --- INICIALIZACIÓN DE SUPABASE ---
@@ -115,7 +117,9 @@ async function syncWithSupabase(tableName, data) {
         wa_msg_type: data.waMsgType,
         wa_template_name: data.waTemplateName,
         wa_template_lang: data.waTemplateLang,
-        wa_base_url: data.waBaseUrl
+        wa_base_url: data.waBaseUrl,
+        wa_msg_quote: data.waMsgQuote,
+        wa_msg_invoice: data.waMsgInvoice
       };
       const { error } = await supabaseClient.from(tableName).upsert(configItem);
       if (error) console.error(`Error de sync en ${tableName}:`, error);
@@ -161,7 +165,9 @@ async function loadStateFromSupabase() {
         waMsgType: dbConfig.wa_msg_type || workshopConfig.waMsgType,
         waTemplateName: dbConfig.wa_template_name || workshopConfig.waTemplateName,
         waTemplateLang: dbConfig.wa_template_lang || workshopConfig.waTemplateLang,
-        waBaseUrl: dbConfig.wa_base_url || workshopConfig.waBaseUrl
+        waBaseUrl: dbConfig.wa_base_url || workshopConfig.waBaseUrl,
+        waMsgQuote: dbConfig.wa_msg_quote || workshopConfig.waMsgQuote,
+        waMsgInvoice: dbConfig.wa_msg_invoice || workshopConfig.waMsgInvoice
       };
       localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
       loadWorkshopConfig();
@@ -311,6 +317,16 @@ function loadWorkshopConfig() {
       if (waBaseUrlEl) {
         waBaseUrlEl.value = workshopConfig.waBaseUrl || 'http://localhost:8000';
       }
+
+      const waMsgQuoteEl = document.getElementById('config-workshop-wa-msg-quote');
+      if (waMsgQuoteEl) {
+        waMsgQuoteEl.value = workshopConfig.waMsgQuote || 'Hola! Le envío el presupuesto de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}';
+      }
+
+      const waMsgInvoiceEl = document.getElementById('config-workshop-wa-msg-invoice');
+      if (waMsgInvoiceEl) {
+        waMsgInvoiceEl.value = workshopConfig.waMsgInvoice || 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}';
+      }
       
       toggleWaConfigFields(savedMethod);
       toggleWaTemplateFields(workshopConfig.waMsgType || 'direct');
@@ -374,6 +390,8 @@ window.saveWorkshopConfig = function() {
   const waTemplateNameVal = document.getElementById('config-workshop-wa-template-name') ? document.getElementById('config-workshop-wa-template-name').value.trim() : '';
   const waTemplateLangVal = document.getElementById('config-workshop-wa-template-lang') ? document.getElementById('config-workshop-wa-template-lang').value.trim() : 'es';
   const waBaseUrlVal = document.getElementById('config-workshop-wa-base-url') ? document.getElementById('config-workshop-wa-base-url').value.trim() : 'http://localhost:8000';
+  const waMsgQuoteVal = document.getElementById('config-workshop-wa-msg-quote') ? document.getElementById('config-workshop-wa-msg-quote').value.trim() : '';
+  const waMsgInvoiceVal = document.getElementById('config-workshop-wa-msg-invoice') ? document.getElementById('config-workshop-wa-msg-invoice').value.trim() : '';
 
   workshopConfig = {
     name: nameVal || 'sdfds',
@@ -392,7 +410,9 @@ window.saveWorkshopConfig = function() {
     waMsgType: waMsgTypeVal,
     waTemplateName: waTemplateNameVal,
     waTemplateLang: waTemplateLangVal,
-    waBaseUrl: waBaseUrlVal
+    waBaseUrl: waBaseUrlVal,
+    waMsgQuote: waMsgQuoteVal || 'Hola! Le envío el presupuesto de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}',
+    waMsgInvoice: waMsgInvoiceVal || 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}'
   };
   
   localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
@@ -10480,8 +10500,21 @@ window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
         }
 
         function openWhatsAppWithLink(docLink) {
-          const docType = filename.includes('Presupuesto') ? 'el presupuesto' : (filename.includes('Certificado') ? 'el certificado de entrega' : 'la factura');
-          const text = encodeURIComponent(`Hola! Le envío ${docType} de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: ${docLink}`);
+          const isQuote = filename.includes('Presupuesto');
+          const isInvoice = filename.includes('Factura');
+          
+          let template = '';
+          if (isQuote) {
+            template = workshopConfig.waMsgQuote || 'Hola! Le envío el presupuesto de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}';
+          } else if (isInvoice) {
+            template = workshopConfig.waMsgInvoice || 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}';
+          } else {
+            const docType = filename.includes('Certificado') ? 'el certificado de entrega' : 'el documento';
+            template = `Hola! Le envío ${docType} de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}`;
+          }
+          
+          const message = template.replace('{link}', docLink);
+          const text = encodeURIComponent(message);
           const url = `https://api.whatsapp.com/send?phone=${clientPhone}&text=${text}`;
           window.open(url, 'whatsapp_web_tab');
           showToastNotification('✓ Chat abierto con el enlace al PDF', 'success');

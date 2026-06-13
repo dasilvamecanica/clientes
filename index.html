@@ -1469,12 +1469,24 @@
             </select>
           </div>
 
-          <div id="self-wa-config-fields" style="display: none; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background-color: var(--card-bg-hover); margin-bottom: 8px;">
+          <div id="self-wa-config-fields" style="display: none; flex-direction: column; gap: 12px; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background-color: var(--card-bg-hover); margin-bottom: 8px;">
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">URL Base del Servidor / Dominio (para el enlace PDF)</label>
-              <input type="text" id="config-workshop-wa-base-url" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--text-primary);" placeholder="Ej: http://localhost:8000 o https://taller.midominio.com">
+              <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Mensaje para Presupuestos</label>
+              <textarea id="config-workshop-wa-msg-quote" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--text-primary); resize: vertical; min-height: 60px;" placeholder="Ej: Hola! Le envío el presupuesto. Descárguelo aquí: {link}"></textarea>
+              <span style="font-size: 10px; color: var(--text-muted);">Usa <code>{link}</code> para indicar dónde se colocará el enlace al PDF.</span>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Mensaje para Facturas</label>
+              <textarea id="config-workshop-wa-msg-invoice" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--text-primary); resize: vertical; min-height: 60px;" placeholder="Ej: Hola! Le envío la factura. Descárguela aquí: {link}"></textarea>
+              <span style="font-size: 10px; color: var(--text-muted);">Usa <code>{link}</code> para indicar dónde se colocará el enlace al PDF.</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">URL Base del Servidor / Dominio (de respaldo local)</label>
+              <input type="text" id="config-workshop-wa-base-url" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--text-primary);" placeholder="Ej: http://localhost:8000">
               <span style="font-size: 10px; color: var(--text-muted);">
-                Si usas la versión nativa de Windows (Electron), el PDF se guardará automáticamente en la carpeta local <code>/pdfs</code> de tu proyecto, y el enlace de WhatsApp se formará usando esta URL base.
+                Si no hay conexión a internet, el sistema utilizará esta dirección como respaldo para el enlace.
               </span>
             </div>
           </div>
@@ -3501,7 +3513,7 @@
   <!-- Cliente de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=4.3"></script>
+  <script src="app.js?v=4.4"></script>
 </body>
 </html>
 
