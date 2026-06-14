@@ -6994,13 +6994,13 @@ window.renderOrdenesTrabajoView = function() {
   
   const filterStage = stageSelect ? stageSelect.value : 'Todos';
 
-  // 1. Filtrar vehÃ­culos que estÃ©n en fase ReparaciÃ³n o Listo (OTs Activas)
-  let list = vehicles.filter(v => v.stage === 'reparacion' || v.stage === 'listo');
+  // 1. Filtrar vehículos que estén en fase Reparación, Listo o Entregado (OTs)
+  let list = vehicles.filter(v => v.stage === 'reparacion' || v.stage === 'listo' || v.stage === 'entregado' || v.delivered);
 
-  // MÃ©tricas
+  // Métricas
   const totalOt = list.length;
   const pendingOt = list.filter(v => v.stage === 'reparacion' && (!v.otTasks || v.otTasks.every(t => !t.completed))).length;
-  const doneOt = list.filter(v => v.stage === 'listo').length;
+  const doneOt = list.filter(v => v.stage === 'listo' || v.stage === 'entregado' || v.delivered).length;
   const processOt = totalOt - pendingOt - doneOt;
 
   document.getElementById('ot-total-val').textContent = totalOt;
@@ -7008,7 +7008,7 @@ window.renderOrdenesTrabajoView = function() {
   document.getElementById('ot-process-val').textContent = processOt;
   document.getElementById('ot-done-val').textContent = doneOt;
 
-  // Filtrar por tÃ©rmino de bÃºsqueda
+  // Filtrar por término de búsqueda
   if (searchVal) {
     list = list.filter(v => {
       const isGolMock = v.id === 'mock-vehicle-gol-2026';
@@ -7020,7 +7020,7 @@ window.renderOrdenesTrabajoView = function() {
       const brand = v.brand ? v.brand.toLowerCase() : '';
       const model = v.model ? v.model.toLowerCase() : '';
       
-      // Normalizar patentes para bÃºsqueda insensible a espacios, guiones o mayÃºsculas
+      // Normalizar patentes para búsqueda insensible a espacios, guiones o mayúsculas
       const normPlate = plate.replace(/[^a-z0-9]/g, '');
       const normSearch = searchVal.replace(/[^a-z0-9]/g, '');
       
@@ -7042,19 +7042,31 @@ window.renderOrdenesTrabajoView = function() {
       list = list.filter(v => v.stage === 'reparacion');
     } else if (filterStage === 'Finalizadas') {
       list = list.filter(v => v.stage === 'listo');
+    } else if (filterStage === 'Entregadas') {
+      list = list.filter(v => v.stage === 'entregado' || v.delivered);
     }
   }
 
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 24px;">No se encontraron Ã³rdenes de trabajo activas.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 24px;">No se encontraron órdenes de trabajo.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = list.map(v => {
     const descText = v.otTasks ? v.otTasks.map(t => t.name).join(', ') : 'Sin especificar';
     const isDone = v.stage === 'listo';
-    const stateText = isDone ? 'Finalizada' : 'En Proceso';
-    const badgeClass = isDone ? 'badge-green' : 'badge-red';
+    const isDelivered = v.stage === 'entregado' || v.delivered;
+    
+    let stateText = 'En Proceso';
+    let badgeClass = 'badge-red';
+    
+    if (isDone) {
+      stateText = 'Finalizada';
+      badgeClass = 'badge-green';
+    } else if (isDelivered) {
+      stateText = 'Entregada';
+      badgeClass = 'badge-gray';
+    }
 
     const relTime = getRelativeSpanishTime(v.entryTime);
 
