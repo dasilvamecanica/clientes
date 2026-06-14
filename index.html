@@ -1737,26 +1737,32 @@
             <div class="reception-header-right" style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-grow: 1;">
 
                <!-- Grupo Cotización -->
-               <div id="group-quote-actions" style="display: none; flex-direction: row; align-items: stretch; gap: 0; border-radius: var(--radius-md);">
+               <div id="group-quote-actions" style="display: none; flex-direction: row; align-items: center; gap: 0; border-radius: var(--radius-md); overflow: hidden;">
                  <button class="history-btn" id="btn-download-pdf-quote" onclick="downloadQuotePDF()" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-md) 0 0 var(--radius-md); border-right: none; font-size: 13px; font-weight: 600; margin: 0;" title="Descargar presupuesto en PDF">
                    <i data-lucide="download" style="width: 14px; height: 14px; flex-shrink: 0;"></i> Cotización
                  </button>
-                 <button id="btn-whatsapp-quote" class="history-btn" onclick="sendQuoteWhatsApp()" style="display: flex; align-items: center; justify-content: center; width: 36px; min-width: 36px; padding: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; border: 1.5px solid #25d366; border-left: none; cursor: pointer; transition: all 0.2s; margin: 0;" title="Enviar presupuesto por WhatsApp">
+                 <!-- Separador doble verde+gris -->
+                 <div style="display: flex; flex-direction: row; align-self: stretch; align-items: stretch; width: 3px; flex-shrink: 0; background: linear-gradient(to right, #25d366 50%, rgba(255,255,255,0.12) 50%);"></div>
+                 <button id="btn-whatsapp-quote" class="history-btn" onclick="sendQuoteWhatsApp()" style="display: flex; align-items: center; justify-content: center; width: 36px; min-width: 36px; padding: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; border-left: none; cursor: pointer; transition: all 0.2s; margin: 0; border: 1.5px solid #25d366; border-left: none;" title="Enviar presupuesto por WhatsApp">
                    <img src="whatsapp-logo-variant-svgrepo-com.svg" style="width: 18px; height: 18px; filter: invert(62%) sepia(77%) saturate(401%) hue-rotate(98deg) brightness(95%) contrast(100%);" alt="WhatsApp">
                  </button>
                </div>
 
                <!-- Certificado de Entrega -->
-               <button class="history-btn" id="btn-download-pdf-delivery" onclick="downloadDeliveryPDF()" disabled style="display: none; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; opacity: 0.4; cursor: not-allowed; pointer-events: none;" title="El vehículo debe estar en la sección 'Listo' para descargar el certificado">
-                 <i data-lucide="award" style="width: 14px; height: 14px;"></i> Certificado
-               </button>
-               <button class="history-btn" id="btn-whatsapp-delivery" onclick="sendDeliveryWhatsApp()" disabled style="display: none; align-items: center; justify-content: center; width: 36px; min-width: 36px; padding: 0; border-radius: var(--radius-md); border: 1.5px solid #25d366; opacity: 0.4; cursor: not-allowed; pointer-events: none; transition: all 0.2s;" title="El vehículo debe estar en la sección 'Listo' para enviar el certificado por WhatsApp">
-                 <img src="whatsapp-logo-variant-svgrepo-com.svg" style="width: 18px; height: 18px; filter: invert(62%) sepia(77%) saturate(401%) hue-rotate(98deg) brightness(95%) contrast(100%);" alt="WhatsApp">
-               </button>
+               <div id="group-certificate-actions" style="display: none; flex-direction: row; align-items: center; gap: 0; border-radius: var(--radius-md); overflow: hidden;">
+                 <button class="history-btn" id="btn-download-pdf-delivery" onclick="downloadDeliveryPDF()" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-md) 0 0 var(--radius-md); border-right: none; font-size: 13px; font-weight: 600; margin: 0;" title="Descargar certificado de entrega en PDF">
+                   <i data-lucide="award" style="width: 14px; height: 14px;"></i> Certificado
+                 </button>
+                 <!-- Separador doble verde+gris -->
+                 <div style="display: flex; flex-direction: row; align-self: stretch; align-items: stretch; width: 3px; flex-shrink: 0; background: linear-gradient(to right, #25d366 50%, rgba(255,255,255,0.12) 50%);"></div>
+                 <button class="history-btn" id="btn-whatsapp-delivery" onclick="sendDeliveryWhatsApp()" style="display: flex; align-items: center; justify-content: center; width: 36px; min-width: 36px; padding: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; border: 1.5px solid #25d366; border-left: none; cursor: pointer; transition: all 0.2s; margin: 0;" title="Enviar certificado por WhatsApp">
+                   <img src="whatsapp-logo-variant-svgrepo-com.svg" style="width: 18px; height: 18px; filter: invert(62%) sepia(77%) saturate(401%) hue-rotate(98deg) brightness(95%) contrast(100%);" alt="WhatsApp">
+                 </button>
+               </div>
 
                <!-- Grupo Factura -->
-               <div id="group-invoice-actions" style="display: none; flex-direction: row; align-items: stretch; gap: 0; position: relative; border-radius: var(--radius-md);">
-                 <div style="position: relative;">
+               <div id="group-invoice-actions" style="display: none; flex-direction: row; align-items: center; gap: 0; position: relative; border-radius: var(--radius-md); overflow: visible;">
+                 <div style="position: relative; display: flex; align-items: stretch;">
                    <button class="history-btn" onclick="toggleInvoicePdfDropdown(event)" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-md) 0 0 var(--radius-md); border-right: none; font-size: 13px; font-weight: 600; margin: 0;">
                      <i data-lucide="receipt" style="width: 14px; height: 14px; flex-shrink: 0;"></i> Factura <i data-lucide="chevron-down" style="width: 11px; height: 11px; margin-left: 2px;"></i>
                    </button>
@@ -1766,7 +1772,9 @@
                      <a onclick="downloadTaxInvoicePDF('C', event)" style="display: flex; align-items: center; gap: 6px;"><i data-lucide="download" style="width: 12px;"></i> Descargar Factura C</a>
                    </div>
                  </div>
-                 <div style="position: relative;">
+                 <!-- Separador doble verde+gris -->
+                 <div style="align-self: stretch; width: 3px; flex-shrink: 0; background: linear-gradient(to right, #25d366 50%, rgba(255,255,255,0.12) 50%);"></div>
+                 <div style="position: relative; display: flex; align-items: stretch;">
                    <button class="history-btn" onclick="toggleInvoiceWaDropdown(event)" style="display: flex; align-items: center; justify-content: center; width: 36px; min-width: 36px; padding: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; border: 1.5px solid #25d366; border-left: none; cursor: pointer; transition: all 0.2s; margin: 0;" title="Enviar factura por WhatsApp">
                      <img src="whatsapp-logo-variant-svgrepo-com.svg" style="width: 18px; height: 18px; filter: invert(62%) sepia(77%) saturate(401%) hue-rotate(98deg) brightness(95%) contrast(100%);" alt="WhatsApp">
                    </button>
@@ -3557,7 +3565,7 @@
   <!-- Cliente de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=5.0"></script>
+  <script src="app.js?v=5.2"></script>
 </body>
 </html>
 <!-- Build trigger commit -->

@@ -68,6 +68,16 @@ async function syncWithSupabase(tableName, data) {
       if (data.length === 0) return;
       const mappedData = data.map(item => {
         if (tableName === 'taller_vehicles') {
+          // Prepare services array with metadata
+          const servicesWithMeta = [...(item.services || [])];
+          const metaObj = {
+            otTasks: item.otTasks || [],
+            ownerHistory: item.ownerHistory || [],
+            deliveryDate: item.deliveryDate || '',
+            deliveryNotes: item.deliveryNotes || ''
+          };
+          servicesWithMeta.push('__METADATA__:' + JSON.stringify(metaObj));
+
           return {
             id: item.id,
             plate: item.plate,
@@ -86,7 +96,7 @@ async function syncWithSupabase(tableName, data) {
             delivered: item.delivered || false,
             kilometers: item.kilometers,
             fuel_level: item.fuelLevel,
-            services: item.services || [],
+            services: servicesWithMeta,
             has_details: item.hasDetails || false,
             details_notes: item.detailsNotes,
             quote_services: item.quoteServices || [],
@@ -96,6 +106,24 @@ async function syncWithSupabase(tableName, data) {
             quote_notes: item.quoteNotes,
             quote_send_email: item.quoteSendEmail || false,
             quote_completed: item.quoteCompleted || false
+          };
+        }
+        if (tableName === 'taller_clients') {
+          return {
+            id: item.id,
+            name: item.name,
+            phone: item.phone,
+            email: item.email,
+            created_at: item.createdAt || item.created_at
+          };
+        }
+        if (tableName === 'taller_reminders') {
+          return {
+            id: item.id,
+            date: item.date,
+            title: item.title,
+            description: item.description,
+            created_at: item.createdAt || item.created_at
           };
         }
         return { ...item };
@@ -205,28 +233,40 @@ async function loadStateFromSupabase() {
       loadWorkshopConfig();
     }
     const { data: clientData, error: clientError } = await supabaseClient.from('taller_clients').select('*');
-    if (!clientError && clientData && clientData.length > 0) {
-      clients = clientData;
+    if (!clientError && clientData) {
+      clients = clientData.map(c => ({
+        id: c.id,
+        name: c.name,
+        phone: c.phone,
+        email: c.email,
+        createdAt: c.created_at || c.createdAt
+      }));
       localStorage.setItem('taller_clients', JSON.stringify(clients));
     }
     const { data: serviceData, error: serviceError } = await supabaseClient.from('taller_services').select('*');
-    if (!serviceError && serviceData && serviceData.length > 0) {
+    if (!serviceError && serviceData) {
       servicesCatalog = serviceData;
       localStorage.setItem('taller_services', JSON.stringify(servicesCatalog));
     }
     const { data: partData, error: partError } = await supabaseClient.from('taller_parts').select('*');
-    if (!partError && partData && partData.length > 0) {
+    if (!partError && partData) {
       partsCatalog = partData;
       localStorage.setItem('taller_parts', JSON.stringify(partsCatalog));
     }
     const { data: teamData, error: teamError } = await supabaseClient.from('taller_team').select('*');
-    if (!teamError && teamData && teamData.length > 0) {
+    if (!teamError && teamData) {
       teamMembers = teamData;
       localStorage.setItem('taller_team', JSON.stringify(teamMembers));
     }
     const { data: reminderData, error: reminderError } = await supabaseClient.from('taller_reminders').select('*');
     if (!reminderError && reminderData) {
-      reminders = reminderData;
+      reminders = reminderData.map(r => ({
+        id: r.id,
+        date: r.date,
+        title: r.title,
+        description: r.description,
+        createdAt: r.created_at || r.createdAt
+      }));
       localStorage.setItem('taller_reminders', JSON.stringify(reminders));
     }
     const { data: regData, error: regError } = await supabaseClient.from('taller_vehicle_registry').select('*').eq('id', 'vehicle_registry');
@@ -240,35 +280,65 @@ async function loadStateFromSupabase() {
     }
     const { data: vehData, error: vehError } = await supabaseClient.from('taller_vehicles').select('*');
     if (!vehError && vehData) {
-      vehicles = vehData.map(item => ({
-        id: item.id,
-        plate: item.plate,
-        brand: item.brand,
-        model: item.model,
-        year: item.year,
-        color: item.color,
-        motor: item.motor,
-        client: item.client,
-        clientPhone: item.client_phone,
-        clientEmail: item.client_email,
-        stage: item.stage,
-        value: Number(item.value),
-        entryDate: item.entry_date,
-        entryTime: Number(item.entry_time),
-        delivered: item.delivered || false,
-        kilometers: Number(item.kilometers),
-        fuelLevel: item.fuel_level,
-        services: item.services || [],
-        hasDetails: item.has_details || false,
-        detailsNotes: item.details_notes,
-        quoteServices: item.quote_services || [],
-        quoteParts: item.quote_parts || [],
-        discountPercent: Number(item.discount_percent) || 0,
-        vatInclusive: item.vat_inclusive !== false,
-        quoteNotes: item.quote_notes,
-        quoteSendEmail: item.quote_send_email || false,
-        quoteCompleted: item.quote_completed || false
-      }));
+      vehicles = vehData.map(item => {
+        let otTasks = [];
+        let ownerHistory = [];
+        let deliveryDate = '';
+        let deliveryNotes = '';
+        let services = [];
+
+        if (Array.isArray(item.services)) {
+          services = item.services.filter(s => {
+            if (typeof s === 'string' && s.startsWith('__METADATA__:')) {
+              try {
+                const meta = JSON.parse(s.substring('__METADATA__:'.length));
+                if (meta.otTasks) otTasks = meta.otTasks;
+                if (meta.ownerHistory) ownerHistory = meta.ownerHistory;
+                if (meta.deliveryDate) deliveryDate = meta.deliveryDate;
+                if (meta.deliveryNotes) deliveryNotes = meta.deliveryNotes;
+              } catch (e) {
+                console.error("Error parsing vehicle metadata:", e);
+              }
+              return false; // filter out from services
+            }
+            return true;
+          });
+        }
+
+        return {
+          id: item.id,
+          plate: item.plate,
+          brand: item.brand,
+          model: item.model,
+          year: item.year,
+          color: item.color,
+          motor: item.motor,
+          client: item.client,
+          clientPhone: item.client_phone,
+          clientEmail: item.client_email,
+          stage: item.stage,
+          value: Number(item.value),
+          entryDate: item.entry_date,
+          entryTime: Number(item.entry_time),
+          delivered: item.delivered || false,
+          kilometers: Number(item.kilometers),
+          fuelLevel: item.fuel_level,
+          services: services,
+          hasDetails: item.has_details || false,
+          detailsNotes: item.details_notes,
+          quoteServices: item.quote_services || [],
+          quoteParts: item.quote_parts || [],
+          discountPercent: Number(item.discount_percent) || 0,
+          vatInclusive: item.vat_inclusive !== false,
+          quoteNotes: item.quote_notes,
+          quoteSendEmail: item.quote_send_email || false,
+          quoteCompleted: item.quote_completed || false,
+          otTasks: otTasks,
+          ownerHistory: ownerHistory,
+          deliveryDate: deliveryDate,
+          deliveryNotes: deliveryNotes
+        };
+      });
       localStorage.setItem('taller_vehicles', JSON.stringify(vehicles));
     }
     console.log("AutoTech: Datos de Supabase sincronizados localmente.");
@@ -477,15 +547,14 @@ window.saveWorkshopConfig = function() {
 // Inicialización de la aplicación
 document.addEventListener('DOMContentLoaded', () => {
   // --- RESCATE DE BASE DE DATOS ROTA ---
-  // Si alguna clave crítica es un array vacío (dejado por versiones previas de clearDatabase),
-  // la eliminamos para que loadState pueda reinicializar con los datos por defecto.
+  // Si alguna clave crítica no es un array válido, la removemos.
   const keysToCheck = ['taller_vehicles', 'taller_clients', 'taller_services', 'taller_parts', 'taller_team'];
   keysToCheck.forEach(key => {
     try {
       const val = localStorage.getItem(key);
       if (val !== null) {
         const parsed = JSON.parse(val);
-        if (!Array.isArray(parsed) || parsed.length === 0) {
+        if (!Array.isArray(parsed)) {
           localStorage.removeItem(key);
         }
       }
@@ -1274,129 +1343,150 @@ function updateDarkModeIcon(isDark) {
 
 // Carga y almacenamiento del Estado mediante LocalStorage
 function loadState() {
+  const isDemo = localStorage.getItem('taller_demo_mode_enabled') === 'true';
+
   // 1. Clientes
   try {
     const savedClients = localStorage.getItem('taller_clients');
     const parsed = savedClients ? JSON.parse(savedClients) : null;
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    if (Array.isArray(parsed)) {
       clients = parsed;
     } else {
       throw new Error('empty');
     }
   } catch(e) {
-    clients = [
-      { id: 'c-1', name: 'Enzo Da Silva', phone: '+5492235041116', email: 'enzo@gmail.com', createdAt: '2026-05-23' },
-      { id: 'c-2', name: 'Silva', phone: '+549987654321', email: 'silva@email.com', createdAt: '2026-05-24' },
-      { id: 'c-3', name: 'Juan García', phone: '+54911223344', email: 'garcia@email.com', createdAt: '2026-05-25' }
-    ];
-    saveClients();
+    if (isDemo) {
+      clients = [
+        { id: 'c-1', name: 'Enzo Da Silva', phone: '+5492235041116', email: 'enzo@gmail.com', createdAt: '2026-05-23' },
+        { id: 'c-2', name: 'Silva', phone: '+549987654321', email: 'silva@email.com', createdAt: '2026-05-24' },
+        { id: 'c-3', name: 'Juan García', phone: '+54911223344', email: 'garcia@email.com', createdAt: '2026-05-25' }
+      ];
+      saveClients();
+    } else {
+      clients = [];
+    }
   }
 
-  // 2. VehÃ­culos
+  // 2. Vehículos
   try {
     const savedVehicles = localStorage.getItem('taller_vehicles');
     const parsed = savedVehicles ? JSON.parse(savedVehicles) : null;
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    if (Array.isArray(parsed)) {
       vehicles = parsed;
     } else {
       throw new Error('empty');
     }
   } catch(e) {
-    // Datos de demostraciÃ³n idÃ©nticos a los de las capturas (Volkswagen Gol GLZ665)
-    const mockEntryTime = Date.now() - (2 * 60 + 27) * 1000;
-    vehicles = [
-      {
-        id: 'mock-vehicle-gol-2026',
-        plate: 'GLZ665',
-        brand: 'Volkswagen',
-        model: 'Gol',
-        year: '2026',
-        color: 'Gris Plata',
-        motor: '1.6 8V',
-        client: 'Enzo Da Silva',
-        clientPhone: '+5492235041116',
-        clientEmail: 'enzo@gmail.com',
-        stage: 'cotizacion',
-        value: 30018.45,
-        entryDate: '2026-05-23',
-        entryTime: mockEntryTime,
-        delivered: false,
-        kilometers: 45000,
-        fuelLevel: '1/2',
-        services: ['Cambio de aceite y filtro', 'InspecciÃ³n de frenos delanteros', 'AlineaciÃ³n y balanceo'],
-        hasDetails: true,
-        detailsNotes: 'PequeÃ±o rayÃ³n en paragolpes trasero',
-        quoteServices: [
-          { name: 'cambio de aceite', value: 30000 }
-        ],
-        quoteParts: [
-          { name: 'Filtro de Aceite', value: 18.45 }
-        ],
-        discountPercent: 0,
-        vatInclusive: true,
-        quoteNotes: 'Presupuesto preliminar para service completo de mantenimiento periÃ³dico.',
-        quoteSendEmail: false,
-        quoteCompleted: true
-      }
-    ];
-    saveState();
+    if (isDemo) {
+      const mockEntryTime = Date.now() - (2 * 60 + 27) * 1000;
+      vehicles = [
+        {
+          id: 'mock-vehicle-gol-2026',
+          plate: 'GLZ665',
+          brand: 'Volkswagen',
+          model: 'Gol',
+          year: '2026',
+          color: 'Gris Plata',
+          motor: '1.6 8V',
+          client: 'Enzo Da Silva',
+          clientPhone: '+5492235041116',
+          clientEmail: 'enzo@gmail.com',
+          stage: 'cotizacion',
+          value: 30018.45,
+          entryDate: '2026-05-23',
+          entryTime: mockEntryTime,
+          delivered: false,
+          kilometers: 45000,
+          fuelLevel: '1/2',
+          services: ['Cambio de aceite y filtro', 'Inspección de frenos delanteros', 'Alineación y balanceo'],
+          hasDetails: true,
+          detailsNotes: 'Pequeño rayón en paragolpes trasero',
+          quoteServices: [
+            { name: 'cambio de aceite', value: 30000 }
+          ],
+          quoteParts: [
+            { name: 'Filtro de Aceite', value: 18.45 }
+          ],
+          discountPercent: 0,
+          vatInclusive: true,
+          quoteNotes: 'Presupuesto preliminar para service completo de mantenimiento periódico.',
+          quoteSendEmail: false,
+          quoteCompleted: true
+        }
+      ];
+      saveState();
+    } else {
+      vehicles = [];
+    }
   }
 
-  // 3. CatÃ¡logo de Servicios
+  // 3. Catálogo de Servicios
   try {
     const savedServices = localStorage.getItem('taller_services');
     const parsed = savedServices ? JSON.parse(savedServices) : null;
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    if (Array.isArray(parsed)) {
       servicesCatalog = parsed;
     } else {
       throw new Error('empty');
     }
   } catch(e) {
-    servicesCatalog = [
-      { id: 's-1', name: 'Cambio de aceite y filtro', description: 'Reemplazo de aceite sintÃ©tico y filtro original homologado.', price: 30000, date: '2026-05-23' },
-      { id: 's-2', name: 'AlineaciÃ³n y balanceo', description: 'AlineaciÃ³n computarizada del tren delantero y balanceo de 4 ruedas.', price: 25000, date: '2026-05-23' },
-      { id: 's-3', name: 'InspecciÃ³n de frenos', description: 'Control de desgaste de pastillas, rectificaciÃ³n de discos y lÃ­quido.', price: 18000, date: '2026-05-23' },
-      { id: 's-4', name: 'DiagnÃ³stico por scanner', description: 'Lectura completa de cÃ³digos de falla del motor y sensores de a bordo.', price: 15000, date: '2026-05-24' }
-    ];
-    saveServices();
+    if (isDemo) {
+      servicesCatalog = [
+        { id: 's-1', name: 'Cambio de aceite y filtro', description: 'Reemplazo de aceite sintético y filtro original homologado.', price: 30000, date: '2026-05-23' },
+        { id: 's-2', name: 'Alineación y balanceo', description: 'Alineación computarizada del tren delantero y balanceo de 4 ruedas.', price: 25000, date: '2026-05-23' },
+        { id: 's-3', name: 'Inspección de frenos', description: 'Control de desgaste de pastillas, rectificación de discos y líquido.', price: 18000, date: '2026-05-23' },
+        { id: 's-4', name: 'Diagnóstico por scanner', description: 'Lectura completa de códigos de falla del motor y sensores de a bordo.', price: 15000, date: '2026-05-24' }
+      ];
+      saveServices();
+    } else {
+      servicesCatalog = [];
+    }
   }
 
-  // 4. CatÃ¡logo de Repuestos
+  // 4. Catálogo de Repuestos
   try {
     const savedParts = localStorage.getItem('taller_parts');
     const parsed = savedParts ? JSON.parse(savedParts) : null;
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    if (Array.isArray(parsed)) {
       partsCatalog = parsed;
     } else {
       throw new Error('empty');
     }
   } catch(e) {
-    partsCatalog = [
-      { id: 'p-1', name: 'Aceite SintÃ©tico 5W30 (4L)', brand: 'Universal', model: 'Multimarca', year: 'â€”', description: 'Aceite sintÃ©tico premium multigrado para alto rendimiento.', price: 35000, date: '2026-05-23' },
-      { id: 'p-2', name: 'Filtro de Aceite original', brand: 'Universal', model: 'Multimarca', year: 'â€”', description: 'Filtro original homologado de alta eficiencia y filtrado.', price: 12000, date: '2026-05-23' },
-      { id: 'p-3', name: 'Pastillas de Freno delanteras', brand: 'Universal', model: 'Multimarca', year: 'â€”', description: 'Kit de pastillas originales de alta duraciÃ³n y adherencia.', price: 45000, date: '2026-05-23' },
-      { id: 'p-4', name: 'BujÃ­a de Platino premium', brand: 'Universal', model: 'Multimarca', year: 'â€”', description: 'BujÃ­a de alta conductividad tÃ©rmica y elÃ©ctrica.', price: 8000, date: '2026-05-24' },
-      { id: 'p-5', name: 'Kit de DistribuciÃ³n premium', brand: 'Universal', model: 'Multimarca', year: 'â€”', description: 'Correa, tensores y bomba de agua original.', price: 120000, date: '2026-05-24' }
-    ];
-    saveParts();
+    if (isDemo) {
+      partsCatalog = [
+        { id: 'p-1', name: 'Aceite Sintético 5W30 (4L)', brand: 'Universal', model: 'Multimarca', year: '—', description: 'Aceite sintético premium multigrado para alto rendimiento.', price: 35000, date: '2026-05-23' },
+        { id: 'p-2', name: 'Filtro de Aceite original', brand: 'Universal', model: 'Multimarca', year: '—', description: 'Filtro original homologado de alta eficiencia y filtrado.', price: 12000, date: '2026-05-23' },
+        { id: 'p-3', name: 'Pastillas de Freno delanteras', brand: 'Universal', model: 'Multimarca', year: '—', description: 'Kit de pastillas originales de alta duración y adherencia.', price: 45000, date: '2026-05-23' },
+        { id: 'p-4', name: 'Bujía de Platino premium', brand: 'Universal', model: 'Multimarca', year: '—', description: 'Bujía de alta conductividad térmica y eléctrica.', price: 8000, date: '2026-05-24' },
+        { id: 'p-5', name: 'Kit de Distribución premium', brand: 'Universal', model: 'Multimarca', year: '—', description: 'Correa, tensores y bomba de agua original.', price: 120000, date: '2026-05-24' }
+      ];
+      saveParts();
+    } else {
+      partsCatalog = [];
+    }
   }
 
   // 5. Equipo del Taller
   try {
     const savedTeam = localStorage.getItem('taller_team');
     const parsed = savedTeam ? JSON.parse(savedTeam) : null;
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    if (Array.isArray(parsed)) {
       teamMembers = parsed;
     } else {
       throw new Error('empty');
     }
   } catch(e) {
-    teamMembers = [
-      { id: 't-1', name: 'Laura Gómez', phone: '+549987654321', email: 'laura@taller.com', role: 'Administrador', specialty: 'Gestión General', salary: 1200000, active: true },
-      { id: 't-2', name: 'Carlos Pérez', phone: '+549112345678', email: 'carlos@taller.com', role: 'Mecánico', specialty: 'Motores y Embragues', salary: 850000, active: true },
-      { id: 't-3', name: 'Andrés Silva', phone: '+54911223344', email: 'andres@taller.com', role: 'Vendedor', specialty: 'Atención al Cliente', salary: 700000, active: true }
-    ];
-    saveTeam();
+    if (isDemo) {
+      teamMembers = [
+        { id: 't-1', name: 'Laura Gómez', phone: '+549987654321', email: 'laura@taller.com', role: 'Administrador', specialty: 'Gestión General', salary: 1200000, active: true },
+        { id: 't-2', name: 'Carlos Pérez', phone: '+549112345678', email: 'carlos@taller.com', role: 'Mecánico', specialty: 'Motores y Embragues', salary: 850000, active: true },
+        { id: 't-3', name: 'Andrés Silva', phone: '+54911223344', email: 'andres@taller.com', role: 'Vendedor', specialty: 'Atención al Cliente', salary: 700000, active: true }
+      ];
+      saveTeam();
+    } else {
+      teamMembers = [];
+    }
   }
 
   // 6. Recordatorios
@@ -1408,7 +1498,7 @@ function loadState() {
     reminders = [];
   }
 
-  // 7. Registro de VehÃ­culos (Marcas, Modelos, Motores)
+  // 7. Registro de Vehículos (Marcas, Modelos, Motores)
   loadVehicleRegistry();
 }
 
@@ -3350,15 +3440,18 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
   // --- Habilitación / Inhabilitación del Certificado de Entrega ---
   const deliveryBtn = document.getElementById('btn-download-pdf-delivery');
   const waDeliveryBtn = document.getElementById('btn-whatsapp-delivery');
+  const groupCertificate = document.getElementById('group-certificate-actions');
   if (deliveryBtn) {
     const hasQuoteItems = (vehicle.quoteServices && vehicle.quoteServices.length > 0) || (vehicle.quoteParts && vehicle.quoteParts.length > 0);
     const isQuoteStageOrLater = ['cotizacion', 'reparacion', 'listo', 'entregado'].includes(vehicle.stage);
     const shouldShow = hasQuoteItems || isQuoteStageOrLater;
     const showCertificate = workshopConfig.expMaster && !!workshopConfig.expHideCertificate;
     if (showCertificate) {
+      if (groupCertificate) groupCertificate.style.display = shouldShow ? 'flex' : 'none';
       deliveryBtn.style.display = shouldShow ? 'flex' : 'none';
       if (waDeliveryBtn) waDeliveryBtn.style.display = shouldShow ? 'flex' : 'none';
     } else {
+      if (groupCertificate) groupCertificate.style.setProperty('display', 'none', 'important');
       deliveryBtn.style.setProperty('display', 'none', 'important');
       if (waDeliveryBtn) waDeliveryBtn.style.setProperty('display', 'none', 'important');
     }
