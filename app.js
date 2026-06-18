@@ -1,8 +1,8 @@
 /* 
 ========================================================================
-   LÃ“GICA PRINCIPAL DEL PANEL OPERATIVO DE TALLER MECÃNICO (app.js)
-   CaracterÃ­sticas: Drag & Drop, Persistencia, Temporizadores en Vivo,
-   Ficha TÃ©cnica de RecepciÃ³n (Foto 2), Modal RecepciÃ³n (Foto 1).
+   LÃ“GICA PRINCIPAL DEL PANEL OPERATIVO DE TALLER MECÁNICO (app.js)
+   Características: Drag & Drop, Persistencia, Temporizadores en Vivo,
+   Ficha Técnica de Recepción (Foto 2), Modal Recepción (Foto 1).
 ========================================================================
 */
 
@@ -18,7 +18,7 @@ let ccFilterPill = 'Todos';
 let currentView = 'tablero'; // 'tablero' | 'calendario' | 'recepcion-detalle'
 let currentCalendarDate = new Date(2026, 4, 24); // Mayo 2026
 let activeContextVehicleId = null;
-let activeReceptionVehicleId = null; // VehÃ­culo siendo editado en Ficha Foto 2
+let activeReceptionVehicleId = null; // Vehículo siendo editado en Ficha Foto 2
 let activeReceptionServices = []; // Lista temporal de servicios para Ficha Foto 2
 let isRecordingVoice = false;
 
@@ -29,20 +29,20 @@ let vehicleRegistry = {
   engines: []
 };
 
-// ConfiguraciÃ³n global del Perfil de Taller
+// Configuración global del Perfil de Taller
 let workshopConfig = {
-  name: 'sdfds',
-  phone1: '+5492235041116',
-  phone2: '+5492235041116',
-  address: 'Dirección de Ejemplo 123',
-  rut: '12345678-9',
-  cuit: '30-12345678-9',
+  name: '',
+  phone1: '',
+  phone2: '',
+  address: '',
+  rut: '',
+  cuit: '',
   ivaCondition: 'Responsable Inscripto',
-  iibb: '901-123456-7',
-  inicioAct: '2018-03-01',
-  pv: '0005',
+  iibb: '',
+  inicioAct: '',
+  pv: '0001',
   waMethod: 'wa_link_self',
-  waPhoneId: '1179474771896317',
+  waPhoneId: '',
   waMsgQuote: 'Hola! Le envío el presupuesto de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}',
   waMsgInvoice: 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}',
   expMaster: false,
@@ -625,30 +625,30 @@ window.saveWorkshopConfig = function() {
   });
 
   workshopConfig = {
-    name: nameVal || 'sdfds',
+    name: nameVal || workshopConfig.name || '',
     categoryMultipliers: multipliers,
-    phone1: phone1Val || '+5492235041116',
-    phone2: phone2Val || '+5492235041116',
-    address: addressVal || 'Dirección de Ejemplo 123',
-    rut: rutVal || '12345678-9',
-    cuit: cuitVal || '30-12345678-9',
-    ivaCondition: ivaVal || 'Responsable Inscripto',
-    iibb: iibbVal || '901-123456-7',
-    inicioAct: inicioVal || '2018-03-01',
-    pv: pvVal || '0005',
-    waMethod: waMethodVal,
-    waToken: waTokenVal,
-    waPhoneId: waPhoneIdVal,
-    waMsgType: waMsgTypeVal,
-    waTemplateName: waTemplateNameVal,
-    waTemplateLang: waTemplateLangVal,
-    waBaseUrl: waBaseUrlVal,
-    waMsgQuote: waMsgQuoteVal || 'Hola! Le envío el presupuesto de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}',
-    waMsgInvoice: waMsgInvoiceVal || 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}',
-    expMaster: document.getElementById('config-exp-master') ? document.getElementById('config-exp-master').checked : false,
-    expHideCertificate: document.getElementById('config-exp-hide-certificate') ? document.getElementById('config-exp-hide-certificate').checked : false,
-    expHideParts: document.getElementById('config-exp-hide-parts') ? document.getElementById('config-exp-hide-parts').checked : false,
-    expHideExcel: document.getElementById('config-exp-hide-excel') ? document.getElementById('config-exp-hide-excel').checked : false
+    phone1: phone1Val || workshopConfig.phone1 || '',
+    phone2: phone2Val || workshopConfig.phone2 || '',
+    address: addressVal || workshopConfig.address || '',
+    rut: rutVal || workshopConfig.rut || '',
+    cuit: cuitVal || workshopConfig.cuit || '',
+    ivaCondition: ivaVal || workshopConfig.ivaCondition || 'Responsable Inscripto',
+    iibb: iibbVal || workshopConfig.iibb || '',
+    inicioAct: inicioVal || workshopConfig.inicioAct || '',
+    pv: pvVal || workshopConfig.pv || '0001',
+    waMethod: waMethodVal || workshopConfig.waMethod || 'wa_link_self',
+    waToken: waTokenVal || workshopConfig.waToken || '',
+    waPhoneId: waPhoneIdVal || workshopConfig.waPhoneId || '',
+    waMsgType: waMsgTypeVal || workshopConfig.waMsgType || 'direct',
+    waTemplateName: waTemplateNameVal || workshopConfig.waTemplateName || '',
+    waTemplateLang: waTemplateLangVal || workshopConfig.waTemplateLang || 'es',
+    waBaseUrl: waBaseUrlVal || workshopConfig.waBaseUrl || 'http://localhost:8000',
+    waMsgQuote: waMsgQuoteVal || workshopConfig.waMsgQuote || 'Hola! Le envío el presupuesto de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}',
+    waMsgInvoice: waMsgInvoiceVal || workshopConfig.waMsgInvoice || 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}',
+    expMaster: document.getElementById('config-exp-master') ? document.getElementById('config-exp-master').checked : (workshopConfig.expMaster || false),
+    expHideCertificate: document.getElementById('config-exp-hide-certificate') ? document.getElementById('config-exp-hide-certificate').checked : (workshopConfig.expHideCertificate || false),
+    expHideParts: document.getElementById('config-exp-hide-parts') ? document.getElementById('config-exp-hide-parts').checked : (workshopConfig.expHideParts || false),
+    expHideExcel: document.getElementById('config-exp-hide-excel') ? document.getElementById('config-exp-hide-excel').checked : (workshopConfig.expHideExcel || false)
   };
   
   localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
@@ -1438,7 +1438,7 @@ window.toggleDarkMode = function() {
 };
 
 window.clearDatabase = function() {
-  if (confirm('âš ï¸  Â¡ATENCIÃ“N! Â¿EstÃ¡ seguro de que desea eliminar toda la base de datos del taller?\n\nEsto borrarÃ¡ todos los vehÃ­culos, citas, clientes y catÃ¡logos de forma permanente. Esta acciÃ³n no se puede deshacer.')) {
+  if (confirm('âš ï¸  ¡ATENCIÃ“N! ¿Está seguro de que desea eliminar toda la base de datos del taller?\n\nEsto borrará todos los vehículos, citas, clientes y catálogos de forma permanente. Esta acción no se puede deshacer.')) {
     localStorage.removeItem('taller_vehicles');
     localStorage.removeItem('taller_clients');
     localStorage.removeItem('taller_services');
@@ -1446,7 +1446,7 @@ window.clearDatabase = function() {
     localStorage.removeItem('taller_team');
     localStorage.removeItem('taller_reminders');
     localStorage.removeItem('taller_vehicle_registry');
-    alert('Base de datos eliminada con Ã©xito. La pÃ¡gina se recargarÃ¡ para aplicar los cambios.');
+    alert('Base de datos eliminada con éxito. La página se recargará para aplicar los cambios.');
     location.reload();
   }
 };
@@ -2246,7 +2246,7 @@ window.deleteReminder = function() {
 // --- 2. GESTORES DE EVENTOS ---
 
 function initEventListeners() {
-  // Cierre de menÃºs contextuales al hacer clic fuera
+  // Cierre de menús contextuales al hacer clic fuera
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('card-context-menu');
     if (menu && !e.target.closest('.card-actions-btn') && !e.target.closest('.dropdown-menu')) {
@@ -2290,7 +2290,7 @@ function initEventListeners() {
     });
   }
 
-  // Autocompletar precio de servicio/repuesto al seleccionar en cotizaciÃ³n
+  // Autocompletar precio de servicio/repuesto al seleccionar en cotización
   const quoteItemName = document.getElementById('add-quote-item-name');
   if (quoteItemName) {
     quoteItemName.addEventListener('input', () => {
@@ -2314,8 +2314,8 @@ function initEventListeners() {
   }
 }
 
-// Intercambiar Vistas (Tablero / Calendario / Ficha RecepciÃ³n / Reportes / Ingresos / Cotizaciones / Agenda)
-// Intercambiar Vistas (Tablero / Calendario / Ficha RecepciÃ³n / Reportes / Ingresos / Cotizaciones / Agenda / Ã“rdenes de Trabajo / Servicios / Equipo / Clientes / Cuentas)
+// Intercambiar Vistas (Tablero / Calendario / Ficha Recepción / Reportes / Ingresos / Cotizaciones / Agenda)
+// Intercambiar Vistas (Tablero / Calendario / Ficha Recepción / Reportes / Ingresos / Cotizaciones / Agenda / Ã“rdenes de Trabajo / Servicios / Equipo / Clientes / Cuentas)
 window.switchView = function(view) {
   if (typeof window.closeMobileSidebarIfOpen === 'function') {
     window.closeMobileSidebarIfOpen();
@@ -2342,7 +2342,7 @@ window.switchView = function(view) {
     if (el) el.style.display = 'none';
   });
 
-  // 2. Limpiar clases activas en los botones de navegaciÃ³n lateral
+  // 2. Limpiar clases activas en los botones de navegación lateral
   const sidebarButtons = [
     'menu-panel', 
     'menu-reportes-main', 
@@ -2618,7 +2618,7 @@ function renderKanban() {
     const listContainer = document.getElementById(`list-${stage}`);
     if (!listContainer) return;
 
-    // Filtrar vehÃ­culos de la etapa actual
+    // Filtrar vehículos de la etapa actual
     let stageVehicles = vehicles.filter(v => v.stage === stage && !v.delivered);
     
     if (searchVal) {
@@ -2631,7 +2631,7 @@ function renderKanban() {
         const brand = v.brand ? v.brand.toLowerCase() : '';
         const model = v.model ? v.model.toLowerCase() : '';
         
-        // Normalizar patentes para bÃºsqueda insensible a espacios, guiones o mayÃºsculas
+        // Normalizar patentes para búsqueda insensible a espacios, guiones o mayúsculas
         const normPlate = plate.replace(/[^a-z0-9]/g, '');
         const normSearch = searchVal.replace(/[^a-z0-9]/g, '');
         
@@ -2648,7 +2648,7 @@ function renderKanban() {
     // Actualizar contadores de columna
     document.getElementById(`count-${stage}`).textContent = stageVehicles.length;
 
-    // Si no hay tarjetas, mostrar estado vacÃ­o (excepto en recepciÃ³n que tiene el botÃ³n dashed)
+    // Si no hay tarjetas, mostrar estado vacío (excepto en recepción que tiene el botón dashed)
     if (stageVehicles.length === 0) {
       if (stage === 'recepcion') {
         listContainer.innerHTML = '';
@@ -2805,7 +2805,7 @@ window.handleDrop = function(e, targetStage) {
   if (vehicleIndex !== -1) {
     vehicles[vehicleIndex].stage = targetStage;
     
-    // Si se mueve a CotizaciÃ³n y no tenÃ­a valor, le asignamos uno simulado para mantener consistencia
+    // Si se mueve a Cotización y no tenía valor, le asignamos uno simulado para mantener consistencia
     if (targetStage === 'cotizacion' && vehicles[vehicleIndex].value === 0) {
       vehicles[vehicleIndex].value = 90000;
     }
@@ -2849,7 +2849,7 @@ function updateAllElapsedTimes() {
   });
 }
 
-// --- 6. CÃLCULO DE MÃ‰TRICAS DEL HEADER ---
+// --- 6. CÁLCULO DE MÃ‰TRICAS DEL HEADER ---
 
 function updateMetrics() {
   const totalIncome = vehicles
@@ -3074,7 +3074,7 @@ window.useTypedName = function(name) {
   if (d) d.style.display = 'none';
 };
 
-// --- 8. AUTOCUMPLEADO DE VEHÃCULO Y REGLAS DE PATENTE ---
+// --- 8. AUTOCUMPLEADO DE VEHÍCULO Y REGLAS DE PATENTE ---
 
 window.autoFormatPlateInput = function(inputEl) {
   let val = inputEl.value.toUpperCase().trim();
@@ -3342,7 +3342,7 @@ window.closeModal = function(modalId) {
   document.getElementById(modalId).classList.remove('open');
 };
 
-// AcciÃ³n: RECEPCIONAR / GUARDAR
+// Acción: RECEPCIONAR / GUARDAR
 window.handleVehicleFormSubmit = function(e) {
   e.preventDefault();
 
@@ -3367,7 +3367,7 @@ window.handleVehicleFormSubmit = function(e) {
 
   // Validar nomenclatura de patentes argentinas
   if (!validatePlateFormat(plateVal)) {
-    const confirmPlate = confirm(`La patente ingresada "${plateVal}" no coincide con los formatos estÃ¡ndar de Argentina:\n- AB 123 CD\n- ABC 123\n- A12 3BCD\n\nÂ¿EstÃ¡s seguro que deseas continuar?`);
+    const confirmPlate = confirm(`La patente ingresada "${plateVal}" no coincide con los formatos estándar de Argentina:\n- AB 123 CD\n- ABC 123\n- A12 3BCD\n\n¿Estás seguro que deseas continuar?`);
     if (!confirmPlate) return;
   }
 
@@ -3888,7 +3888,7 @@ window.openFichaVehiculoFromBanner = function() {
   }
 };
 
-// Renderizar la lista dinÃ¡mica de servicios
+// Renderizar la lista dinámica de servicios
 function renderAddedServicesList() {
   // No-op: services are now edited directly in the textarea
 }
@@ -3896,7 +3896,7 @@ function renderAddedServicesList() {
 window.addServiceToList = function() {};
 window.removeServiceFromList = function() {};
 
-// SimulaciÃ³n de Dictado por Voz (InteracciÃ³n divertida premium para el textarea)
+// Simulación de Dictado por Voz (Interacción divertida premium para el textarea)
 window.toggleVoiceDictation = function() {
   const micBtn = document.getElementById('mic-btn');
   const input = document.getElementById('det-service-description');
@@ -3910,10 +3910,10 @@ window.toggleVoiceDictation = function() {
   input.value = "";
   
   const mockFails = [
-    "El cliente explica que el auto tironea en baja y siente un ruido metÃ¡lico en la rueda delantera izquierda al doblar.",
-    "Cambio de aceite y filtros completo. El cliente tambiÃ©n solicita revisar el aire acondicionado que no enfrÃ­a suficiente.",
-    "PÃ©rdida de lÃ­quido de direcciÃ³n hidrÃ¡ulica y un chirrido constante en la correa de distribuciÃ³n al encender en frÃ­o.",
-    "Realizar afinamiento completo, cambio de bujÃ­as y chequear luz de Check Engine encendida de forma intermitente.",
+    "El cliente explica que el auto tironea en baja y siente un ruido metálico en la rueda delantera izquierda al doblar.",
+    "Cambio de aceite y filtros completo. El cliente también solicita revisar el aire acondicionado que no enfría suficiente.",
+    "Pérdida de líquido de dirección hidráulica y un chirrido constante en la correa de distribución al encender en frío.",
+    "Realizar afinamiento completo, cambio de bujías y chequear luz de Check Engine encendida de forma intermitente.",
     "Revisar pastillas y discos de freno traseros. El cliente nota que el pedal se siente esponjoso al frenar fuerte."
   ];
   
@@ -3932,8 +3932,8 @@ window.toggleVoiceDictation = function() {
         clearInterval(typeInterval);
         isRecordingVoice = false;
         micBtn.classList.remove('recording');
-        input.placeholder = "ExplicaciÃ³n del cliente y problemas del auto";
-        alert("DescripciÃ³n dictada por voz con Ã©xito.");
+        input.placeholder = "Explicación del cliente y problemas del auto";
+        alert("Descripción dictada por voz con éxito.");
       }
     }, 30);
   }, 1000);
@@ -3952,7 +3952,7 @@ window.toggleDetailsArea = function() {
   }
 };
 
-// Confirmar RecepciÃ³n (Boton "Recepcionar VehÃ­culo")
+// Confirmar Recepción (Boton "Recepcionar Vehículo")
 window.confirmReception = function() {
   if (!activeReceptionVehicleId) return;
 
@@ -3964,29 +3964,29 @@ window.confirmReception = function() {
   const detailsToggle = document.getElementById('det-details-toggle').checked;
   const detailsNotes = document.getElementById('det-details-notes').value.trim();
 
-  // Guardar datos tÃ©cnicos en el estado
+  // Guardar datos técnicos en el estado
   vehicles[vehicleIndex].kilometers = kmVal;
   vehicles[vehicleIndex].fuelLevel = fuelVal;
   vehicles[vehicleIndex].services = document.getElementById('det-service-description').value.trim();
   vehicles[vehicleIndex].hasDetails = detailsToggle;
   vehicles[vehicleIndex].detailsNotes = detailsToggle ? detailsNotes : '';
   
-  // Transicionar etapa a "CotizaciÃ³n" (DESACTIVADO: Se mantiene en recepciÃ³n para mover manualmente)
+  // Transicionar etapa a "Cotización" (DESACTIVADO: Se mantiene en recepción para mover manualmente)
   // vehicles[vehicleIndex].stage = 'cotizacion';
   
-  // Asignar monto cotizado inicial para simulaciÃ³n ($90.000)
+  // Asignar monto cotizado inicial para simulación ($90.000)
   if (vehicles[vehicleIndex].value === 0) {
     vehicles[vehicleIndex].value = 90000;
   }
 
   saveState();
   
-  // Salir de recepciÃ³n y volver al tablero
+  // Salir de recepción y volver al tablero
   exitDetailedReception();
   
-  // NotificaciÃ³n de Ã©xito
+  // Notificación de éxito
   const name = `${vehicles[vehicleIndex].brand} ${vehicles[vehicleIndex].model}`;
-  alert(`VehÃ­culo "${name}" recepcionado con Ã©xito.\nKilometraje: ${kmVal} km.\nNivel Combustible: ${fuelVal}.`);
+  alert(`Vehículo "${name}" recepcionado con éxito.\nKilometraje: ${kmVal} km.\nNivel Combustible: ${fuelVal}.`);
 };
 
 // --- 11. OTRAS ACCIONES DE TARJETAS (ELIMINAR / ENTREGAR) ---
@@ -4006,7 +4006,7 @@ window.openContextMenu = function(e, vehicleId, stage) {
     deliverBtn.style.display = 'none';
   }
   
-  // Mostrar "Ver cotizaciÃ³n" en los 3 puntos
+  // Mostrar "Ver cotización" en los 3 puntos
   if (viewQuoteBtn) {
     const vehicle = vehicles.find(v => v.id === vehicleId);
     if (vehicle && (vehicle.quoteCompleted || vehicle.stage === 'cotizacion' || vehicle.stage === 'reparacion' || vehicle.stage === 'listo')) {
@@ -4030,16 +4030,16 @@ window.handleContextEdit = function() {
   document.getElementById('card-context-menu').classList.remove('show');
 };
 
-// Carga para ediciÃ³n desde el menÃº contextual
+// Carga para edición desde el menú contextual
 window.openEditVehicleModal = function(vehicleId) {
   const vehicle = vehicles.find(v => v.id === vehicleId);
   if (!vehicle) return;
 
-  // Abrir en Ficha tÃ©cnica si estÃ¡ en recepciÃ³n, sino en modal regular
+  // Abrir en Ficha técnica si está en recepción, sino en modal regular
   if (vehicle.stage === 'recepcion') {
     openDetailedReception(vehicleId);
   } else {
-    // Si no estÃ¡ en recepciÃ³n, editamos su cotizaciÃ³n con modal extendido
+    // Si no está en recepción, editamos su cotización con modal extendido
     openDetailedReception(vehicleId);
   }
   
@@ -4137,11 +4137,11 @@ window.openQuoteModal = function(vehicleId) {
       <div>
         <span style="color: var(--text-muted); font-size: 10px; font-weight: 700; text-transform: uppercase;">Cliente</span>
         <strong>${vehicle.client}</strong>
-        <span>VehÃ­culo: ${vehicle.brand} ${vehicle.model}</span>
+        <span>Vehículo: ${vehicle.brand} ${vehicle.model}</span>
         <span>Patente: <strong style="font-family: var(--font-mono);">${vehicle.plate}</strong></span>
       </div>
       <div style="text-align: right;">
-        <span style="color: var(--text-muted); font-size: 10px; font-weight: 700; text-transform: uppercase;">Detalles CotizaciÃ³n</span>
+        <span style="color: var(--text-muted); font-size: 10px; font-weight: 700; text-transform: uppercase;">Detalles Cotización</span>
         <strong>Ingreso #${vehicle.id.substring(vehicle.id.length - 4, vehicle.id.length) === '2026' ? '1' : vehicle.id.substring(vehicle.id.length - 4, vehicle.id.length)}</strong>
         <span>Fecha de Ingreso: ${vehicle.entryDate}</span>
         <span>Estado: <span style="font-weight: 700; text-transform: uppercase; color: ${vehicle.stage === 'recepcion' ? 'var(--color-recepcion)' : vehicle.stage === 'cotizacion' ? 'var(--color-cotizacion)' : vehicle.stage === 'reparacion' ? 'var(--color-reparacion)' : vehicle.stage === 'listo' ? 'var(--color-listo)' : 'var(--color-accent)'};">${vehicle.stage === 'recepcion' ? 'RECEPCIÃ“N' : vehicle.stage === 'cotizacion' ? 'COTIZACIÃ“N' : vehicle.stage === 'reparacion' ? 'ORDEN DE TRABAJO' : vehicle.stage === 'listo' ? 'LISTO' : vehicle.stage.toUpperCase()}</span></span>
@@ -4153,7 +4153,7 @@ window.openQuoteModal = function(vehicleId) {
       <table class="invoice-table">
         <thead>
           <tr>
-            <th>DescripciÃ³n de Servicio / Item</th>
+            <th>Descripción de Servicio / Item</th>
             <th style="text-align: right;">Total Parcial</th>
           </tr>
         </thead>
@@ -4161,11 +4161,11 @@ window.openQuoteModal = function(vehicleId) {
           <tr>
             <td>
               <strong>Mano de Obra Especializada</strong><br>
-              <span style="font-size: 11px; color: var(--text-secondary);">Mano de obra especializada para el diagnÃ³stico, reparaciÃ³n y testeo de servicios detallados.</span>
+              <span style="font-size: 11px; color: var(--text-secondary);">Mano de obra especializada para el diagnóstico, reparación y testeo de servicios detallados.</span>
               <ul style="font-size: 10px; margin-top: 4px; padding-left: 16px; color: var(--text-secondary);">
                 ${typeof vehicle.services === 'string'
-                  ? vehicle.services.split('\n').filter(s => s.trim().length > 0).map(s => `<li>${s}</li>`).join('') || '<li>RevisiÃ³n general del vehÃ­culo</li>'
-                  : (vehicle.services || []).map(s => `<li>${s}</li>`).join('') || '<li>RevisiÃ³n general del vehÃ­culo</li>'}
+                  ? vehicle.services.split('\n').filter(s => s.trim().length > 0).map(s => `<li>${s}</li>`).join('') || '<li>Revisión general del vehículo</li>'
+                  : (vehicle.services || []).map(s => `<li>${s}</li>`).join('') || '<li>Revisión general del vehículo</li>'}
               </ul>
             </td>
             <td>${formatCurrency(laborValue)}</td>
@@ -4173,8 +4173,8 @@ window.openQuoteModal = function(vehicleId) {
           <tr>
             <td>
               <strong>Repuestos e Insumos</strong><br>
-              <span style="font-size: 11px; color: var(--text-secondary);">Insumos homologados y repuestos tÃ©cnicos requeridos.</span>
-              <span style="font-size: 10px; color: var(--text-muted); display: block; margin-top: 2px;">(Filtros, lubricantes, componentes mecÃ¡nicos del sistema)</span>
+              <span style="font-size: 11px; color: var(--text-secondary);">Insumos homologados y repuestos técnicos requeridos.</span>
+              <span style="font-size: 10px; color: var(--text-muted); display: block; margin-top: 2px;">(Filtros, lubricantes, componentes mecánicos del sistema)</span>
             </td>
             <td>${formatCurrency(partsValue)}</td>
           </tr>
@@ -4188,11 +4188,11 @@ window.openQuoteModal = function(vehicleId) {
     </div>
     
     <div style="margin-top: 16px; border-top: 1px dashed var(--border-color); padding-top: 12px; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-      <strong>Ficha TÃ©cnica de RecepciÃ³n:</strong> Kilometraje: ${vehicle.kilometers || 0} km | Combustible: ${vehicle.fuelLevel || '1/2'}
+      <strong>Ficha Técnica de Recepción:</strong> Kilometraje: ${vehicle.kilometers || 0} km | Combustible: ${vehicle.fuelLevel || '1/2'}
       <br>
-      <strong>Detalles FÃ­sicos:</strong> ${vehicle.detailsNotes || 'Sin anomalÃ­as registradas en la carrocerÃ­a.'}
+      <strong>Detalles Físicos:</strong> ${vehicle.detailsNotes || 'Sin anomalías registradas en la carrocería.'}
       <br><br>
-      <strong>Notas Legales:</strong> Validez de 15 dÃ­as. GarantÃ­a de reparaciÃ³n de 3 meses.
+      <strong>Notas Legales:</strong> Validez de 15 días. Garantía de reparación de 3 meses.
     </div>
   `;
   
@@ -4200,7 +4200,7 @@ window.openQuoteModal = function(vehicleId) {
   initLucide();
 };
 
-// --- 13. GENERADOR DE CALENDARIO MENSUAL DINÃMICO ---
+// --- 13. GENERADOR DE CALENDARIO MENSUAL DINÁMICO ---
 
 window.adjustMonth = function(offset) {
   currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset);
@@ -4258,7 +4258,7 @@ function renderCalendar() {
     daysGrid.appendChild(cell);
   }
 
-  // DÃ­as mes actual
+  // Días mes actual
   for (let day = 1; day <= totalDays; day++) {
     const currentDate = new Date(year, month, day);
     const dateString = formatDateString(currentDate);
@@ -4837,7 +4837,7 @@ window.openAddQuoteItemModal = function(type) {
   } else {
     title.textContent = 'Agregar Repuesto / Insumo';
     label.textContent = 'Nombre del Repuesto*';
-    inputName.placeholder = 'Ej. Filtro de Aceite SintÃ©tico';
+    inputName.placeholder = 'Ej. Filtro de Aceite Sintético';
     inputName.setAttribute('list', 'quote-parts-suggestions');
   }
   
@@ -4879,7 +4879,7 @@ function renderQuoteTab() {
   const servList = document.getElementById('quote-services-list');
   const partsList = document.getElementById('quote-parts-list');
 
-  // Cargar fecha y hora comprometida de entrega en el editor de cotizaciÃ³n
+  // Cargar fecha y hora comprometida de entrega en el editor de cotización
   const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
   if (vehicle) {
     const dateInput = document.getElementById('quote-delivery-date');
@@ -5103,8 +5103,8 @@ function ensurePartExistsInCatalog(partName, price, vehicle) {
   const rawName = partName.trim();
   if (!rawName) return rawName;
 
-  // Si el usuario seleccionÃ³ de las sugerencias y tiene el sufijo " [Marca Modelo AÃ±o]"
-  // o si escribiÃ³ un nombre simple, busquemos limpiarlo para obtener el nombre base.
+  // Si el usuario seleccionó de las sugerencias y tiene el sufijo " [Marca Modelo Año]"
+  // o si escribió un nombre simple, busquemos limpiarlo para obtener el nombre base.
   let cleanName = rawName;
   const suffixPattern = / \[[^\]]+\]$/;
   if (suffixPattern.test(cleanName)) {
@@ -5115,7 +5115,7 @@ function ensurePartExistsInCatalog(partName, price, vehicle) {
   const model = (vehicle.model || '').trim();
   const year = (vehicle.year || '').trim();
 
-  // Buscar coincidencia exacta por nombre base + marca + modelo + aÃ±o en el catÃ¡logo
+  // Buscar coincidencia exacta por nombre base + marca + modelo + año en el catálogo
   const existingPart = partsCatalog.find(p => 
     p.name.toLowerCase() === cleanName.toLowerCase() && 
     (p.brand || '').toLowerCase() === brand.toLowerCase() && 
@@ -5124,11 +5124,11 @@ function ensurePartExistsInCatalog(partName, price, vehicle) {
   );
 
   if (!existingPart) {
-    // Crear el repuesto en el catÃ¡logo con columnas dedicadas para marca, modelo y aÃ±o
+    // Crear el repuesto en el catálogo con columnas dedicadas para marca, modelo y año
     const newPart = {
       id: 'p-' + Date.now() + Math.random().toString(36).substr(2, 5),
       name: cleanName,
-      description: `Creado automÃ¡ticamente desde cotizaciÃ³n para ${brand} ${model} ${year}`,
+      description: `Creado automáticamente desde cotización para ${brand} ${model} ${year}`,
       brand: brand,
       model: model,
       year: year,
@@ -5142,7 +5142,7 @@ function ensurePartExistsInCatalog(partName, price, vehicle) {
     }
   }
 
-  // Devolvemos el nombre formateado con sufijo de compatibilidad para que sea claro en la cotizaciÃ³n y OT
+  // Devolvemos el nombre formateado con sufijo de compatibilidad para que sea claro en la cotización y OT
   const compat = [];
   if (brand && brand !== 'Universal') compat.push(brand);
   if (model && model !== 'Multimarca') compat.push(model);
@@ -5255,7 +5255,7 @@ window.toggleQuoteNotes = function() {
 window.confirmQuoteCreation = function() {
   if (!activeReceptionVehicleId) return;
 
-  // Si hay un renglÃ³n inline de ediciÃ³n activo, guardarlo sÃ­ncronamente primero
+  // Si hay un renglón inline de edición activo, guardarlo síncronamente primero
   const activeInlineRow = document.querySelector('.inline-edit-item');
   if (activeInlineRow) {
     const nameInput = activeInlineRow.querySelector('#inline-item-name');
@@ -5278,14 +5278,14 @@ window.confirmQuoteCreation = function() {
         }
       }
     }
-    // Remover el renglÃ³n del DOM para que el blur asÃ­ncrono posterior retorne temprano sin hacer nada
+    // Remover el renglón del DOM para que el blur asíncrono posterior retorne temprano sin hacer nada
     activeInlineRow.remove();
   }
 
   const dateVal = document.getElementById('quote-delivery-date').value;
   const timeVal = document.getElementById('quote-delivery-time').value;
   if (!dateVal || !timeVal) {
-    alert('Por favor, selecciona la fecha y hora estimada de entrega del vehÃ­culo para la cotizaciÃ³n.');
+    alert('Por favor, selecciona la fecha y hora estimada de entrega del vehículo para la cotización.');
     const dateInput = document.getElementById('quote-delivery-date');
     const timeInput = document.getElementById('quote-delivery-time');
     if (!dateVal && dateInput) dateInput.focus();
@@ -5296,7 +5296,7 @@ window.confirmQuoteCreation = function() {
   const vehicleIndex = vehicles.findIndex(v => v.id === activeReceptionVehicleId);
   if (vehicleIndex === -1) return;
 
-  // Realizar Ãºltimo cÃ¡lculo
+  // Realizar último cálculo
   const servSum = activeQuoteServices.reduce((s, item) => s + item.value, 0);
   const partsSum = activeQuoteParts.reduce((s, item) => s + item.value, 0);
   const subtotal = servSum + partsSum;
@@ -5309,7 +5309,7 @@ window.confirmQuoteCreation = function() {
   const notes = document.getElementById('quote-notes').value.trim();
   const sendEmail = document.getElementById('quote-send-email').checked;
 
-  // Guardar en estado del vehÃ­culo
+  // Guardar en estado del vehículo
   vehicles[vehicleIndex].quoteServices = [...activeQuoteServices];
   vehicles[vehicleIndex].quoteParts = [...activeQuoteParts];
   vehicles[vehicleIndex].discountPercent = discPercent;
@@ -5321,7 +5321,7 @@ window.confirmQuoteCreation = function() {
   vehicles[vehicleIndex].deliveryDate = dateVal;
   vehicles[vehicleIndex].deliveryTime = timeVal;
   
-  // Si estÃ¡ en RecepciÃ³n, al crear presupuesto pasa a CotizaciÃ³n de inmediato
+  // Si está en Recepción, al crear presupuesto pasa a Cotización de inmediato
   if (vehicles[vehicleIndex].stage === 'recepcion') {
     vehicles[vehicleIndex].stage = 'cotizacion';
   }
@@ -5394,10 +5394,10 @@ window.renderQuotePreview = function(vehicle) {
   const parts = vehicle.quoteParts || [];
   
   const elServCount = document.getElementById('prev-serv-count');
-  if (elServCount) elServCount.textContent = `${services.length} ${services.length === 1 ? 'item' : 'Ã­tems'}`;
+  if (elServCount) elServCount.textContent = `${services.length} ${services.length === 1 ? 'item' : 'ítems'}`;
   
   const elPartsCount = document.getElementById('prev-parts-count');
-  if (elPartsCount) elPartsCount.textContent = `${parts.length} ${parts.length === 1 ? 'item' : 'Ã­tems'}`;
+  if (elPartsCount) elPartsCount.textContent = `${parts.length} ${parts.length === 1 ? 'item' : 'ítems'}`;
   
   const formatVal = (val) => formatCurrency(val);
 
@@ -5455,7 +5455,7 @@ window.renderQuotePreview = function(vehicle) {
     if (vehicle.vatInclusive !== false) {
       taxLabel.textContent = "Precios con impuesto incluido.";
     } else {
-      taxLabel.textContent = "Precios mÃ¡s IVA (19%).";
+      taxLabel.textContent = "Precios más IVA (19%).";
     }
   }
 };
@@ -5463,7 +5463,7 @@ window.renderQuotePreview = function(vehicle) {
 window.approveQuoteAndCreateWorkOrder = function() {
   if (!activeReceptionVehicleId) return;
   
-  // Si hay un renglÃ³n inline de ediciÃ³n activo, guardarlo sÃ­ncronamente primero
+  // Si hay un renglón inline de edición activo, guardarlo síncronamente primero
   const activeInlineRow = document.querySelector('.inline-edit-item');
   if (activeInlineRow) {
     const nameInput = activeInlineRow.querySelector('#inline-item-name');
@@ -5494,11 +5494,11 @@ window.approveQuoteAndCreateWorkOrder = function() {
   
   const vehicle = vehicles[vehicleIndex];
 
-  // Sincronizar cotizaciÃ³n actual por si hubo adiciones
+  // Sincronizar cotización actual por si hubo adiciones
   vehicle.quoteServices = [...activeQuoteServices];
   vehicle.quoteParts = [...activeQuoteParts];
   
-  // Obtener fecha y hora directamente de las cajas del panel de cotizaciÃ³n
+  // Obtener fecha y hora directamente de las cajas del panel de cotización
   const deliveryDateVal = document.getElementById('quote-delivery-date')?.value || '';
   const deliveryTimeVal = document.getElementById('quote-delivery-time')?.value || '';
   
@@ -5704,14 +5704,14 @@ window.renderOTTab = function() {
   const obsField = document.getElementById('ot-observations');
   if (obsField) obsField.value = vehicle.otObservations || '';
 
-  // Renderizar imÃ¡genes guardadas
+  // Renderizar imágenes guardadas
   renderOTImages();
 
   // Actualizar badge de etapa
   const stageBadge = document.getElementById('ot-stage-badge');
   if (stageBadge) {
     const stageMap = {
-      recepcion:  { label: 'En recepciÃ³n',  cls: 'stage-recepcion-badge' },
+      recepcion:  { label: 'En recepción',  cls: 'stage-recepcion-badge' },
       en_proceso: { label: 'En proceso',     cls: 'stage-pending-badge'   },
       listo:      { label: 'Listo',          cls: 'stage-listo-badge'     },
       entregado:  { label: 'Entregado',      cls: 'stage-entregado-badge' },
@@ -5771,7 +5771,7 @@ window.saveOTAndUpdate = function() {
   saveState();
   renderApp();
 
-  // Toast de confirmaciÃ³n
+  // Toast de confirmación
   const toast = document.createElement('div');
   toast.textContent = 'âœ“ Orden de trabajo actualizada';
   toast.style.cssText = `
@@ -5796,7 +5796,7 @@ window.saveOTObservations = function() {
   saveState();
 };
 
-// â”€â”€ ImÃ¡genes de la OT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Imágenes de la OT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 window.addOTImages = function(event) {
   if (!activeReceptionVehicleId) return;
   const vehicleIndex = vehicles.findIndex(v => v.id === activeReceptionVehicleId);
@@ -6148,7 +6148,7 @@ window.renderReportesView = function() {
   if (newCountEl) newCountEl.textContent = `(${newCount} ${newCount === 1 ? 'cliente' : 'clientes'})`;
 };
 
-// --- 2. RENDERIZADOR DE VEHÃCULOS INGRESADOS (SCREEN 2) ---
+// --- 2. RENDERIZADOR DE VEHÍCULOS INGRESADOS (SCREEN 2) ---
 window.renderVehiclesListTable = function() {
   const searchInput = document.getElementById('sidebar-search-input');
   const stageSelect = document.getElementById('ingresos-stage-select');
@@ -6328,7 +6328,7 @@ function getRelativeSpanishTime(timestamp) {
   
   if (days > 0) {
     if (days === 1) return 'Ayer';
-    return `hace ${days} dÃ­as`;
+    return `hace ${days} días`;
   }
   if (hours > 0) {
     if (hours === 1) return 'hace alrededor de 1 hora';
@@ -6391,18 +6391,18 @@ window.renderCotizacionesTable = function() {
         <button class="table-action-btn-text blue-outline" onclick="openQuoteModal('${v.id}')">
           <i data-lucide="file-text"></i> Generar Documento
         </button>
-        <button class="table-action-btn red-delete" onclick="deleteVehicleFromTable('${v.id}')" title="Eliminar CotizaciÃ³n">
+        <button class="table-action-btn red-delete" onclick="deleteVehicleFromTable('${v.id}')" title="Eliminar Cotización">
           <i data-lucide="trash-2"></i>
         </button>
       `
       : `
         <button class="table-action-btn-text green-outline" onclick="openDetailedReception('${v.id}')">
-          <i data-lucide="car"></i> Ingresar vehÃ­culo
+          <i data-lucide="car"></i> Ingresar vehículo
         </button>
         <button class="table-action-btn-text blue-outline" onclick="openDetailedQuoteView('${v.id}')">
           <i data-lucide="file-text"></i> Generar Documento
         </button>
-        <button class="table-action-btn red-delete" onclick="deleteVehicleFromTable('${v.id}')" title="Eliminar CotizaciÃ³n">
+        <button class="table-action-btn red-delete" onclick="deleteVehicleFromTable('${v.id}')" title="Eliminar Cotización">
           <i data-lucide="trash-2"></i>
         </button>
       `;
@@ -6417,7 +6417,7 @@ window.renderCotizacionesTable = function() {
         </td>
         <td style="font-weight: 700; color: var(--text-primary);">#${indexNum}</td>
         <td style="font-weight: 600; color: var(--text-primary);">${v.client}</td>
-        <td style="font-family: var(--font-mono);">${v.clientPhone || 'Sin telÃ©fono'}</td>
+        <td style="font-family: var(--font-mono);">${v.clientPhone || 'Sin teléfono'}</td>
         <td style="font-weight: 600;">${v.brand} ${v.model} <span style="color: var(--text-muted); font-size: 11px;">(${v.plate})</span></td>
         <td><span class="stage-pending-badge ${badgeClass}" style="font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px;">${stateText}</span></td>
         <td style="font-size: 12px; color: var(--text-secondary);">Ayer</td>
@@ -6435,12 +6435,12 @@ window.renderCotizacionesTable = function() {
 };
 
 window.deleteVehicleFromTable = function(vehicleId) {
-  if (confirm('Â¿EstÃ¡s seguro de que deseas eliminar este registro de cotizaciÃ³n?')) {
+  if (confirm('¿Estás seguro de que deseas eliminar este registro de cotización?')) {
     vehicles = vehicles.filter(v => v.id !== vehicleId);
     saveState();
     deleteFromSupabase('taller_vehicles', vehicleId);
     renderApp();
-    alert('Registro eliminado con Ã©xito.');
+    alert('Registro eliminado con éxito.');
   }
 };
 
@@ -6489,7 +6489,7 @@ window.renderAgendaCalendar = function() {
     daysGrid.appendChild(cell);
   }
 
-  // DÃ­as mes actual
+  // Días mes actual
   for (let day = 1; day <= totalDays; day++) {
     const currentDate = new Date(year, month, day);
     const dateString = formatDateString(currentDate);
@@ -6555,7 +6555,7 @@ window.renderProximasCitas = function() {
             <div style="width: 38px; height: 38px; border-radius: 50%; background-color: rgba(var(--color-accent-rgb),0.1); color: var(--color-accent); display: flex; align-items: center; justify-content: center;">
               <i data-lucide="calendar" style="width: 16px;"></i>
             </div>
-            <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-align: center;">No hay citas, entregas ni recordatorios prÃ³ximos</span>
+            <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-align: center;">No hay citas, entregas ni recordatorios próximos</span>
           </div>
         `;
       }
@@ -6614,13 +6614,13 @@ window.renderProximasCitas = function() {
         const cardWidth = isDashboard ? 'width: 280px; flex-shrink: 0;' : 'width: 100%;';
 
         // Use concrete hex values so they resolve correctly in all contexts (dashboard + calendar)
-        let stageColor = '#3b82f6'; // Azul recepciÃ³n â€” matches badge-blue
-        let stageName = 'RecepciÃ³n';
+        let stageColor = '#3b82f6'; // Azul recepción â€” matches badge-blue
+        let stageName = 'Recepción';
         let badgeClass = 'badge-blue';
         if (v.stage === 'cotizacion') {
-          stageColor = '#8b5cf6'; stageName = 'CotizaciÃ³n'; badgeClass = 'badge-violet';
+          stageColor = '#8b5cf6'; stageName = 'Cotización'; badgeClass = 'badge-violet';
         } else if (v.stage === 'reparacion') {
-          stageColor = '#ef4444'; stageName = 'ReparaciÃ³n'; badgeClass = 'badge-red';
+          stageColor = '#ef4444'; stageName = 'Reparación'; badgeClass = 'badge-red';
         } else if (v.stage === 'listo') {
           stageColor = '#22c55e'; stageName = 'Listo'; badgeClass = 'badge-green';
         } else if (v.stage === 'cita') {
@@ -6906,7 +6906,7 @@ window.handleCitaFormSubmit = function(event) {
 
   // Validate that AT LEAST one detail is present (brand/model, plate, or clientName)
   if (!clientName.trim() && !plateVal.trim() && !brandVal.trim() && !modelVal.trim() && !descVal.trim()) {
-    alert('Por favor ingrese al menos algÃºn dato del cliente, vehÃ­culo o motivo para registrar la cita.');
+    alert('Por favor ingrese al menos algún dato del cliente, vehículo o motivo para registrar la cita.');
     return;
   }
 
@@ -6996,7 +6996,7 @@ window.openViewCitaModal = function(id) {
   document.getElementById('view-cita-date-label').textContent = formattedDate;
 
   document.getElementById('view-cita-client-name').textContent = cita.client || 'Sin Nombre';
-  document.getElementById('view-cita-client-phone').textContent = cita.clientPhone || 'Sin TelÃ©fono';
+  document.getElementById('view-cita-client-phone').textContent = cita.clientPhone || 'Sin Teléfono';
 
   const brand = cita.brand && cita.brand !== 'Cita' ? cita.brand : '';
   const model = cita.model && cita.model !== 'Pendiente' ? cita.model : '';
@@ -7004,7 +7004,7 @@ window.openViewCitaModal = function(id) {
   if (brand || model) {
     document.getElementById('view-cita-veh-brand-model').textContent = `${brand} ${model}`.trim();
   } else {
-    document.getElementById('view-cita-veh-brand-model').textContent = 'Sin vehÃ­culo especificado';
+    document.getElementById('view-cita-veh-brand-model').textContent = 'Sin vehículo especificado';
   }
 
   document.getElementById('view-cita-veh-plate').textContent = cita.plate || 'SIN PATENTE';
@@ -7026,7 +7026,7 @@ window.openViewCitaModal = function(id) {
 
   // Bind delete button
   document.getElementById('view-cita-delete-btn').onclick = () => {
-    if (confirm('Â¿EstÃ¡ seguro de que desea eliminar esta cita?')) {
+    if (confirm('¿Está seguro de que desea eliminar esta cita?')) {
       const idx = vehicles.findIndex(v => String(v.id) === String(cita.id));
       if (idx !== -1) {
         vehicles.splice(idx, 1);
@@ -7137,7 +7137,7 @@ function createAgendaDayCell(dayNumber, isOtherMonth, isToday, dateString) {
     eventsDiv.appendChild(eventTag);
   });
 
-  // 2. Mostrar vehÃ­culos con fecha comprometida de entrega para hoy
+  // 2. Mostrar vehículos con fecha comprometida de entrega para hoy
   const deliveryVehicles = vehicles.filter(v => v.deliveryDate === dateString && !v.delivered);
   deliveryVehicles.forEach(vehicle => {
     const eventTag = document.createElement('span');
@@ -7155,7 +7155,7 @@ function createAgendaDayCell(dayNumber, isOtherMonth, isToday, dateString) {
     eventsDiv.appendChild(eventTag);
   });
 
-  // 3. Mostrar recordatorios para este dÃ­a
+  // 3. Mostrar recordatorios para este día
   const dayReminders = reminders.filter(r => r.date === dateString);
   dayReminders.forEach(reminder => {
     const reminderTag = document.createElement('span');
@@ -7183,11 +7183,11 @@ function createAgendaDayCell(dayNumber, isOtherMonth, isToday, dateString) {
 
 /* 
 ========================================================================
-   18. MOTORES DE RENDERIZADO ASÃNCRONOS Y LOGICA DE DEUDAS (Fase 2)
+   18. MOTORES DE RENDERIZADO ASÍNCRONOS Y LOGICA DE DEUDAS (Fase 2)
 ========================================================================
 */
 
-// --- CONTROLADORES DE CARGA ASÃNCRONA ---
+// --- CONTROLADORES DE CARGA ASÍNCRONA ---
 let teamLoading = false;
 let teamLoaded = false;
 let clientsLoading = false;
@@ -7371,7 +7371,7 @@ window.deleteOTFromDB = async function(vehicleId) {
 };
 
 
-// --- 2. SERVICIOS DEL CATÃLOGO (OPERACIONES TÃ‰CNICAS) ---
+// --- 2. SERVICIOS DEL CATÁLOGO (OPERACIONES TÃ‰CNICAS) ---
 window.renderServiciosCatalogView = function() {
   const searchInput = document.getElementById('catalogo-servicios-search');
   const tbody = document.getElementById('servicios-table-body');
@@ -7734,7 +7734,7 @@ window.openNewPartModal = function() {
 window.handleNewPartSubmit = function(e) {
   e.preventDefault();
   const name = document.getElementById('np-name').value.trim();
-  const description = document.getElementById('np-description').value.trim() || 'Sin descripciÃ³n';
+  const description = document.getElementById('np-description').value.trim() || 'Sin descripción';
   const brand = document.getElementById('np-brand').value.trim() || 'Universal';
   const model = document.getElementById('np-model').value.trim() || 'Multimarca';
   const year = document.getElementById('np-year').value.trim() || 'â€”';
@@ -7756,11 +7756,11 @@ window.handleNewPartSubmit = function(e) {
   populateDatalists(); // Actualizar autocompletador!
   closeModal('new-part-modal');
   renderRepuestosCatalogView();
-  alert(`Repuesto "${name}" agregado con Ã©xito al catÃ¡logo.`);
+  alert(`Repuesto "${name}" agregado con éxito al catálogo.`);
 };
 
 window.deletePartFromCatalog = function(partId) {
-  if (confirm('Â¿EstÃ¡s seguro de que deseas eliminar este repuesto del catÃ¡logo?')) {
+  if (confirm('¿Estás seguro de que deseas eliminar este repuesto del catálogo?')) {
     partsCatalog = partsCatalog.filter(p => p.id !== partId);
     saveParts();
     deleteFromSupabase('taller_parts', partId);
@@ -7793,7 +7793,7 @@ function updateTeamMetrics() {
   const total = teamMembers.length;
   const admins = teamMembers.filter(t => t.role === 'Administrador').length;
   const sellers = teamMembers.filter(t => t.role === 'Vendedor').length;
-  const mechanics = teamMembers.filter(t => t.role === 'MecÃ¡nico').length;
+  const mechanics = teamMembers.filter(t => t.role === 'Mecánico').length;
   const active = teamMembers.filter(t => t.active).length;
 
   document.getElementById('eq-total-val').textContent = total;
@@ -7856,7 +7856,7 @@ function drawTeamTable() {
         </td>
         <td style="font-weight: 600;">
           <span style="display: inline-flex; align-items: center; gap: 4px;">
-            <i data-lucide="${t.role === 'MecÃ¡nico' ? 'wrench' : t.role === 'Administrador' ? 'shield' : 'shopping-cart'}" style="width: 13px; color: var(--text-secondary);"></i>
+            <i data-lucide="${t.role === 'Mecánico' ? 'wrench' : t.role === 'Administrador' ? 'shield' : 'shopping-cart'}" style="width: 13px; color: var(--text-secondary);"></i>
             ${t.role}
           </span>
         </td>
@@ -8473,7 +8473,7 @@ window.renderCuentasCobrarView = function() {
   initLucide();
 };
 
-// --- 6. VEHÃCULOS (GESTIÃ“N DE RECURSOS) ---
+// --- 6. VEHÍCULOS (GESTIÃ“N DE RECURSOS) ---
 window.renderVehiculosView = function() {
   const searchInput = document.getElementById('veh-search-input');
   const brandSelect = document.getElementById('veh-brand-select');
@@ -8507,10 +8507,10 @@ window.renderVehiculosView = function() {
   });
   let list = Object.values(uniqueVehiclesMap);
 
-  // Calculo de MÃ©tricas
+  // Calculo de Métricas
   const totalVeh = list.length;
   
-  // VehÃ­culos recientes (Ãºltimos 3 aÃ±os, >= 2024)
+  // Vehículos recientes (últimos 3 años, >= 2024)
   const recentVeh = list.filter(v => parseInt(v.year) >= 2024).length;
   
   // Marcas Populares
@@ -8533,7 +8533,7 @@ window.renderVehiculosView = function() {
     popularCount = maxCount;
   }
 
-  // Promedio de aÃ±os
+  // Promedio de años
   let avgYear = 0;
   if (list.length > 0) {
     const totalYears = list.reduce((sum, v) => sum + (parseInt(v.year) || 0), 0);
@@ -8561,7 +8561,7 @@ window.renderVehiculosView = function() {
     list = list.filter(v => v.brand === filterBrand);
   }
 
-  // Filtrado por antigÃ¼edad
+  // Filtrado por antigüedad
   if (filterAge !== 'Todos') {
     if (filterAge === 'Nuevos (>= 2024)') {
       list = list.filter(v => (parseInt(v.year) || 0) >= 2024);
@@ -9249,7 +9249,7 @@ window.deleteVehicleFromDB = function(vehicleId) {
   const menu = document.getElementById('vehicle-dropdown-menu');
   if (menu) menu.classList.remove('show');
 
-  if (confirm('Â¿EstÃ¡s seguro de que deseas eliminar este vehÃ­culo de la flota?')) {
+  if (confirm('¿Estás seguro de que deseas eliminar este vehículo de la flota?')) {
     vehicles = vehicles.filter(v => v.id !== vehicleId);
     saveState();
     deleteFromSupabase('taller_vehicles', vehicleId);
@@ -9301,7 +9301,7 @@ window.editQuoteServicePrice = function(index) {
   if (newValStr === null) return; // cancelado
   const newVal = parseFloat(newValStr);
   if (isNaN(newVal) || newVal < 0) {
-    alert('Precio invÃ¡lido.');
+    alert('Precio inválido.');
     return;
   }
   activeQuoteServices[index].value = newVal;
@@ -9315,7 +9315,7 @@ window.editQuotePartPrice = function(index) {
   if (newValStr === null) return; // cancelado
   const newVal = parseFloat(newValStr);
   if (isNaN(newVal) || newVal < 0) {
-    alert('Precio invÃ¡lido.');
+    alert('Precio inválido.');
     return;
   }
   activeQuoteParts[index].value = newVal;
@@ -9334,13 +9334,13 @@ window.applyDetailedModalReadOnlyState = function() {
   
   // 2. Hide or disable specific action buttons and editable areas
   const actions = [
-    '.btn-recepcionar-confirm', // BotÃ³n Recepcionar
-    '.approve-ot-btn',           // BotÃ³n Aprobar y crear OT
+    '.btn-recepcionar-confirm', // Botón Recepcionar
+    '.approve-ot-btn',           // Botón Aprobar y crear OT
     '.add-card-btn',            // Botones de agregar
-    '#prev-edit-btn',           // BotÃ³n Editar cotizaciÃ³n
-    '.service-remove-btn',      // BotÃ³n remover de cotizaciÃ³n
-    '.add-quote-item-btn',      // BotÃ³n agregar Ã­tem de cotizaciÃ³n
-    '.parts-add-btn',           // BotÃ³n agregar repuestos
+    '#prev-edit-btn',           // Botón Editar cotización
+    '.service-remove-btn',      // Botón remover de cotización
+    '.add-quote-item-btn',      // Botón agregar ítem de cotización
+    '.parts-add-btn',           // Botón agregar repuestos
     '.circle-nav-btn',          // Botones redondos de acciones adicionales
     '.history-btn',             // Botones de historial, comentar, foto, PDF
     '.table-action-btn'         // Botones de acciones en tablas internas
@@ -9403,7 +9403,7 @@ window.closeGlobalSearchModal = function(e) {
   }
 };
 
-// NavegaciÃ³n por teclado dentro de la paleta
+// Navegación por teclado dentro de la paleta
 (function() {
   let selectedIndex = -1;
 
@@ -9449,13 +9449,13 @@ window.closeGlobalSearchModal = function(e) {
     });
   }
 
-  // Resetear el Ã­ndice de selecciÃ³n cuando cambia la bÃºsqueda
+  // Resetear el índice de selección cuando cambia la búsqueda
   window.resetPaletteSelectionIndex = function() {
     selectedIndex = -1;
   };
 })();
 
-// BÃºsqueda en vivo y renderizado de resultados agrupados
+// Búsqueda en vivo y renderizado de resultados agrupados
 window.handlePaletteSearch = function() {
   const input = document.getElementById('palette-search-input');
   const container = document.getElementById('palette-results-container');
@@ -9465,9 +9465,9 @@ window.handlePaletteSearch = function() {
   resetPaletteSelectionIndex();
 
   if (!query) {
-    // Renderizar accesos rÃ¡pidos / Sugerencias si el buscador estÃ¡ vacÃ­o
+    // Renderizar accesos rápidos / Sugerencias si el buscador está vacío
     container.innerHTML = `
-      <div class="palette-group-title">Sugerencias y Accesos RÃ¡pidos</div>
+      <div class="palette-group-title">Sugerencias y Accesos Rápidos</div>
       <div class="palette-item" onclick="executePaletteAction('view-tablero')">
         <div class="palette-item-left">
           <i data-lucide="layout-grid" class="palette-item-icon"></i>
@@ -9482,8 +9482,8 @@ window.handlePaletteSearch = function() {
         <div class="palette-item-left">
           <i data-lucide="plus-circle" class="palette-item-icon"></i>
           <div class="palette-item-details">
-            <span class="palette-item-title">Ingresar nuevo vehÃ­culo</span>
-            <span class="palette-item-subtitle">Abre el modal de recepciÃ³n y registro</span>
+            <span class="palette-item-title">Ingresar nuevo vehículo</span>
+            <span class="palette-item-subtitle">Abre el modal de recepción y registro</span>
           </div>
         </div>
         <span class="palette-item-action">Abrir</span>
@@ -9502,8 +9502,8 @@ window.handlePaletteSearch = function() {
         <div class="palette-item-left">
           <i data-lucide="bar-chart-3" class="palette-item-icon"></i>
           <div class="palette-item-details">
-            <span class="palette-item-title">Ver EstadÃ­sticas</span>
-            <span class="palette-item-subtitle">MÃ©tricas, ingresos y anÃ¡lisis tÃ©cnico</span>
+            <span class="palette-item-title">Ver Estadísticas</span>
+            <span class="palette-item-subtitle">Métricas, ingresos y análisis técnico</span>
           </div>
         </div>
         <span class="palette-item-action">Ir a vista</span>
@@ -9512,7 +9512,7 @@ window.handlePaletteSearch = function() {
         <div class="palette-item-left">
           <i data-lucide="wrench" class="palette-item-icon"></i>
           <div class="palette-item-details">
-            <span class="palette-item-title">Ver CatÃ¡logo de Servicios</span>
+            <span class="palette-item-title">Ver Catálogo de Servicios</span>
             <span class="palette-item-subtitle">Administra los servicios predefinidos</span>
           </div>
         </div>
@@ -9523,7 +9523,7 @@ window.handlePaletteSearch = function() {
     return;
   }
 
-  // Filtrar vehÃ­culos, clientes y catÃ¡logos
+  // Filtrar vehículos, clientes y catálogos
   const matchedVehicles = vehicles.filter(v => {
     const isGol = v.id === 'mock-vehicle-gol-2026';
     const indexNum = isGol ? '2' : (v.id && v.id.length >= 2 ? v.id.substring(v.id.length - 2) : '01');
@@ -9565,20 +9565,20 @@ window.handlePaletteSearch = function() {
 
   let html = '';
 
-  // Renderizar VehÃ­culos Encontrados
+  // Renderizar Vehículos Encontrados
   if (matchedVehicles.length > 0) {
-    html += `<div class="palette-group-title">VehÃ­culos / Ingresos</div>`;
+    html += `<div class="palette-group-title">Vehículos / Ingresos</div>`;
     matchedVehicles.forEach(v => {
       const isGol = v.id === 'mock-vehicle-gol-2026';
       const indexNum = isGol ? '2' : (v.id && v.id.length >= 2 ? v.id.substring(v.id.length - 2) : '01');
       
-      let stageText = 'RecepciÃ³n';
+      let stageText = 'Recepción';
       let badgeClass = 'badge-blue';
       if (v.stage === 'cotizacion') {
-        stageText = 'En CotizaciÃ³n';
+        stageText = 'En Cotización';
         badgeClass = 'badge-violet';
       } else if (v.stage === 'reparacion') {
-        stageText = 'En ReparaciÃ³n';
+        stageText = 'En Reparación';
         badgeClass = 'badge-red';
       } else if (v.stage === 'listo') {
         stageText = 'Listo';
@@ -9622,9 +9622,9 @@ window.handlePaletteSearch = function() {
     });
   }
 
-  // Renderizar Servicios del CatÃ¡logo Encontrados
+  // Renderizar Servicios del Catálogo Encontrados
   if (matchedServices.length > 0) {
-    html += `<div class="palette-group-title">Servicios del CatÃ¡logo</div>`;
+    html += `<div class="palette-group-title">Servicios del Catálogo</div>`;
     matchedServices.forEach(s => {
       html += `
         <div class="palette-item" onclick="executePaletteAction('open-service', '${s.name}')">
@@ -9632,18 +9632,18 @@ window.handlePaletteSearch = function() {
             <i data-lucide="wrench" class="palette-item-icon"></i>
             <div class="palette-item-details">
               <span class="palette-item-title">${s.name}</span>
-              <span class="palette-item-subtitle">${s.description || 'Sin descripciÃ³n'}</span>
+              <span class="palette-item-subtitle">${s.description || 'Sin descripción'}</span>
             </div>
           </div>
-          <span class="palette-item-action">Ver en CatÃ¡logo</span>
+          <span class="palette-item-action">Ver en Catálogo</span>
         </div>
       `;
     });
   }
 
-  // Renderizar Repuestos del CatÃ¡logo Encontrados
+  // Renderizar Repuestos del Catálogo Encontrados
   if (matchedParts.length > 0) {
-    html += `<div class="palette-group-title">Repuestos del CatÃ¡logo</div>`;
+    html += `<div class="palette-group-title">Repuestos del Catálogo</div>`;
     matchedParts.forEach(p => {
       html += `
         <div class="palette-item" onclick="executePaletteAction('open-part', '${p.name}')">
@@ -9651,10 +9651,10 @@ window.handlePaletteSearch = function() {
             <i data-lucide="package" class="palette-item-icon"></i>
             <div class="palette-item-details">
               <span class="palette-item-title">${p.name}</span>
-              <span class="palette-item-subtitle">${p.description || 'Sin descripciÃ³n'}</span>
+              <span class="palette-item-subtitle">${p.description || 'Sin descripción'}</span>
             </div>
           </div>
-          <span class="palette-item-action">Ver en CatÃ¡logo</span>
+          <span class="palette-item-action">Ver en Catálogo</span>
         </div>
       `;
     });
@@ -9664,7 +9664,7 @@ window.handlePaletteSearch = function() {
   initLucide();
 };
 
-// Acciones al seleccionar un Ã­tem de la paleta
+// Acciones al seleccionar un ítem de la paleta
 window.executePaletteAction = function(action, param) {
   closeGlobalSearch();
 
@@ -9679,7 +9679,7 @@ window.executePaletteAction = function(action, param) {
   } else if (action === 'view-services') {
     switchView('servicios-catalogo');
   } else if (action === 'open-vehicle') {
-    // Abrir ficha detallada del vehÃ­culo
+    // Abrir ficha detallada del vehículo
     openDetailedReception(param);
   } else if (action === 'open-client') {
     // Cambiar a vista de clientes y filtrar por cliente
@@ -9690,7 +9690,7 @@ window.executePaletteAction = function(action, param) {
       renderClientesListaView();
     }
   } else if (action === 'open-service') {
-    // Cambiar a catÃ¡logo de servicios y filtrar por nombre
+    // Cambiar a catálogo de servicios y filtrar por nombre
     switchView('servicios-catalogo');
     const input = document.getElementById('catalogo-servicios-search');
     if (input) {
@@ -9698,7 +9698,7 @@ window.executePaletteAction = function(action, param) {
       renderServiciosCatalogView();
     }
   } else if (action === 'open-part') {
-    // Cambiar a catÃ¡logo de repuestos y filtrar por nombre
+    // Cambiar a catálogo de repuestos y filtrar por nombre
     switchView('repuestos-catalogo');
     const input = document.getElementById('catalogo-repuestos-search');
     if (input) {
@@ -9724,7 +9724,7 @@ document.addEventListener('click', function() {
   }
 });
 
-// --- NavegaciÃ³n profunda al Historial de Ã“rdenes de Trabajo por Patente ---
+// --- Navegación profunda al Historial de Ã“rdenes de Trabajo por Patente ---
 window.viewWorkOrderHistoryOfActiveVehicle = function() {
   if (!activeReceptionVehicleId) return;
   const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
@@ -9735,7 +9735,7 @@ window.viewWorkOrderHistoryOfActiveVehicle = function() {
   // 1. Cerrar ficha detallada
   exitDetailedReception();
   
-  // 2. Rellenar la barra de bÃºsqueda local de OTs con la patente
+  // 2. Rellenar la barra de búsqueda local de OTs con la patente
   const otSearchInput = document.getElementById('ot-search-input');
   if (otSearchInput) {
     otSearchInput.value = plate;
@@ -9747,7 +9747,7 @@ window.viewWorkOrderHistoryOfActiveVehicle = function() {
     sidebarSearchInput.value = '';
   }
 
-  // 3. Cambiar a secciÃ³n "Ordenes de trabajo"
+  // 3. Cambiar a sección "Ordenes de trabajo"
   switchView('ordenes-trabajo');
 };
 
@@ -10097,7 +10097,7 @@ window.downloadTaxInvoicePDF = function(invoiceType, event, returnBlob = false) 
       container.remove();
     });
   }
-};// --- GeneraciÃ³n de CotizaciÃ³n en PDF de Alta Fidelidad ---
+};// --- Generación de Cotización en PDF de Alta Fidelidad ---
 
 window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
   if (typeof loadWorkshopConfig === 'function') {
@@ -10108,16 +10108,16 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
 
   const id = vehicleId || activeReceptionVehicleId;
   if (!id) {
-    alert('No hay ningÃºn vehÃ­culo activo para generar el presupuesto.');
+    alert('No hay ningún vehículo activo para generar el presupuesto.');
     return;
   }
   const vehicle = vehicles.find(v => String(v.id) === String(id));
   if (!vehicle) {
-    alert('VehÃ­culo no encontrado.');
+    alert('Vehículo no encontrado.');
     return;
   }
 
-  // Obtener Ã­tems activos
+  // Obtener ítems activos
   let services = [];
   let parts = [];
   if (String(activeReceptionVehicleId) === String(vehicle.id)) {
@@ -10129,11 +10129,11 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
   }
 
   if (services.length === 0 && parts.length === 0) {
-    alert('La cotizaciÃ³n estÃ¡ vacÃ­a. Agregue servicios o repuestos antes de descargar.');
+    alert('La cotización está vacía. Agregue servicios o repuestos antes de descargar.');
     return;
   }
 
-  // Obtener nÃºmero de presupuesto correlativo robusto y libre de crashes
+  // Obtener número de presupuesto correlativo robusto y libre de crashes
   const isGolMock = vehicle.id === 'mock-vehicle-gol-2026';
   const matchResult = typeof vehicle.id === 'string' ? vehicle.id.match(/\d+/) : null;
   const baseNum = isGolMock ? 5 : (matchResult ? parseInt(matchResult[0]) : (vehicles.indexOf(vehicle) + 1));
@@ -10292,7 +10292,7 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
       <table class="header-table">
         <tr>
           <td style="width: 25%;"></td>
-          <td style="width: 50%;"><h1 class="header-title">Presupuesto NÂ° ${budgetNum}</h1></td>
+          <td style="width: 50%;"><h1 class="header-title">Presupuesto N° ${budgetNum}</h1></td>
           <td style="width: 25%;" class="header-date">Fecha: ${formattedDate}</td>
         </tr>
       </table>
@@ -10326,7 +10326,7 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
           <div class="info-block-header">CLIENTE</div>
           <table class="info-table">
             <tr><td class="info-label">Nombre</td><td>${vehicle.client || 'â€”'}</td></tr>
-            <tr><td class="info-label">TelÃ©fono</td><td>${vehicle.clientPhone || 'â€”'}</td></tr>
+            <tr><td class="info-label">Teléfono</td><td>${vehicle.clientPhone || 'â€”'}</td></tr>
             <tr><td class="info-label">Email</td><td>${vehicle.clientEmail || 'â€”'}</td></tr>
           </table>
         </div>
@@ -10334,7 +10334,7 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
           <div class="info-block-header">VEHÃ CULO</div>
           <table class="info-table">
             <tr><td class="info-label">Marca / Modelo</td><td>${vehicle.brand || 'â€”'} ${vehicle.model || 'â€”'}</td></tr>
-            <tr><td class="info-label">AÃ±o / Color</td><td>${vehicle.year || 'â€”'} / ${vehicle.color || 'â€”'}</td></tr>
+            <tr><td class="info-label">Año / Color</td><td>${vehicle.year || 'â€”'} / ${vehicle.color || 'â€”'}</td></tr>
             <tr><td class="info-label">Motor</td><td>${vehicle.motor || 'â€”'}</td></tr>
             <tr><td class="info-label">Patente</td><td><span class="plate-pill">${vehicle.plate || 'â€”'}</span></td></tr>
           </table>
@@ -10344,8 +10344,8 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
       <table class="items-table">
         <thead>
           <tr>
-            <th style="width: 8%;">NÂ°</th>
-            <th style="width: 52%;">DescripciÃ³n</th>
+            <th style="width: 8%;">N°</th>
+            <th style="width: 52%;">Descripción</th>
             <th style="width: 10%;">Cant.</th>
             <th style="width: 15%;">Precio Unit.</th>
             <th style="width: 15%;">Total</th>
