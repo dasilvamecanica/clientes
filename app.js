@@ -2804,6 +2804,50 @@ function updateMetrics() {
   if (deliveredCountEl) deliveredCountEl.textContent = deliveredCount;
 }
 
+function getCategoryBadgeHtml(category) {
+  if (!category || category === '—') return '—';
+  const cat = category.trim().toUpperCase();
+  let hash = 0;
+  for (let i = 0; i < cat.length; i++) {
+    hash = cat.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  const isDark = document.documentElement.classList.contains('dark') || document.body.classList.contains('dark');
+  let bg, border, text;
+  if (isDark) {
+    bg = `hsla(${hue}, 60%, 18%, 0.4)`;
+    border = `hsla(${hue}, 50%, 40%, 0.4)`;
+    text = `hsl(${hue}, 85%, 75%)`;
+  } else {
+    bg = `hsl(${hue}, 80%, 94%)`;
+    border = `hsl(${hue}, 50%, 82%)`;
+    text = `hsl(${hue}, 80%, 22%)`;
+  }
+  return `<span class="service-category-badge" style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; background: ${bg}; color: ${text}; border: 1px solid ${border}; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${cat}</span>`;
+}
+
+function getVehicleCategoryBadgeHtml(category) {
+  const cat = (category || 'B').toUpperCase();
+  let bg, text, border, label;
+  if (cat === 'A') {
+    bg = 'rgba(14, 165, 233, 0.1)';
+    text = '#0284c7';
+    border = 'rgba(14, 165, 233, 0.3)';
+    label = 'Tarifa A (Chico)';
+  } else if (cat === 'C') {
+    bg = 'rgba(249, 115, 22, 0.1)';
+    text = '#ea580c';
+    border = 'rgba(249, 115, 22, 0.3)';
+    label = 'Tarifa C (Grande)';
+  } else {
+    bg = 'rgba(139, 92, 246, 0.1)';
+    text = '#7c3aed';
+    border = 'rgba(139, 92, 246, 0.3)';
+    label = 'Tarifa B (Mediano)';
+  }
+  return `<span class="vehicle-category-badge" style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 5px; background: ${bg}; color: ${text}; border: 1px solid ${border}; text-transform: uppercase; display: inline-block; letter-spacing: 0.5px;">${label}</span>`;
+}
+
 function formatCurrency(amount) {
   if (amount === 0) return '$0';
   const hasDecimals = amount % 1 !== 0;
@@ -3438,6 +3482,11 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
   
   const detClientEmail = document.getElementById('det-client-email');
   if (detClientEmail) detClientEmail.textContent = vehicle.clientEmail || '-';
+
+  const detVehicleCategoryBadge = document.getElementById('det-vehicle-category-badge');
+  if (detVehicleCategoryBadge) {
+    detVehicleCategoryBadge.innerHTML = getVehicleCategoryBadgeHtml(vehicle.category);
+  }
   
   // Poblar nuevos datos del vehículo en el sidebar de la izquierda
   const detVehicleNameSidebar = document.getElementById('det-vehicle-name-sidebar');
@@ -7244,7 +7293,7 @@ window.renderServiciosCatalogView = function() {
   tbody.innerHTML = list.map(s => {
     return `
       <tr>
-        <td style="font-weight: 600; color: var(--text-secondary); font-size: 12.5px;">${s.category || '—'}</td>
+        <td style="font-weight: 600; color: var(--text-secondary); font-size: 12.5px;">${getCategoryBadgeHtml(s.category)}</td>
         <td style="font-weight: 700; color: var(--text-primary); font-size: 13.5px;">${s.name}</td>
         <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">${formatCurrency(s.priceA)}</td>
         <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">${formatCurrency(s.priceB)}</td>
