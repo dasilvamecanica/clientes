@@ -1492,6 +1492,23 @@
         </div>
       </section>
 
+      <!-- SECCIÓN: MULTIPLICADORES POR CATEGORÍA DE SERVICIO -->
+      <section class="reception-form-card" style="padding: 24px; max-width: 600px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 8px;">
+          <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="trending-up" style="color: #f59e0b; width: 20px; height: 20px;"></i>
+            Multiplicadores por Categoría
+          </h2>
+          <p style="font-size: 13px; color: var(--text-muted); margin: 6px 0 0 0;">
+            Ajuste proporcionalmente los precios de sus servicios por categoría. Un valor de 1.10 representa un aumento del 10%, y 0.90 representa un descuento del 10%.
+          </p>
+        </div>
+
+        <div id="category-multipliers-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; padding-right: 6px;">
+          <span style="font-size: 13px; color: var(--text-muted); font-style: italic;">No hay categorías registradas en el catálogo. Sincronice primero con Google Sheets.</span>
+        </div>
+      </section>
+
       <!-- SECCIÓN: REGISTRO DE MARCAS, MODELOS Y MOTORES -->
       <section class="reception-form-card" style="padding: 24px; max-width: 600px; display: flex; flex-direction: column; gap: 16px;">
         <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 8px;">
@@ -3649,7 +3666,7 @@
   <!-- Cliente de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=5.8"></script>
+  <script src="app.js?v=5.9"></script>
 </body>
 </html>
 <!-- Build trigger commit -->

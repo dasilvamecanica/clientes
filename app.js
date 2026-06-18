@@ -443,6 +443,10 @@ function loadWorkshopConfig() {
     
     const inicioEl = document.getElementById('config-workshop-inicio-act');
     if (inicioEl) inicioEl.value = workshopConfig.inicioAct || '2018-03-01';
+
+    if (typeof renderCategoryMultipliersConfig === 'function') {
+      renderCategoryMultipliersConfig();
+    }
     
     const pvEl = document.getElementById('config-workshop-pv');
     if (pvEl) pvEl.value = workshopConfig.pv || '0005';
@@ -558,8 +562,17 @@ window.saveWorkshopConfig = function() {
   const waMsgQuoteVal = document.getElementById('config-workshop-wa-msg-quote') ? document.getElementById('config-workshop-wa-msg-quote').value.trim() : '';
   const waMsgInvoiceVal = document.getElementById('config-workshop-wa-msg-invoice') ? document.getElementById('config-workshop-wa-msg-invoice').value.trim() : '';
 
+  const multipliers = {};
+  const multiplierInputs = document.querySelectorAll('.config-cat-multiplier-input');
+  multiplierInputs.forEach(input => {
+    const cat = input.getAttribute('data-category');
+    const val = parseFloat(input.value) || 1.0;
+    multipliers[cat] = val;
+  });
+
   workshopConfig = {
     name: nameVal || 'sdfds',
+    categoryMultipliers: multipliers,
     phone1: phone1Val || '+5492235041116',
     phone2: phone2Val || '+5492235041116',
     address: addressVal || 'Dirección de Ejemplo 123',
@@ -2234,7 +2247,7 @@ function initEventListeners() {
         if (service) {
           const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
           const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
-          const price = service['price' + cat] || service.price || 0;
+          const price = getServicePrice(service, cat);
           document.getElementById('add-quote-item-value').value = price;
         }
       } else {
@@ -2847,6 +2860,45 @@ function getVehicleCategoryBadgeHtml(category) {
   }
   return `<span class="vehicle-category-badge" style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 5px; background: ${bg}; color: ${text}; border: 1px solid ${border}; text-transform: uppercase; display: inline-block; letter-spacing: 0.5px;">${label}</span>`;
 }
+
+function getServicePrice(s, tier) {
+  if (!s) return 0;
+  const base = s['price' + tier] || s.price || 0;
+  const cat = (s.category || 'GENERAL').toUpperCase();
+  const mult = (workshopConfig.categoryMultipliers && workshopConfig.categoryMultipliers[cat] !== undefined)
+    ? parseFloat(workshopConfig.categoryMultipliers[cat]) || 1.0
+    : 1.0;
+  return base * mult;
+}
+
+window.renderCategoryMultipliersConfig = function() {
+  const container = document.getElementById('category-multipliers-container');
+  if (!container) return;
+
+  const categories = [...new Set(servicesCatalog.map(s => (s.category || 'GENERAL').toUpperCase()).filter(Boolean))].sort();
+
+  if (categories.length === 0) {
+    container.innerHTML = `<span style="font-size: 13px; color: var(--text-muted); font-style: italic;">No hay categorías registradas en el catálogo. Sincronice primero con Google Sheets.</span>`;
+    return;
+  }
+
+  if (!workshopConfig.categoryMultipliers) {
+    workshopConfig.categoryMultipliers = {};
+  }
+
+  container.innerHTML = categories.map(cat => {
+    const val = workshopConfig.categoryMultipliers[cat] !== undefined ? workshopConfig.categoryMultipliers[cat] : 1.0;
+    return `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background-color: var(--card-bg-hover); border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-bottom: 4px;">
+        <span style="font-size: 13px; font-weight: 700; color: var(--text-primary); text-transform: uppercase;">${cat}</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="number" class="config-cat-multiplier-input" data-category="${cat}" value="${val}" step="0.01" min="0.1" max="10" style="width: 80px; text-align: right; background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 13px; color: var(--text-primary);">
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">x</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
 
 function formatCurrency(amount) {
   if (amount === 0) return '$0';
@@ -4949,7 +5001,7 @@ window.handleInlineNameChange = function(input, type) {
     if (catalogItem) {
       const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
       const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
-      const price = catalogItem['price' + cat] || catalogItem.price || 0;
+      const price = getServicePrice(catalogItem, cat);
       valueInput.value = price;
     }
   } else {
@@ -7300,9 +7352,9 @@ window.renderServiciosCatalogView = function() {
       <tr style="cursor: pointer;" onclick="openEditServiceModal('${s.id}')">
         <td style="font-weight: 600;">${getCategoryBadgeHtml(s.category)}</td>
         <td style="font-weight: 700; color: var(--text-primary);">${s.name}</td>
-        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceA ? formatCurrency(s.priceA) : '-'}</td>
-        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceB ? formatCurrency(s.priceB) : '-'}</td>
-        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceC ? formatCurrency(s.priceC) : '-'}</td>
+        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceA ? formatCurrency(getServicePrice(s, 'A')) : '-'}</td>
+        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceB ? formatCurrency(getServicePrice(s, 'B')) : '-'}</td>
+        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceC ? formatCurrency(getServicePrice(s, 'C')) : '-'}</td>
         <td style="text-align: center;" onclick="event.stopPropagation()">
           <button class="table-action-btn red-delete" onclick="deleteServiceFromCatalog('${s.id}')" title="Eliminar Servicio" style="padding: 2px 6px;">
             <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
@@ -9148,7 +9200,7 @@ window.populateDatalists = function() {
     const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
     const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
     quoteSuggestions.innerHTML = servicesCatalog.map(s => {
-      const price = s['price' + cat] || s.price || 0;
+      const price = getServicePrice(s, cat);
       const catLabel = s.category ? `[${s.category}] ` : '';
       return `<option value="${s.name}">${catLabel}${formatCurrency(price)}</option>`;
     }).join('');
