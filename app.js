@@ -3030,6 +3030,17 @@ window.delayCloseClientDropdown = function() {
   }, 180);
 };
 
+// Devuelve una dirección de email limpia, o '' si el valor es un placeholder o inválido
+function sanitizeEmail(val) {
+  if (!val) return '';
+  const trimmed = val.trim();
+  // Descartar valores que claramente no son emails (guiones, em-dashes, N/A, etc.)
+  if (/^[-—–_\s.N/A]+$/i.test(trimmed)) return '';
+  // Si no contiene '@' tampoco es un email válido
+  if (!trimmed.includes('@')) return '';
+  return trimmed;
+}
+
 window.selectClient = function(id, name) {
   document.getElementById('form-client-search').value = name;
   document.getElementById('form-client-select').value  = id;
@@ -3037,7 +3048,7 @@ window.selectClient = function(id, name) {
   const client = clients.find(c => String(c.id) === String(id));
   if (client) {
     document.getElementById('form-nc-phone').value = client.phone || '';
-    document.getElementById('form-nc-email').value = client.email || '';
+    document.getElementById('form-nc-email').value = sanitizeEmail(client.email);
     
     // Campos fiscales del cliente
     const cuitEl = document.getElementById('form-client-cuit');
@@ -3195,7 +3206,7 @@ window.handlePlateInput = function(inputEl) {
       } else {
         document.getElementById('form-client-search').value = matchedVehicle.client;
         document.getElementById('form-nc-phone').value = matchedVehicle.clientPhone || '';
-        document.getElementById('form-nc-email').value = matchedVehicle.clientEmail || '';
+        document.getElementById('form-nc-email').value = sanitizeEmail(matchedVehicle.clientEmail);
       }
     }
   } else {
@@ -3225,7 +3236,7 @@ window.handlePlateBlur = function(inputEl) {
       } else {
         document.getElementById('form-client-search').value = matchedVehicle.client;
         document.getElementById('form-nc-phone').value = matchedVehicle.clientPhone || '';
-        document.getElementById('form-nc-email').value = matchedVehicle.clientEmail || '';
+        document.getElementById('form-nc-email').value = sanitizeEmail(matchedVehicle.clientEmail);
       }
     }
   }
@@ -3259,7 +3270,7 @@ window.selectVehicle = function(id) {
       } else {
         document.getElementById('form-client-search').value = v.client;
         document.getElementById('form-nc-phone').value = v.clientPhone || '';
-        document.getElementById('form-nc-email').value = v.clientEmail || '';
+        document.getElementById('form-nc-email').value = sanitizeEmail(v.clientEmail);
       }
     }
   }
@@ -3379,7 +3390,7 @@ window.handleVehicleFormSubmit = function(e) {
   // Manejo de Clientes y Homónimos
   const clientSearchName = document.getElementById('form-client-search').value.trim();
   const typedPhone = document.getElementById('form-nc-phone').value.trim();
-  const typedEmail = document.getElementById('form-nc-email').value.trim() || '—';
+  const typedEmail = document.getElementById('form-nc-email').value.trim() || '';
   let clientId = document.getElementById('form-client-select').value;
   let client = null;
 
@@ -3388,7 +3399,8 @@ window.handleVehicleFormSubmit = function(e) {
 
   if (existingClient) {
     const phoneMatches = (existingClient.phone || '').trim() === typedPhone;
-    const emailMatches = (existingClient.email || '—').trim() === typedEmail;
+    const cleanExistingEmail = sanitizeEmail(existingClient.email);
+    const emailMatches = !typedEmail || !cleanExistingEmail || cleanExistingEmail === typedEmail;
 
     if (phoneMatches && emailMatches) {
       // Si coinciden perfectamente los contactos, asumimos que es el mismo cliente y lo vinculamos
@@ -9217,13 +9229,13 @@ window.openEditVehicleModal = function(vehicleId) {
   const clientObj = clients.find(c => c.name.trim().toLowerCase() === (v.client || '').trim().toLowerCase());
   if (clientObj) {
     document.getElementById('form-nc-phone').value = clientObj.phone || '';
-    document.getElementById('form-nc-email').value = clientObj.email || '';
+    document.getElementById('form-nc-email').value = sanitizeEmail(clientObj.email);
     document.getElementById('form-client-cuit').value = clientObj.cuit || '';
     document.getElementById('form-client-iva').value = clientObj.ivaCondition || 'Consumidor Final';
     document.getElementById('form-client-address').value = clientObj.address || '';
   } else {
     document.getElementById('form-nc-phone').value = v.clientPhone || '';
-    document.getElementById('form-nc-email').value = v.clientEmail || '';
+    document.getElementById('form-nc-email').value = sanitizeEmail(v.clientEmail);
     document.getElementById('form-client-cuit').value = v.clientCuit || '';
     document.getElementById('form-client-iva').value = v.clientIva || 'Consumidor Final';
     document.getElementById('form-client-address').value = v.clientAddress || '';
