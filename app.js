@@ -534,7 +534,6 @@ function loadWorkshopConfig() {
     toggleWaConfigFields(savedMethod);
     toggleWaTemplateFields(workshopConfig.waMsgType || 'direct');
   }
-}
 
   const demoSwitch = document.getElementById('demo-mode-switch');
   if (demoSwitch) {
