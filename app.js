@@ -3855,19 +3855,23 @@ window.deliverVehicleFromCard = function(vehicleId) {
 window.handleContextDelete = function() {
   if (!activeContextVehicleId) return;
   
-  if (confirm('Â¿EstÃ¡s seguro de que deseas eliminar este registro de vehÃ­culo?')) {
+  if (confirm('¿Estás seguro de que deseas eliminar este registro de vehículo?')) {
     const cardEl = document.getElementById(`card-${activeContextVehicleId}`);
     if (cardEl) {
       cardEl.style.transform = 'scale(0.8)';
       cardEl.style.opacity = '0';
       setTimeout(() => {
-        vehicles = vehicles.filter(v => v.id !== activeContextVehicleId);
+        const idToDelete = activeContextVehicleId;
+        vehicles = vehicles.filter(v => v.id !== idToDelete);
         saveState();
+        deleteFromSupabase('taller_vehicles', idToDelete);
         renderApp();
       }, 250);
     } else {
-      vehicles = vehicles.filter(v => v.id !== activeContextVehicleId);
+      const idToDelete = activeContextVehicleId;
+      vehicles = vehicles.filter(v => v.id !== idToDelete);
       saveState();
+      deleteFromSupabase('taller_vehicles', idToDelete);
       renderApp();
     }
   }
@@ -5651,12 +5655,14 @@ window.renderOTImages = function() {
 window.deleteActiveVehicleFromFicha = function() {
   if (!activeReceptionVehicleId) return;
   
-  if (confirm('Â¿EstÃ¡s seguro de que deseas eliminar este registro de vehÃ­culo permanentemente?')) {
-    vehicles = vehicles.filter(v => v.id !== activeReceptionVehicleId);
+  if (confirm('¿Estás seguro de que deseas eliminar este registro de vehículo permanentemente?')) {
+    const idToDelete = activeReceptionVehicleId;
+    vehicles = vehicles.filter(v => v.id !== idToDelete);
     saveState();
+    deleteFromSupabase('taller_vehicles', idToDelete);
     exitDetailedReception();
     renderApp();
-    alert('VehÃ­culo eliminado permanentemente.');
+    alert('Vehículo eliminado permanentemente.');
   }
 };
 
@@ -7145,6 +7151,7 @@ window.deleteOTFromDB = function(vehicleId) {
   if (confirm('¿Estás seguro de que deseas eliminar esta orden de trabajo?')) {
     vehicles = vehicles.filter(v => v.id !== vehicleId);
     saveState();
+    deleteFromSupabase('taller_vehicles', vehicleId);
     renderApp();
   }
 };
@@ -8671,6 +8678,7 @@ window.deleteCurrentVehicleFromModal = function() {
   if (confirm('¿Estás seguro de que deseas eliminar este vehículo de la flota? Esta acción no se puede deshacer.')) {
     vehicles = vehicles.filter(v => v.id !== vehicleId);
     saveState();
+    deleteFromSupabase('taller_vehicles', vehicleId);
     closeModal('vehicle-details-modal');
     renderApp();
   }
