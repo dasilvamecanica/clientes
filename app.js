@@ -3165,6 +3165,9 @@ window.openAddVehicleModal = function(defaultStage = 'recepcion') {
   document.getElementById('vehicle-form').reset();
   document.getElementById('form-vehicle-id').value = '';
   document.getElementById('form-client-select').value = '';
+  if (document.getElementById('form-category')) {
+    document.getElementById('form-category').value = 'B';
+  }
   
   // Poblar datalists
   populateAutocompleteDatalists();
@@ -3195,8 +3198,6 @@ window.handleVehicleFormSubmit = function(e) {
   const mileageVal = mileageInput ? parseInt(mileageInput.value) || 0 : 0;
   const vinInput = document.getElementById('form-vin');
   const vinVal = vinInput ? vinInput.value.trim() : '';
-  const categoryEl = document.getElementById('form-category');
-  const categoryVal = categoryEl ? categoryEl.value : 'B';
 
   if (!plateVal) {
     alert('Por favor, ingresa la patente del vehículo.');
@@ -3317,7 +3318,7 @@ window.handleVehicleFormSubmit = function(e) {
       vehicle.motor = motorVal;
       vehicle.kilometers = mileageVal;
       vehicle.vin = vinVal;
-      vehicle.category = categoryVal;
+      vehicle.category = document.getElementById('form-category') ? document.getElementById('form-category').value : 'B';
 
       // Registrar propietario anterior en historial si cambia
       const prevOwner = vehicle.client;
@@ -3368,6 +3369,7 @@ window.handleVehicleFormSubmit = function(e) {
     color: colorVal,
     motor: motorVal,
     vin: vinVal,
+    category: document.getElementById('form-category') ? document.getElementById('form-category').value : 'B',
     client: client.name,
     clientPhone: client.phone,
     clientEmail: client.email,
@@ -3384,8 +3386,7 @@ window.handleVehicleFormSubmit = function(e) {
     fuelLevel: '1/2',
     services: [],
     hasDetails: false,
-    detailsNotes: '',
-    category: categoryVal
+    detailsNotes: ''
   };
 
   vehicles.push(newVehicle);
@@ -3442,8 +3443,7 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
   const detVehicleNameSidebar = document.getElementById('det-vehicle-name-sidebar');
   if (detVehicleNameSidebar) {
     const motorStr = vehicle.motor ? ` · Motor: ${vehicle.motor}` : '';
-    const catStr = vehicle.category ? ` [Cat. ${vehicle.category}]` : ' [Cat. B]';
-    detVehicleNameSidebar.textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}${catStr}`;
+    detVehicleNameSidebar.textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}`;
   }
   const detVehiclePlateSidebar = document.getElementById('det-vehicle-plate-sidebar');
   if (detVehiclePlateSidebar) {
@@ -7172,155 +7172,53 @@ window.openOTActionsMenu = function(event, vehicleId) {
     menu.style.borderRadius = 'var(--radius-md)';
     menu.style.boxShadow = 'var(--shadow-md)';
     menu.style.zIndex = '1000';
-    // --- 2. SERVICIOS DEL CATÁLOGO (OPERACIONES TÉCNICAS) ---
+    menu.style.width = '160px';
+    document.body.appendChild(menu);
+  }
 
-// CSV Parser Helper
-function parseCSV(text) {
-  const lines = [];
-  let row = [];
-  let inQuotes = false;
-  let currentVal = '';
+  menu.innerHTML = `
+    <button class="dropdown-item" onclick="viewOTDetails('${vehicleId}')">
+      <i data-lucide="eye" style="width: 14px; color: var(--text-secondary);"></i> Ver detalles
+    </button>
+    <button class="dropdown-item" onclick="openDetailedReception('${vehicleId}', false)">
+      <i data-lucide="pencil" style="width: 14px; color: var(--text-secondary);"></i> Editar Orden
+    </button>
+    <div style="border-top: 1px solid var(--border-color); margin: 4px 0;"></div>
+    <button class="dropdown-item text-danger" onclick="deleteOTFromDB('${vehicleId}')" style="color: #ef4444;">
+      <i data-lucide="trash-2" style="width: 14px; color: #ef4444;"></i> Eliminar
+    </button>
+  `;
 
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const nextChar = text[i + 1];
+  const rect = event.currentTarget.getBoundingClientRect();
+  menu.style.top = `${window.scrollY + rect.bottom + 4}px`;
+  menu.style.left = `${window.scrollX + rect.left - 130}px`;
+  menu.classList.add('show');
 
-    if (char === '"') {
-      if (inQuotes && nextChar === '"') {
-        currentVal += '"';
-        i++; // skip next quote
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ',' && !inQuotes) {
-      row.push(currentVal.trim());
-      currentVal = '';
-    } else if ((char === '\r' || char === '\n') && !inQuotes) {
-      if (char === '\r' && nextChar === '\n') {
-        i++;
-      }
-      row.push(currentVal.trim());
-      lines.push(row);
-      row = [];
-      currentVal = '';
-    } else {
-      currentVal += char;
+  initLucide();
+
+  const closeMenu = (e) => {
+    if (!e.target.closest('#ot-dropdown-menu') && !e.target.closest('.table-action-btn')) {
+      menu.classList.remove('show');
+      document.removeEventListener('click', closeMenu);
     }
-  }
-  if (currentVal || row.length > 0) {
-    row.push(currentVal.trim());
-    lines.push(row);
-  }
-  return lines;
-}
+  };
+  document.addEventListener('click', closeMenu);
+};
 
-// Price Parser Helper
-function parsePrice(str) {
-  if (!str) return 0;
-  let s = str.trim();
-  if (s === '-' || s === '' || s === '—') return 0;
-  s = s.replace('$', '').replace(/\s/g, '').replace(/,/g, '');
-  const val = parseFloat(s);
-  return isNaN(val) ? 0 : val;
-}
-
-// Sincronización desde Google Sheets
-window.syncServicesWithGoogleSheet = async function() {
-  const btn = document.getElementById('btn-sync-sheet-services');
-  if (!btn) return;
-  const originalText = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = `<i data-lucide="refresh-cw" class="spin" style="width: 14px; display: inline-block; animation: spin 1s linear infinite;"></i> Sincronizando...`;
+window.deleteOTFromDB = function(vehicleId) {
+  const menu = document.getElementById('ot-dropdown-menu');
+  if (menu) menu.classList.remove('show');
   
-  // Agregar estilo de rotación temporalmente si no existe
-  if (!document.getElementById('temp-spin-style')) {
-    const style = document.createElement('style');
-    style.id = 'temp-spin-style';
-    style.textContent = `@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`;
-    document.head.appendChild(style);
-  }
-
-  try {
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1CxS7ATBmdJaxgzaLeT7t6SjXGwfjgIpLHEJAM7U2KTc/export?format=csv';
-    const res = await fetch(sheetUrl);
-    if (!res.ok) {
-      throw new Error(`Error HTTP ${res.status}: ${res.statusText}`);
-    }
-    const csvText = await res.text();
-    const parsedRows = parseCSV(csvText);
-    const newServices = [];
-    let index = 0;
-
-    for (let i = 1; i < parsedRows.length; i++) {
-      const row = parsedRows[i];
-      // Note: first empty string offset from split is index 0
-      if (row.length < 3) continue;
-
-      const category = (row[1] || '').trim();
-      const serviceName = (row[2] || '').trim();
-      const priceAVal = row[3] || '';
-      const priceBVal = row[4] || '';
-      const priceCVal = row[5] || '';
-
-      if (!serviceName) continue;
-
-      const priceA = parsePrice(priceAVal);
-      const priceB = parsePrice(priceBVal);
-      const priceC = parsePrice(priceCVal);
-
-      // Unique stable ID
-      const stableId = 's-sync-' + serviceName.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 40) + '-' + index;
-      index++;
-
-      newServices.push({
-        id: stableId,
-        name: serviceName,
-        category: category,
-        description: `Servicio de ${category}`,
-        price: priceB || priceA || priceC || 0,
-        priceA: priceA,
-        priceB: priceB,
-        priceC: priceC,
-        date: new Date().toISOString().split('T')[0]
-      });
-    }
-
-    if (newServices.length === 0) {
-      throw new Error("No se encontraron registros de servicios válidos en el documento.");
-    }
-
-    // 1. Limpiar base de datos Supabase
-    if (supabaseClient) {
-      const { error: deleteError } = await supabaseClient
-        .from('taller_services')
-        .delete()
-        .neq('id', 'keep_none');
-      if (deleteError) {
-        console.error("Error al limpiar taller_services en Supabase:", deleteError);
-      }
-    }
-
-    // 2. Guardar catálogo local y gatillar sincronización
-    servicesCatalog = newServices;
-    saveServices();
-
-    // 3. Renderizar y poblar autocompletadores
-    renderServiciosCatalogView();
-    if (typeof populateDatalists === 'function') {
-      populateDatalists();
-    }
-
-    alert(`Sincronización exitosa. Se importaron ${newServices.length} servicios desde Google Sheets.`);
-  } catch (err) {
-    console.error("Error en sincronización:", err);
-    alert(`Error de sincronización: ${err.message}`);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = originalText;
-    initLucide();
+  if (confirm('¿Estás seguro de que deseas eliminar esta orden de trabajo?')) {
+    vehicles = vehicles.filter(v => v.id !== vehicleId);
+    saveState();
+    deleteFromSupabase('taller_vehicles', vehicleId);
+    renderApp();
   }
 };
 
+
+// --- 2. SERVICIOS DEL CATÃLOGO (OPERACIONES TÃ‰CNICAS) ---
 window.renderServiciosCatalogView = function() {
   const searchInput = document.getElementById('catalogo-servicios-search');
   const tbody = document.getElementById('servicios-table-body');
@@ -7410,6 +7308,149 @@ window.deleteServiceFromCatalog = function(serviceId) {
     renderServiciosCatalogView();
   }
 };
+
+// CSV Parser Helper
+function parseCSV(text) {
+  const lines = [];
+  let row = [];
+  let inQuotes = false;
+  let currentVal = '';
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        currentVal += '"';
+        i++; // skip next quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      row.push(currentVal.trim());
+      currentVal = '';
+    } else if ((char === '\r' || char === '\n') && !inQuotes) {
+      if (char === '\r' && nextChar === '\n') {
+        i++;
+      }
+      row.push(currentVal.trim());
+      lines.push(row);
+      row = [];
+      currentVal = '';
+    } else {
+      currentVal += char;
+    }
+  }
+  if (currentVal || row.length > 0) {
+    row.push(currentVal.trim());
+    lines.push(row);
+  }
+  return lines;
+}
+
+// Price Parser Helper
+function parsePrice(str) {
+  if (!str) return 0;
+  let s = str.trim();
+  if (s === '-' || s === '' || s === '—') return 0;
+  s = s.replace('$', '').replace(/\s/g, '').replace(/,/g, '');
+  const val = parseFloat(s);
+  return isNaN(val) ? 0 : val;
+}
+
+// Sincronización desde Google Sheets
+window.syncServicesWithGoogleSheet = async function() {
+  const btn = document.getElementById('btn-sync-sheet-services');
+  if (!btn) return;
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i data-lucide="refresh-cw" class="spin" style="width: 14px; display: inline-block; animation: spin 1s linear infinite;"></i> Sincronizando...`;
+  
+  if (!document.getElementById('temp-spin-style')) {
+    const style = document.createElement('style');
+    style.id = 'temp-spin-style';
+    style.textContent = `@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`;
+    document.head.appendChild(style);
+  }
+
+  try {
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1CxS7ATBmdJaxgzaLeT7t6SjXGwfjgIpLHEJAM7U2KTc/export?format=csv';
+    const res = await fetch(sheetUrl);
+    if (!res.ok) {
+      throw new Error(`Error HTTP ${res.status}: ${res.statusText}`);
+    }
+    const csvText = await res.text();
+    const parsedRows = parseCSV(csvText);
+    const newServices = [];
+    let index = 0;
+
+    for (let i = 1; i < parsedRows.length; i++) {
+      const row = parsedRows[i];
+      if (row.length < 3) continue;
+
+      const category = (row[1] || '').trim();
+      const serviceName = (row[2] || '').trim();
+      const priceAVal = row[3] || '';
+      const priceBVal = row[4] || '';
+      const priceCVal = row[5] || '';
+
+      if (!serviceName) continue;
+
+      const priceA = parsePrice(priceAVal);
+      const priceB = parsePrice(priceBVal);
+      const priceC = parsePrice(priceCVal);
+
+      const stableId = 's-sync-' + serviceName.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 40) + '-' + index;
+      index++;
+
+      newServices.push({
+        id: stableId,
+        name: serviceName,
+        category: category,
+        description: `Servicio de ${category}`,
+        price: priceB || priceA || priceC || 0,
+        priceA: priceA,
+        priceB: priceB,
+        priceC: priceC,
+        date: new Date().toISOString().split('T')[0]
+      });
+    }
+
+    if (newServices.length === 0) {
+      throw new Error("No se encontraron registros de servicios válidos en el documento.");
+    }
+
+    if (supabaseClient) {
+      const { error: deleteError } = await supabaseClient
+        .from('taller_services')
+        .delete()
+        .neq('id', 'keep_none');
+      if (deleteError) {
+        console.error("Error al limpiar taller_services en Supabase:", deleteError);
+      }
+    }
+
+    servicesCatalog = newServices;
+    saveServices();
+
+    renderServiciosCatalogView();
+    if (typeof populateDatalists === 'function') {
+      populateDatalists();
+    }
+
+    alert(`Sincronización exitosa. Se importaron ${newServices.length} servicios desde Google Sheets.`);
+  } catch (err) {
+    console.error("Error en sincronización:", err);
+    alert(`Error de sincronización: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+    initLucide();
+  }
+};
+
+
 
 window.renderRepuestosCatalogView = function() {
   const searchInput = document.getElementById('catalogo-repuestos-search');
@@ -8737,10 +8778,6 @@ window.viewVehicleDetails = function(vehicleId) {
   document.getElementById('vd-motor').textContent = v.motor || '—';
   document.getElementById('vd-mileage').textContent = v.kilometers ? `${parseInt(v.kilometers).toLocaleString('es-ES')} km` : '—';
   document.getElementById('vd-vin').textContent = v.vin || '—';
-  const catNames = { 'A': 'Categoría A (Chico)', 'B': 'Categoría B (Mediano)', 'C': 'Categoría C (Grande/Premium)' };
-  const catText = catNames[v.category] || `Categoría ${v.category || 'B'} (Mediano)`;
-  const vdCategory = document.getElementById('vd-category');
-  if (vdCategory) vdCategory.textContent = catText;
 
   // Propietario
   const clientObj = clients.find(c => c.name.trim().toLowerCase() === (v.client || '').trim().toLowerCase());
@@ -8959,7 +8996,9 @@ window.openEditVehicleModal = function(vehicleId) {
   document.getElementById('form-motor').value = v.motor || '';
   document.getElementById('form-mileage').value = v.kilometers || '';
   document.getElementById('form-vin').value = v.vin || '';
-  document.getElementById('form-category').value = v.category || 'B';
+  if (document.getElementById('form-category')) {
+    document.getElementById('form-category').value = v.category || 'B';
+  }
   
   // Set owner details
   document.getElementById('form-client-search').value = v.client || '';
