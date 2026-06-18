@@ -8193,7 +8193,7 @@ window.openClientActionsMenu = function(event, clientId) {
   if (client) {
     menu.querySelector('#btn-ws-sim').onclick = () => {
       menu.classList.remove('show');
-      alert(`Abriendo chat integrado por WhatsApp con ${client.name} en ${client.phone}...`);
+      sendClientWhatsApp(client);
     };
   }
 
@@ -11141,6 +11141,31 @@ function showToastNotification(text, type = 'info') {
   `;
   document.body.appendChild(toast);
   return toast;
+}
+
+// Abrir WhatsApp con un cliente directamente (sin PDF)
+function sendClientWhatsApp(client) {
+  if (!client || !client.phone) {
+    alert('Este cliente no tiene un número de teléfono registrado.');
+    return;
+  }
+
+  const clientPhone = formatArgentinianPhoneForWhatsApp(client.phone);
+  if (!clientPhone) {
+    alert('El número de teléfono del cliente no tiene un formato válido.');
+    return;
+  }
+
+  const greeting = encodeURIComponent(`Hola ${client.name}! Le contactamos desde ${workshopConfig.name || 'el taller'}.`);
+
+  // Usar WhatsApp Web si el método configurado es wa_link_ext, de lo contrario usar api.whatsapp.com
+  const baseUrl = workshopConfig.waMethod === 'wa_link_ext'
+    ? 'https://web.whatsapp.com/send'
+    : 'https://api.whatsapp.com/send';
+
+  const url = `${baseUrl}?phone=${clientPhone}&text=${greeting}`;
+  window.open(url, 'whatsapp_web_tab');
+  showToastNotification(`✓ Abriendo WhatsApp con ${client.name}`, 'success');
 }
 
 window.sendDocumentViaWhatsApp = function(phone, filename, pdfBlob) {
