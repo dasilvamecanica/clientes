@@ -74,7 +74,8 @@ async function syncWithSupabase(tableName, data) {
             otTasks: item.otTasks || [],
             ownerHistory: item.ownerHistory || [],
             deliveryDate: item.deliveryDate || '',
-            deliveryNotes: item.deliveryNotes || ''
+            deliveryNotes: item.deliveryNotes || '',
+            category: item.category || 'B'
           };
           servicesWithMeta.push('__METADATA__:' + JSON.stringify(metaObj));
 
@@ -124,6 +125,22 @@ async function syncWithSupabase(tableName, data) {
             title: item.title,
             description: item.description,
             created_at: item.createdAt || item.created_at
+          };
+        }
+        if (tableName === 'taller_services') {
+          const metaObj = {
+            category: item.category || '',
+            priceA: item.priceA || 0,
+            priceB: item.priceB || 0,
+            priceC: item.priceC || 0
+          };
+          const serializedDesc = `${item.description || ''} ||| ${JSON.stringify(metaObj)}`;
+          return {
+            id: item.id,
+            name: item.name,
+            description: serializedDesc,
+            price: item.price || 0,
+            date: item.date
           };
         }
         return { ...item };
@@ -245,7 +262,37 @@ async function loadStateFromSupabase() {
     }
     const { data: serviceData, error: serviceError } = await supabaseClient.from('taller_services').select('*');
     if (!serviceError && serviceData) {
-      servicesCatalog = serviceData;
+      servicesCatalog = serviceData.map(s => {
+        let desc = s.description || '';
+        let category = '';
+        let priceA = 0;
+        let priceB = 0;
+        let priceC = 0;
+        if (desc.includes(' ||| ')) {
+          const parts = desc.split(' ||| ');
+          desc = parts[0];
+          try {
+            const meta = JSON.parse(parts[1]);
+            category = meta.category || '';
+            priceA = Number(meta.priceA) || 0;
+            priceB = Number(meta.priceB) || 0;
+            priceC = Number(meta.priceC) || 0;
+          } catch (e) {
+            console.error("Error parsing service metadata:", e);
+          }
+        }
+        return {
+          id: s.id,
+          name: s.name,
+          category: category || 'GENERAL',
+          description: desc,
+          price: s.price,
+          priceA: priceA || s.price || 0,
+          priceB: priceB || s.price || 0,
+          priceC: priceC || s.price || 0,
+          date: s.date
+        };
+      });
       localStorage.setItem('taller_services', JSON.stringify(servicesCatalog));
     }
     const { data: partData, error: partError } = await supabaseClient.from('taller_parts').select('*');
@@ -285,6 +332,7 @@ async function loadStateFromSupabase() {
         let ownerHistory = [];
         let deliveryDate = '';
         let deliveryNotes = '';
+        let category = 'B';
         let services = [];
 
         if (Array.isArray(item.services)) {
@@ -296,6 +344,7 @@ async function loadStateFromSupabase() {
                 if (meta.ownerHistory) ownerHistory = meta.ownerHistory;
                 if (meta.deliveryDate) deliveryDate = meta.deliveryDate;
                 if (meta.deliveryNotes) deliveryNotes = meta.deliveryNotes;
+                if (meta.category) category = meta.category;
               } catch (e) {
                 console.error("Error parsing vehicle metadata:", e);
               }
@@ -336,7 +385,8 @@ async function loadStateFromSupabase() {
           otTasks: otTasks,
           ownerHistory: ownerHistory,
           deliveryDate: deliveryDate,
-          deliveryNotes: deliveryNotes
+          deliveryNotes: deliveryNotes,
+          category: category
         };
       });
       localStorage.setItem('taller_vehicles', JSON.stringify(vehicles));
@@ -2182,7 +2232,10 @@ function initEventListeners() {
       if (type === 'service') {
         const service = servicesCatalog.find(s => s.name === selectedName);
         if (service) {
-          document.getElementById('add-quote-item-value').value = service.price;
+          const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+          const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
+          const price = service['price' + cat] || service.price || 0;
+          document.getElementById('add-quote-item-value').value = price;
         }
       } else {
         const part = partsCatalog.find(p => p.name === selectedName);
@@ -3142,6 +3195,8 @@ window.handleVehicleFormSubmit = function(e) {
   const mileageVal = mileageInput ? parseInt(mileageInput.value) || 0 : 0;
   const vinInput = document.getElementById('form-vin');
   const vinVal = vinInput ? vinInput.value.trim() : '';
+  const categoryEl = document.getElementById('form-category');
+  const categoryVal = categoryEl ? categoryEl.value : 'B';
 
   if (!plateVal) {
     alert('Por favor, ingresa la patente del vehículo.');
@@ -3262,6 +3317,7 @@ window.handleVehicleFormSubmit = function(e) {
       vehicle.motor = motorVal;
       vehicle.kilometers = mileageVal;
       vehicle.vin = vinVal;
+      vehicle.category = categoryVal;
 
       // Registrar propietario anterior en historial si cambia
       const prevOwner = vehicle.client;
@@ -3328,7 +3384,8 @@ window.handleVehicleFormSubmit = function(e) {
     fuelLevel: '1/2',
     services: [],
     hasDetails: false,
-    detailsNotes: ''
+    detailsNotes: '',
+    category: categoryVal
   };
 
   vehicles.push(newVehicle);
@@ -3385,7 +3442,8 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
   const detVehicleNameSidebar = document.getElementById('det-vehicle-name-sidebar');
   if (detVehicleNameSidebar) {
     const motorStr = vehicle.motor ? ` · Motor: ${vehicle.motor}` : '';
-    detVehicleNameSidebar.textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}`;
+    const catStr = vehicle.category ? ` [Cat. ${vehicle.category}]` : ' [Cat. B]';
+    detVehicleNameSidebar.textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}${catStr}`;
   }
   const detVehiclePlateSidebar = document.getElementById('det-vehicle-plate-sidebar');
   if (detVehiclePlateSidebar) {
@@ -4840,7 +4898,10 @@ window.handleInlineNameChange = function(input, type) {
   if (type === 'service') {
     const catalogItem = servicesCatalog.find(s => s.name.toLowerCase() === name.toLowerCase());
     if (catalogItem) {
-      valueInput.value = catalogItem.price;
+      const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+      const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
+      const price = catalogItem['price' + cat] || catalogItem.price || 0;
+      valueInput.value = price;
     }
   } else {
     // Buscar coincidencia exacta por nombre simple o nombre formateado con compatibilidad
@@ -7111,53 +7172,155 @@ window.openOTActionsMenu = function(event, vehicleId) {
     menu.style.borderRadius = 'var(--radius-md)';
     menu.style.boxShadow = 'var(--shadow-md)';
     menu.style.zIndex = '1000';
-    menu.style.width = '160px';
-    document.body.appendChild(menu);
-  }
+    // --- 2. SERVICIOS DEL CATÁLOGO (OPERACIONES TÉCNICAS) ---
 
-  menu.innerHTML = `
-    <button class="dropdown-item" onclick="viewOTDetails('${vehicleId}')">
-      <i data-lucide="eye" style="width: 14px; color: var(--text-secondary);"></i> Ver detalles
-    </button>
-    <button class="dropdown-item" onclick="openDetailedReception('${vehicleId}', false)">
-      <i data-lucide="pencil" style="width: 14px; color: var(--text-secondary);"></i> Editar Orden
-    </button>
-    <div style="border-top: 1px solid var(--border-color); margin: 4px 0;"></div>
-    <button class="dropdown-item text-danger" onclick="deleteOTFromDB('${vehicleId}')" style="color: #ef4444;">
-      <i data-lucide="trash-2" style="width: 14px; color: #ef4444;"></i> Eliminar
-    </button>
-  `;
+// CSV Parser Helper
+function parseCSV(text) {
+  const lines = [];
+  let row = [];
+  let inQuotes = false;
+  let currentVal = '';
 
-  const rect = event.currentTarget.getBoundingClientRect();
-  menu.style.top = `${window.scrollY + rect.bottom + 4}px`;
-  menu.style.left = `${window.scrollX + rect.left - 130}px`;
-  menu.classList.add('show');
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
 
-  initLucide();
-
-  const closeMenu = (e) => {
-    if (!e.target.closest('#ot-dropdown-menu') && !e.target.closest('.table-action-btn')) {
-      menu.classList.remove('show');
-      document.removeEventListener('click', closeMenu);
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        currentVal += '"';
+        i++; // skip next quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      row.push(currentVal.trim());
+      currentVal = '';
+    } else if ((char === '\r' || char === '\n') && !inQuotes) {
+      if (char === '\r' && nextChar === '\n') {
+        i++;
+      }
+      row.push(currentVal.trim());
+      lines.push(row);
+      row = [];
+      currentVal = '';
+    } else {
+      currentVal += char;
     }
-  };
-  document.addEventListener('click', closeMenu);
-};
+  }
+  if (currentVal || row.length > 0) {
+    row.push(currentVal.trim());
+    lines.push(row);
+  }
+  return lines;
+}
 
-window.deleteOTFromDB = function(vehicleId) {
-  const menu = document.getElementById('ot-dropdown-menu');
-  if (menu) menu.classList.remove('show');
+// Price Parser Helper
+function parsePrice(str) {
+  if (!str) return 0;
+  let s = str.trim();
+  if (s === '-' || s === '' || s === '—') return 0;
+  s = s.replace('$', '').replace(/\s/g, '').replace(/,/g, '');
+  const val = parseFloat(s);
+  return isNaN(val) ? 0 : val;
+}
+
+// Sincronización desde Google Sheets
+window.syncServicesWithGoogleSheet = async function() {
+  const btn = document.getElementById('btn-sync-sheet-services');
+  if (!btn) return;
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i data-lucide="refresh-cw" class="spin" style="width: 14px; display: inline-block; animation: spin 1s linear infinite;"></i> Sincronizando...`;
   
-  if (confirm('¿Estás seguro de que deseas eliminar esta orden de trabajo?')) {
-    vehicles = vehicles.filter(v => v.id !== vehicleId);
-    saveState();
-    deleteFromSupabase('taller_vehicles', vehicleId);
-    renderApp();
+  // Agregar estilo de rotación temporalmente si no existe
+  if (!document.getElementById('temp-spin-style')) {
+    const style = document.createElement('style');
+    style.id = 'temp-spin-style';
+    style.textContent = `@keyframes spin { 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`;
+    document.head.appendChild(style);
+  }
+
+  try {
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1CxS7ATBmdJaxgzaLeT7t6SjXGwfjgIpLHEJAM7U2KTc/export?format=csv';
+    const res = await fetch(sheetUrl);
+    if (!res.ok) {
+      throw new Error(`Error HTTP ${res.status}: ${res.statusText}`);
+    }
+    const csvText = await res.text();
+    const parsedRows = parseCSV(csvText);
+    const newServices = [];
+    let index = 0;
+
+    for (let i = 1; i < parsedRows.length; i++) {
+      const row = parsedRows[i];
+      // Note: first empty string offset from split is index 0
+      if (row.length < 3) continue;
+
+      const category = (row[1] || '').trim();
+      const serviceName = (row[2] || '').trim();
+      const priceAVal = row[3] || '';
+      const priceBVal = row[4] || '';
+      const priceCVal = row[5] || '';
+
+      if (!serviceName) continue;
+
+      const priceA = parsePrice(priceAVal);
+      const priceB = parsePrice(priceBVal);
+      const priceC = parsePrice(priceCVal);
+
+      // Unique stable ID
+      const stableId = 's-sync-' + serviceName.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 40) + '-' + index;
+      index++;
+
+      newServices.push({
+        id: stableId,
+        name: serviceName,
+        category: category,
+        description: `Servicio de ${category}`,
+        price: priceB || priceA || priceC || 0,
+        priceA: priceA,
+        priceB: priceB,
+        priceC: priceC,
+        date: new Date().toISOString().split('T')[0]
+      });
+    }
+
+    if (newServices.length === 0) {
+      throw new Error("No se encontraron registros de servicios válidos en el documento.");
+    }
+
+    // 1. Limpiar base de datos Supabase
+    if (supabaseClient) {
+      const { error: deleteError } = await supabaseClient
+        .from('taller_services')
+        .delete()
+        .neq('id', 'keep_none');
+      if (deleteError) {
+        console.error("Error al limpiar taller_services en Supabase:", deleteError);
+      }
+    }
+
+    // 2. Guardar catálogo local y gatillar sincronización
+    servicesCatalog = newServices;
+    saveServices();
+
+    // 3. Renderizar y poblar autocompletadores
+    renderServiciosCatalogView();
+    if (typeof populateDatalists === 'function') {
+      populateDatalists();
+    }
+
+    alert(`Sincronización exitosa. Se importaron ${newServices.length} servicios desde Google Sheets.`);
+  } catch (err) {
+    console.error("Error en sincronización:", err);
+    alert(`Error de sincronización: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+    initLucide();
   }
 };
 
-
-// --- 2. SERVICIOS DEL CATÃLOGO (OPERACIONES TÃ‰CNICAS) ---
 window.renderServiciosCatalogView = function() {
   const searchInput = document.getElementById('catalogo-servicios-search');
   const tbody = document.getElementById('servicios-table-body');
@@ -7168,21 +7331,26 @@ window.renderServiciosCatalogView = function() {
   let list = [...servicesCatalog];
 
   if (searchVal) {
-    list = list.filter(s => s.name.toLowerCase().includes(searchVal) || s.description.toLowerCase().includes(searchVal));
+    list = list.filter(s => 
+      s.name.toLowerCase().includes(searchVal) || 
+      (s.category || '').toLowerCase().includes(searchVal) ||
+      (s.description || '').toLowerCase().includes(searchVal)
+    );
   }
 
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 32px;">No se encontraron servicios registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 32px;">No se encontraron servicios registrados.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = list.map(s => {
     return `
       <tr>
-        <td style="font-weight: 700; color: var(--text-primary);">${s.name}</td>
-        <td style="color: var(--text-secondary); font-size: 12.5px;">${s.description}</td>
-        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">${formatCurrency(s.price)}</td>
-        <td style="color: var(--text-muted); font-size: 12px;">${s.date}</td>
+        <td style="font-weight: 600; color: var(--text-secondary); font-size: 12.5px;">${s.category || '—'}</td>
+        <td style="font-weight: 700; color: var(--text-primary); font-size: 13.5px;">${s.name}</td>
+        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">${formatCurrency(s.priceA)}</td>
+        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">${formatCurrency(s.priceB)}</td>
+        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">${formatCurrency(s.priceC)}</td>
         <td style="text-align: center;">
           <button class="table-action-btn red-delete" onclick="deleteServiceFromCatalog('${s.id}')" title="Eliminar Servicio">
             <i data-lucide="trash-2"></i>
@@ -7196,21 +7364,34 @@ window.renderServiciosCatalogView = function() {
 };
 
 window.openNewServiceModal = function() {
+  document.getElementById('ns-category').value = '';
+  document.getElementById('ns-name').value = '';
+  document.getElementById('ns-description').value = '';
+  document.getElementById('ns-price-a').value = '';
+  document.getElementById('ns-price-b').value = '';
+  document.getElementById('ns-price-c').value = '';
   document.getElementById('new-service-modal').classList.add('open');
-  document.getElementById('ns-name').focus();
+  document.getElementById('ns-category').focus();
 };
 
 window.handleNewServiceSubmit = function(e) {
   e.preventDefault();
+  const category = document.getElementById('ns-category').value.trim().toUpperCase() || 'GENERAL';
   const name = document.getElementById('ns-name').value.trim();
-  const description = document.getElementById('ns-description').value.trim() || 'Sin descripciÃ³n';
-  const price = parseFloat(document.getElementById('ns-price').value) || 0;
+  const description = document.getElementById('ns-description').value.trim() || `Servicio de ${category}`;
+  const priceA = parseFloat(document.getElementById('ns-price-a').value) || 0;
+  const priceB = parseFloat(document.getElementById('ns-price-b').value) || 0;
+  const priceC = parseFloat(document.getElementById('ns-price-c').value) || 0;
 
   const newService = {
-    id: 's-' + Date.now(),
+    id: 's-' + Date.now() + Math.random().toString(36).substr(2, 5),
     name,
+    category,
     description,
-    price,
+    price: priceB || priceA || priceC || 0,
+    priceA,
+    priceB,
+    priceC,
     date: new Date().toISOString().split('T')[0]
   };
 
@@ -7218,11 +7399,11 @@ window.handleNewServiceSubmit = function(e) {
   saveServices();
   closeModal('new-service-modal');
   renderServiciosCatalogView();
-  alert(`Servicio "${name}" agregado con Ã©xito al catÃ¡logo.`);
+  alert(`Servicio "${name}" agregado con éxito al catálogo.`);
 };
 
 window.deleteServiceFromCatalog = function(serviceId) {
-  if (confirm('Â¿EstÃ¡s seguro de que deseas eliminar este servicio del catÃ¡logo?')) {
+  if (confirm('¿Estás seguro de que deseas eliminar este servicio del catálogo?')) {
     servicesCatalog = servicesCatalog.filter(s => s.id !== serviceId);
     saveServices();
     deleteFromSupabase('taller_services', serviceId);
@@ -8556,6 +8737,10 @@ window.viewVehicleDetails = function(vehicleId) {
   document.getElementById('vd-motor').textContent = v.motor || '—';
   document.getElementById('vd-mileage').textContent = v.kilometers ? `${parseInt(v.kilometers).toLocaleString('es-ES')} km` : '—';
   document.getElementById('vd-vin').textContent = v.vin || '—';
+  const catNames = { 'A': 'Categoría A (Chico)', 'B': 'Categoría B (Mediano)', 'C': 'Categoría C (Grande/Premium)' };
+  const catText = catNames[v.category] || `Categoría ${v.category || 'B'} (Mediano)`;
+  const vdCategory = document.getElementById('vd-category');
+  if (vdCategory) vdCategory.textContent = catText;
 
   // Propietario
   const clientObj = clients.find(c => c.name.trim().toLowerCase() === (v.client || '').trim().toLowerCase());
@@ -8774,6 +8959,7 @@ window.openEditVehicleModal = function(vehicleId) {
   document.getElementById('form-motor').value = v.motor || '';
   document.getElementById('form-mileage').value = v.kilometers || '';
   document.getElementById('form-vin').value = v.vin || '';
+  document.getElementById('form-category').value = v.category || 'B';
   
   // Set owner details
   document.getElementById('form-client-search').value = v.client || '';
@@ -8820,7 +9006,13 @@ window.populateDatalists = function() {
 
   const quoteSuggestions = document.getElementById('quote-services-suggestions');
   if (quoteSuggestions) {
-    quoteSuggestions.innerHTML = servicesCatalog.map(s => `<option value="${s.name}">${formatCurrency(s.price)}</option>`).join('');
+    const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+    const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
+    quoteSuggestions.innerHTML = servicesCatalog.map(s => {
+      const price = s['price' + cat] || s.price || 0;
+      const catLabel = s.category ? `[${s.category}] ` : '';
+      return `<option value="${s.name}">${catLabel}${formatCurrency(price)}</option>`;
+    }).join('');
   }
 
   const quotePartsSuggestions = document.getElementById('quote-parts-suggestions');
@@ -8829,10 +9021,16 @@ window.populateDatalists = function() {
       const compat = [];
       if (p.brand && p.brand !== 'Universal') compat.push(p.brand);
       if (p.model && p.model !== 'Multimarca') compat.push(p.model);
-      if (p.year && p.year !== 'â€”') compat.push(p.year);
+      if (p.year && p.year !== '—') compat.push(p.year);
       const suffix = compat.length > 0 ? ` [${compat.join(' ')}]` : '';
       return `<option value="${p.name}${suffix}">${formatCurrency(p.price)}</option>`;
     }).join('');
+  }
+
+  const categoriesSuggestions = document.getElementById('categories-suggestions');
+  if (categoriesSuggestions) {
+    const cats = [...new Set(servicesCatalog.map(s => s.category).filter(Boolean))];
+    categoriesSuggestions.innerHTML = cats.map(c => `<option value="${c}"></option>`).join('');
   }
 };
 

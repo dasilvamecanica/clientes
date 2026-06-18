@@ -825,8 +825,8 @@
           <span style="font-size: 13px; color: var(--text-secondary);">Gestiona los servicios disponibles en el taller</span>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button id="btn-import-excel-services" class="btn-secondary" style="background-color: white; border: 1.5px solid var(--border-color); color: var(--text-primary); font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 13px;" onclick="alert('Importando catálogo de servicios desde plantilla de Excel...')">
-            <i data-lucide="upload" style="width: 14px;"></i> Importar Excel
+          <button id="btn-sync-sheet-services" class="btn-secondary" style="background-color: white; border: 1.5px solid var(--border-color); color: var(--text-primary); font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 13px;" onclick="syncServicesWithGoogleSheet()">
+            <i data-lucide="refresh-cw" style="width: 14px;"></i> Sincronizar Google Sheet
           </button>
           <button class="btn-primary" style="background-color: var(--color-accent); color: white; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; padding: 10px 18px;" onclick="openNewServiceModal()">
             <i data-lucide="plus" style="width: 14px;"></i> Nuevo Servicio
@@ -838,7 +838,7 @@
       <section style="display: flex; gap: 12px; align-items: center; width: 100%;">
         <div style="position: relative; flex-grow: 1;">
           <i data-lucide="search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-muted);"></i>
-          <input type="text" id="catalogo-servicios-search" placeholder="Buscar por nombre, descripción o ID..." style="background-color: white; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 10px 42px 10px 38px; font-size: 13px; color: var(--text-primary); width: 100%;" oninput="renderServiciosCatalogView()">
+          <input type="text" id="catalogo-servicios-search" placeholder="Buscar por categoría, servicio o ID..." style="background-color: white; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 10px 42px 10px 38px; font-size: 13px; color: var(--text-primary); width: 100%;" oninput="renderServiciosCatalogView()">
         </div>
       </section>
 
@@ -847,10 +847,11 @@
         <table class="invoice-table" style="margin-top: 0;">
           <thead>
             <tr>
-              <th>Nombre</th>
-              <th>Descripción</th>
-              <th style="text-align: right; width: 140px;">Precio</th>
-              <th style="width: 180px;">Fecha Creación</th>
+              <th style="width: 180px;">Categoría</th>
+              <th>Servicio</th>
+              <th style="text-align: right; width: 120px;">Precio A</th>
+              <th style="text-align: right; width: 120px;">Precio B</th>
+              <th style="text-align: right; width: 120px;">Precio C</th>
               <th style="width: 100px; text-align: center;">Acciones</th>
             </tr>
           </thead>
@@ -2302,6 +2303,16 @@
               <input type="text" class="form-input" id="form-vin" placeholder="Ej. 9BWCA41G2GT12345">
             </div>
 
+            <!-- Categoría para Tarifas -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="form-category">Categoría para Tarifas*</label>
+              <select class="form-input" id="form-category" required style="background-color: white; font-weight: 700; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 10px 12px; font-size: 13px;">
+                <option value="A">Categoría A (Chicos / Simples)</option>
+                <option value="B" selected>Categoría B (Medianos / Comunes)</option>
+                <option value="C">Categoría C (Grandes / Camionetas / Premium)</option>
+              </select>
+            </div>
+
           </div>
 
           <!-- ── RIGHT COLUMN: Cliente ── -->
@@ -2647,9 +2658,13 @@
               <span class="client-info-label" style="color: var(--text-secondary); font-weight: 500;">Kilometraje:</span>
               <span class="client-info-value" id="vd-mileage" style="color: var(--text-primary); font-weight: 700;">—</span>
             </div>
-            <div class="client-info-item" style="display: flex; justify-content: space-between; font-size: 13px; padding-bottom: 0; border: none;">
+            <div class="client-info-item" style="display: flex; justify-content: space-between; font-size: 13px; border-bottom: 1.5px dashed var(--border-color); padding-bottom: 6px;">
               <span class="client-info-label" style="color: var(--text-secondary); font-weight: 500;">Chasis / VIN:</span>
               <span class="client-info-value" id="vd-vin" style="color: var(--text-primary); font-weight: 700; font-family: var(--font-mono);">—</span>
+            </div>
+            <div class="client-info-item" style="display: flex; justify-content: space-between; font-size: 13px; padding-bottom: 0; border: none;">
+              <span class="client-info-label" style="color: var(--text-secondary); font-weight: 500;">Categoría Tarifas:</span>
+              <span class="client-info-value" id="vd-category" style="color: var(--text-primary); font-weight: 700;">—</span>
             </div>
           </div>
 
@@ -3095,7 +3110,7 @@
 
   <!-- MODAL: AGREGAR NUEVO SERVICIO AL CATÁLOGO -->
   <div class="modal-overlay" id="new-service-modal" style="z-index: 140;">
-    <div class="modal-window" style="max-width: 420px;">
+    <div class="modal-window" style="max-width: 440px;">
       <header class="modal-header">
         <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px; color: var(--color-accent);">
           <i data-lucide="wrench"></i>
@@ -3108,6 +3123,11 @@
       <form onsubmit="handleNewServiceSubmit(event)">
         <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
           <div class="form-group">
+            <label class="form-label" for="ns-category">Categoría*</label>
+            <input type="text" class="form-input" id="ns-category" required placeholder="Ej. DISTRIBUCION" list="categories-suggestions" style="background-color: white;">
+            <datalist id="categories-suggestions"></datalist>
+          </div>
+          <div class="form-group">
             <label class="form-label" for="ns-name">Nombre del Servicio*</label>
             <input type="text" class="form-input" id="ns-name" required placeholder="Ej. Cambio de bujías" style="background-color: white;">
           </div>
@@ -3115,9 +3135,19 @@
             <label class="form-label" for="ns-description">Descripción</label>
             <textarea class="form-input" id="ns-description" placeholder="Ej. Cambio de bujías de encendido y revisión de cables de bujía..." rows="2" style="resize: none; background-color: white;"></textarea>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="ns-price">Precio ($)*</label>
-            <input type="number" class="form-input" id="ns-price" required placeholder="Ej. 15000" style="background-color: white;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label class="form-label" for="ns-price-a">Precio A ($)*</label>
+              <input type="number" class="form-input" id="ns-price-a" required placeholder="Ej. 115000" style="background-color: white; text-align: right; font-weight: 700;">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ns-price-b">Precio B ($)*</label>
+              <input type="number" class="form-input" id="ns-price-b" required placeholder="Ej. 150000" style="background-color: white; text-align: right; font-weight: 700;">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ns-price-c">Precio C ($)*</label>
+              <input type="number" class="form-input" id="ns-price-c" required placeholder="Ej. 180000" style="background-color: white; text-align: right; font-weight: 700;">
+            </div>
           </div>
         </div>
         <footer class="modal-footer">
@@ -3566,7 +3596,7 @@
   <!-- Cliente de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=5.4"></script>
+  <script src="app.js?v=5.5"></script>
 </body>
 </html>
 <!-- Build trigger commit -->
