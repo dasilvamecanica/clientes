@@ -5034,25 +5034,7 @@ function ensurePartExistsInCatalog(partName, price, vehicle) {
 }
 
 function ensureServiceExists(serviceName, price) {
-  const rawName = serviceName.trim();
-  if (!rawName) return rawName;
-
-  const existingService = servicesCatalog.find(s => s.name.toLowerCase() === rawName.toLowerCase());
-  if (!existingService) {
-    const newService = {
-      id: 's-' + Date.now() + Math.random().toString(36).substr(2, 5),
-      name: rawName,
-      description: 'Servicio creado automÃ¡ticamente desde cotizaciÃ³n',
-      price: price,
-      date: new Date().toISOString().split('T')[0]
-    };
-    servicesCatalog.push(newService);
-    saveServices();
-    if (typeof populateDatalists === 'function') {
-      populateDatalists();
-    }
-  }
-  return rawName;
+  return serviceName.trim();
 }
 
 window.saveInlineQuoteItem = function(type, element) {
@@ -7315,13 +7297,13 @@ window.renderServiciosCatalogView = function() {
     }
 
     rows.push(`
-      <tr>
+      <tr style="cursor: pointer;" onclick="openEditServiceModal('${s.id}')">
         <td style="font-weight: 600;">${getCategoryBadgeHtml(s.category)}</td>
         <td style="font-weight: 700; color: var(--text-primary);">${s.name}</td>
         <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceA ? formatCurrency(s.priceA) : '-'}</td>
         <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceB ? formatCurrency(s.priceB) : '-'}</td>
         <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceC ? formatCurrency(s.priceC) : '-'}</td>
-        <td style="text-align: center;">
+        <td style="text-align: center;" onclick="event.stopPropagation()">
           <button class="table-action-btn red-delete" onclick="deleteServiceFromCatalog('${s.id}')" title="Eliminar Servicio" style="padding: 2px 6px;">
             <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
           </button>
@@ -7379,6 +7361,51 @@ window.deleteServiceFromCatalog = function(serviceId) {
     saveServices();
     deleteFromSupabase('taller_services', serviceId);
     renderServiciosCatalogView();
+  }
+};
+
+window.openEditServiceModal = function(serviceId) {
+  const service = servicesCatalog.find(s => s.id === serviceId);
+  if (!service) return;
+
+  document.getElementById('es-id').value = service.id;
+  document.getElementById('es-category').value = service.category || '';
+  document.getElementById('es-name').value = service.name || '';
+  document.getElementById('es-description').value = service.description || '';
+  document.getElementById('es-price-a').value = service.priceA || 0;
+  document.getElementById('es-price-b').value = service.priceB || 0;
+  document.getElementById('es-price-c').value = service.priceC || 0;
+
+  document.getElementById('edit-service-modal').classList.add('open');
+};
+
+window.handleEditServiceSubmit = function(e) {
+  e.preventDefault();
+  const id = document.getElementById('es-id').value;
+  const category = document.getElementById('es-category').value.trim().toUpperCase() || 'GENERAL';
+  const name = document.getElementById('es-name').value.trim();
+  const description = document.getElementById('es-description').value.trim() || `Servicio de ${category}`;
+  const priceA = parseFloat(document.getElementById('es-price-a').value) || 0;
+  const priceB = parseFloat(document.getElementById('es-price-b').value) || 0;
+  const priceC = parseFloat(document.getElementById('es-price-c').value) || 0;
+
+  const service = servicesCatalog.find(s => s.id === id);
+  if (service) {
+    service.name = name;
+    service.category = category;
+    service.description = description;
+    service.price = priceB || priceA || priceC || 0;
+    service.priceA = priceA;
+    service.priceB = priceB;
+    service.priceC = priceC;
+
+    saveServices();
+    closeModal('edit-service-modal');
+    renderServiciosCatalogView();
+    if (typeof populateDatalists === 'function') {
+      populateDatalists();
+    }
+    alert(`Servicio "${name}" actualizado con éxito.`);
   }
 };
 

@@ -3161,6 +3161,56 @@
     </div>
   </div>
 
+  <!-- MODAL: EDITAR SERVICIO DEL CATÁLOGO -->
+  <div class="modal-overlay" id="edit-service-modal" style="z-index: 140;">
+    <div class="modal-window" style="max-width: 420px;">
+      <header class="modal-header">
+        <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px; color: var(--color-accent);">
+          <i data-lucide="edit"></i>
+          Editar Servicio
+        </h3>
+        <button class="modal-close-btn" onclick="closeModal('edit-service-modal')">
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+      <form onsubmit="handleEditServiceSubmit(event)">
+        <input type="hidden" id="es-id">
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="es-category">Categoría*</label>
+            <input type="text" class="form-input" id="es-category" list="categories-suggestions" required placeholder="Ej. DISTRIBUCION o FRENOS" style="background-color: white;">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="es-name">Nombre del Servicio*</label>
+            <input type="text" class="form-input" id="es-name" required placeholder="Ej. Cambio de bujías" style="background-color: white;">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="es-description">Descripción</label>
+            <textarea class="form-input" id="es-description" placeholder="Ej. Cambio de bujías de encendido y revisión de cables..." rows="2" style="resize: none; background-color: white;"></textarea>
+          </div>
+          <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+            <div>
+              <label class="form-label" for="es-price-a">Tarifa A*</label>
+              <input type="number" class="form-input" id="es-price-a" required placeholder="Ej. 12000" style="background-color: white;">
+            </div>
+            <div>
+              <label class="form-label" for="es-price-b">Tarifa B*</label>
+              <input type="number" class="form-input" id="es-price-b" required placeholder="Ej. 15000" style="background-color: white;">
+            </div>
+            <div>
+              <label class="form-label" for="es-price-c">Tarifa C*</label>
+              <input type="number" class="form-input" id="es-price-c" required placeholder="Ej. 18000" style="background-color: white;">
+            </div>
+          </div>
+        </div>
+        <footer class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('edit-service-modal')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Cambios</button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL: AGREGAR NUEVO REPUESTO AL CATÁLOGO -->
   <div class="modal-overlay" id="new-part-modal" style="z-index: 140;">
     <div class="modal-window" style="max-width: 420px;">
@@ -3599,7 +3649,7 @@
   <!-- Cliente de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=5.7"></script>
+  <script src="app.js?v=5.8"></script>
 </body>
 </html>
 <!-- Build trigger commit -->
