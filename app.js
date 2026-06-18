@@ -317,6 +317,9 @@ async function loadStateFromSupabase() {
         };
       });
       localStorage.setItem('taller_services', JSON.stringify(servicesCatalog));
+      if (typeof renderCategoryMultipliersConfig === 'function') {
+        renderCategoryMultipliersConfig();
+      }
     }
     const { data: partData, error: partError } = await supabaseClient.from('taller_parts').select('*');
     if (!partError && partData) {
@@ -448,70 +451,90 @@ function loadWorkshopConfig() {
   const nameInput = document.getElementById('config-workshop-name');
   if (nameInput) {
     nameInput.value = workshopConfig.name || '';
-    document.getElementById('config-workshop-phone1').value = workshopConfig.phone1 || '';
-    document.getElementById('config-workshop-phone2').value = workshopConfig.phone2 || '';
-    document.getElementById('config-workshop-address').value = workshopConfig.address || '';
-    const rutEl = document.getElementById('config-workshop-rut');
-    if (rutEl) rutEl.value = workshopConfig.rut || '';
-    
-    // Campos fiscales argentinos
-    const cuitEl = document.getElementById('config-workshop-cuit');
-    if (cuitEl) cuitEl.value = workshopConfig.cuit || '30-12345678-9';
-    
-    const ivaEl = document.getElementById('config-workshop-iva');
-    if (ivaEl) ivaEl.value = workshopConfig.ivaCondition || 'Responsable Inscripto';
-    
-    const iibbEl = document.getElementById('config-workshop-iibb');
-    if (iibbEl) iibbEl.value = workshopConfig.iibb || '901-123456-7';
-    
-    const inicioEl = document.getElementById('config-workshop-inicio-act');
-    if (inicioEl) inicioEl.value = workshopConfig.inicioAct || '2018-03-01';
-
-    if (typeof renderCategoryMultipliersConfig === 'function') {
-      renderCategoryMultipliersConfig();
-    }
-    
-    const pvEl = document.getElementById('config-workshop-pv');
-    if (pvEl) pvEl.value = workshopConfig.pv || '0005';
-
-    // Cargar token de Mercado Libre en la configuración de taller
-    const meliTokenEl = document.getElementById('config-workshop-meli-token');
-    if (meliTokenEl) {
-      meliTokenEl.value = localStorage.getItem('meli_access_token') || '';
-    }
-
-    // Cargar configuraciones de WhatsApp
-    const waMethodEl = document.getElementById('config-workshop-wa-method');
-    if (waMethodEl) {
-      const savedMethod = workshopConfig.waMethod || 'wa_link_self';
-      const savedPhoneId = workshopConfig.waPhoneId || '1179474771896317';
-      
-      waMethodEl.value = savedMethod;
-      document.getElementById('config-workshop-wa-token').value = workshopConfig.waToken || '';
-      document.getElementById('config-workshop-wa-phone-id').value = savedPhoneId;
-      document.getElementById('config-workshop-wa-msg-type').value = workshopConfig.waMsgType || 'direct';
-      document.getElementById('config-workshop-wa-template-name').value = workshopConfig.waTemplateName || '';
-      document.getElementById('config-workshop-wa-template-lang').value = workshopConfig.waTemplateLang || 'es';
-      
-      const waBaseUrlEl = document.getElementById('config-workshop-wa-base-url');
-      if (waBaseUrlEl) {
-        waBaseUrlEl.value = workshopConfig.waBaseUrl || 'http://localhost:8000';
-      }
-
-      const waMsgQuoteEl = document.getElementById('config-workshop-wa-msg-quote');
-      if (waMsgQuoteEl) {
-        waMsgQuoteEl.value = workshopConfig.waMsgQuote || 'Hola! Le envío el presupuesto de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}';
-      }
-
-      const waMsgInvoiceEl = document.getElementById('config-workshop-wa-msg-invoice');
-      if (waMsgInvoiceEl) {
-        waMsgInvoiceEl.value = workshopConfig.waMsgInvoice || 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}';
-      }
-      
-      toggleWaConfigFields(savedMethod);
-      toggleWaTemplateFields(workshopConfig.waMsgType || 'direct');
-    }
   }
+  const phone1Input = document.getElementById('config-workshop-phone1');
+  if (phone1Input) {
+    phone1Input.value = workshopConfig.phone1 || '';
+  }
+  const phone2Input = document.getElementById('config-workshop-phone2');
+  if (phone2Input) {
+    phone2Input.value = workshopConfig.phone2 || '';
+  }
+  const addressInput = document.getElementById('config-workshop-address');
+  if (addressInput) {
+    addressInput.value = workshopConfig.address || '';
+  }
+  const rutEl = document.getElementById('config-workshop-rut');
+  if (rutEl) rutEl.value = workshopConfig.rut || '';
+  
+  // Campos fiscales argentinos
+  const cuitEl = document.getElementById('config-workshop-cuit');
+  if (cuitEl) cuitEl.value = workshopConfig.cuit || '30-12345678-9';
+  
+  const ivaEl = document.getElementById('config-workshop-iva');
+  if (ivaEl) ivaEl.value = workshopConfig.ivaCondition || 'Responsable Inscripto';
+  
+  const iibbEl = document.getElementById('config-workshop-iibb');
+  if (iibbEl) iibbEl.value = workshopConfig.iibb || '901-123456-7';
+  
+  const inicioEl = document.getElementById('config-workshop-inicio-act');
+  if (inicioEl) inicioEl.value = workshopConfig.inicioAct || '2018-03-01';
+
+  if (typeof renderCategoryMultipliersConfig === 'function') {
+    renderCategoryMultipliersConfig();
+  }
+  
+  const pvEl = document.getElementById('config-workshop-pv');
+  if (pvEl) pvEl.value = workshopConfig.pv || '0005';
+
+  // Cargar token de Mercado Libre en la configuración de taller
+  const meliTokenEl = document.getElementById('config-workshop-meli-token');
+  if (meliTokenEl) {
+    meliTokenEl.value = localStorage.getItem('meli_access_token') || '';
+  }
+
+  // Cargar configuraciones de WhatsApp
+  const waMethodEl = document.getElementById('config-workshop-wa-method');
+  if (waMethodEl) {
+    const savedMethod = workshopConfig.waMethod || 'wa_link_self';
+    const savedPhoneId = workshopConfig.waPhoneId || '1179474771896317';
+    
+    waMethodEl.value = savedMethod;
+    
+    const waTokenEl = document.getElementById('config-workshop-wa-token');
+    if (waTokenEl) waTokenEl.value = workshopConfig.waToken || '';
+    
+    const waPhoneIdEl = document.getElementById('config-workshop-wa-phone-id');
+    if (waPhoneIdEl) waPhoneIdEl.value = savedPhoneId;
+    
+    const waMsgTypeEl = document.getElementById('config-workshop-wa-msg-type');
+    if (waMsgTypeEl) waMsgTypeEl.value = workshopConfig.waMsgType || 'direct';
+    
+    const waTemplateNameEl = document.getElementById('config-workshop-wa-template-name');
+    if (waTemplateNameEl) waTemplateNameEl.value = workshopConfig.waTemplateName || '';
+    
+    const waTemplateLangEl = document.getElementById('config-workshop-wa-template-lang');
+    if (waTemplateLangEl) waTemplateLangEl.value = workshopConfig.waTemplateLang || 'es';
+    
+    const waBaseUrlEl = document.getElementById('config-workshop-wa-base-url');
+    if (waBaseUrlEl) {
+      waBaseUrlEl.value = workshopConfig.waBaseUrl || 'http://localhost:8000';
+    }
+
+    const waMsgQuoteEl = document.getElementById('config-workshop-wa-msg-quote');
+    if (waMsgQuoteEl) {
+      waMsgQuoteEl.value = workshopConfig.waMsgQuote || 'Hola! Le envío el presupuesto de su vehículo. Puede descargarlo e imprimirlo desde el siguiente enlace: {link}';
+    }
+
+    const waMsgInvoiceEl = document.getElementById('config-workshop-wa-msg-invoice');
+    if (waMsgInvoiceEl) {
+      waMsgInvoiceEl.value = workshopConfig.waMsgInvoice || 'Hola! Le envío la factura de su vehículo. Puede descargarla e imprimirla desde el siguiente enlace: {link}';
+    }
+    
+    toggleWaConfigFields(savedMethod);
+    toggleWaTemplateFields(workshopConfig.waMsgType || 'direct');
+  }
+}
 
   const demoSwitch = document.getElementById('demo-mode-switch');
   if (demoSwitch) {
@@ -554,11 +577,20 @@ window.toggleTabBlocking = function(enabled) {
 };
 
 window.saveWorkshopConfig = function() {
-  const nameVal = document.getElementById('config-workshop-name').value.trim();
-  const phone1Val = document.getElementById('config-workshop-phone1').value.trim();
-  const phone2Val = document.getElementById('config-workshop-phone2').value.trim();
-  const addressVal = document.getElementById('config-workshop-address').value.trim();
-  const rutVal = document.getElementById('config-workshop-rut').value.trim();
+  const nameEl = document.getElementById('config-workshop-name');
+  const nameVal = nameEl ? nameEl.value.trim() : '';
+
+  const phone1El = document.getElementById('config-workshop-phone1');
+  const phone1Val = phone1El ? phone1El.value.trim() : '';
+
+  const phone2El = document.getElementById('config-workshop-phone2');
+  const phone2Val = phone2El ? phone2El.value.trim() : '';
+
+  const addressEl = document.getElementById('config-workshop-address');
+  const addressVal = addressEl ? addressEl.value.trim() : '';
+
+  const rutEl = document.getElementById('config-workshop-rut');
+  const rutVal = rutEl ? rutEl.value.trim() : '';
   
   // Campos argentinos
   const cuitVal = document.getElementById('config-workshop-cuit') ? document.getElementById('config-workshop-cuit').value.trim() : '';
