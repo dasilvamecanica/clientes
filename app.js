@@ -7342,14 +7342,18 @@ window.openOTActionsMenu = function(event, vehicleId) {
   document.addEventListener('click', closeMenu);
 };
 
-window.deleteOTFromDB = function(vehicleId) {
+window.deleteOTFromDB = async function(vehicleId) {
   const menu = document.getElementById('ot-dropdown-menu');
   if (menu) menu.classList.remove('show');
   
-  if (confirm('¿Estás seguro de que deseas eliminar esta orden de trabajo?')) {
+  if (confirm('¿Estás seguro de que deseas eliminar esta orden de trabajo? Esta acción no se puede deshacer.')) {
+    // Remove from local array first
     vehicles = vehicles.filter(v => v.id !== vehicleId);
-    saveState();
-    deleteFromSupabase('taller_vehicles', vehicleId);
+    // Save only to localStorage (skip Supabase upsert to avoid race with the delete below)
+    localStorage.setItem('taller_vehicles', JSON.stringify(vehicles));
+    // Delete directly from Supabase and wait for it
+    await deleteFromSupabase('taller_vehicles', vehicleId);
+    // Re-render UI
     renderApp();
   }
 };
