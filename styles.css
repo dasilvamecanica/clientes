@@ -3977,3 +3977,47 @@ aside.sidebar.collapsed .sidebar-user-container {
 
 
 
+
+/* --- COMPACT SERVICES CATALOG SPREADSHEET LAYOUT --- */
+.compact-catalog-table {
+  border: 1px solid var(--border-color) !important;
+}
+.compact-catalog-table thead th {
+  background-color: #f59e0b !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  padding: 6px 8px !important;
+  font-size: 11px !important;
+  border: 1px solid #d97706 !important;
+  text-transform: uppercase;
+}
+.compact-catalog-table tbody td {
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  border: 1px solid var(--border-color) !important;
+  height: 28px !important;
+  vertical-align: middle !important;
+}
+.dark .compact-catalog-table thead th {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+  border: 1px solid #b45309 !important;
+}
+.dark .compact-catalog-table tbody td {
+  border-color: #374151 !important;
+}
+.category-separator-row td {
+  background-color: #f59e0b !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  text-align: center !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  padding: 6px 12px !important;
+  border-bottom: 2px solid #d97706 !important;
+}
+.dark .category-separator-row td {
+  background-color: #d97706 !important;
+  border-bottom: 2px solid #b45309 !important;
+}

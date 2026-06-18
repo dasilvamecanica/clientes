@@ -7285,28 +7285,52 @@ window.renderServiciosCatalogView = function() {
     );
   }
 
+  // Group / Sort by category first, then by service name
+  list.sort((a, b) => {
+    const catA = (a.category || 'GENERAL').toUpperCase();
+    const catB = (b.category || 'GENERAL').toUpperCase();
+    if (catA !== catB) return catA.localeCompare(catB);
+    return (a.name || '').localeCompare(b.name || '');
+  });
+
   if (list.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 32px;">No se encontraron servicios registrados.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = list.map(s => {
-    return `
+  let lastCategory = '';
+  const rows = [];
+
+  list.forEach(s => {
+    const currentCategory = (s.category || 'GENERAL').toUpperCase();
+    if (currentCategory !== lastCategory) {
+      rows.push(`
+        <tr class="category-separator-row">
+          <td colspan="6">
+            ${currentCategory}
+          </td>
+        </tr>
+      `);
+      lastCategory = currentCategory;
+    }
+
+    rows.push(`
       <tr>
-        <td style="font-weight: 600; color: var(--text-secondary); font-size: 12.5px;">${getCategoryBadgeHtml(s.category)}</td>
-        <td style="font-weight: 700; color: var(--text-primary); font-size: 13.5px;">${s.name}</td>
-        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">${formatCurrency(s.priceA)}</td>
-        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">${formatCurrency(s.priceB)}</td>
-        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">${formatCurrency(s.priceC)}</td>
+        <td style="font-weight: 600;">${getCategoryBadgeHtml(s.category)}</td>
+        <td style="font-weight: 700; color: var(--text-primary);">${s.name}</td>
+        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceA ? formatCurrency(s.priceA) : '-'}</td>
+        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceB ? formatCurrency(s.priceB) : '-'}</td>
+        <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">${s.priceC ? formatCurrency(s.priceC) : '-'}</td>
         <td style="text-align: center;">
-          <button class="table-action-btn red-delete" onclick="deleteServiceFromCatalog('${s.id}')" title="Eliminar Servicio">
-            <i data-lucide="trash-2"></i>
+          <button class="table-action-btn red-delete" onclick="deleteServiceFromCatalog('${s.id}')" title="Eliminar Servicio" style="padding: 2px 6px;">
+            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
           </button>
         </td>
       </tr>
-    `;
-  }).join('');
+    `);
+  });
 
+  tbody.innerHTML = rows.join('');
   initLucide();
 };
 
