@@ -178,6 +178,15 @@ async function syncWithSupabase(tableName, data) {
       };
       const { error } = await supabaseClient.from(tableName).upsert(configItem);
       if (error) console.error(`Error de sync en ${tableName}:`, error);
+
+      if (data.categoryMultipliers) {
+        const multItem = {
+          id: 'category_multipliers',
+          name: JSON.stringify(data.categoryMultipliers)
+        };
+        const { error: multError } = await supabaseClient.from(tableName).upsert(multItem);
+        if (multError) console.error("Error al sincronizar category_multipliers:", multError);
+      }
     }
   } catch (err) {
     console.error("Error en sync:", err);
@@ -249,6 +258,20 @@ async function loadStateFromSupabase() {
       localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
       loadWorkshopConfig();
     }
+
+    const { data: multData, error: multError } = await supabaseClient.from('taller_config').select('*').eq('id', 'category_multipliers');
+    if (!multError && multData && multData.length > 0) {
+      try {
+        workshopConfig.categoryMultipliers = JSON.parse(multData[0].name);
+        localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
+        if (typeof renderCategoryMultipliersConfig === 'function') {
+          renderCategoryMultipliersConfig();
+        }
+      } catch (e) {
+        console.error("Error parsing category multipliers from Supabase:", e);
+      }
+    }
+
     const { data: clientData, error: clientError } = await supabaseClient.from('taller_clients').select('*');
     if (!clientError && clientData) {
       clients = clientData.map(c => ({
