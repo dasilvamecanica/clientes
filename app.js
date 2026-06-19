@@ -21,6 +21,7 @@ let activeContextVehicleId = null;
 let activeReceptionVehicleId = null; // Vehículo siendo editado en Ficha Foto 2
 let activeReceptionServices = []; // Lista temporal de servicios para Ficha Foto 2
 let isRecordingVoice = false;
+let mobileStageFilter = 'all';
 
 // Registro global de Marcas, Modelos y Motores utilizados en el taller
 let vehicleRegistry = {
@@ -2618,7 +2619,7 @@ window.switchView = function(view) {
     if (el) el.style.display = 'none';
   });
 
-  // 2. Limpiar clases activas en los botones de navegación lateral
+  // 2. Limpiar clases activas en los botones de navegación lateral e inferior
   const sidebarButtons = [
     'menu-panel', 
     'menu-reportes-main', 
@@ -2634,6 +2635,18 @@ window.switchView = function(view) {
     'menu-vehiculos-db'
   ];
   sidebarButtons.forEach(btnId => {
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.remove('active');
+  });
+
+  const bottomButtons = [
+    'mobile-nav-panel',
+    'mobile-nav-agenda',
+    'mobile-nav-clientes',
+    'mobile-nav-servicios',
+    'mobile-nav-config'
+  ];
+  bottomButtons.forEach(btnId => {
     const btn = document.getElementById(btnId);
     if (btn) btn.classList.remove('active');
   });
@@ -2798,6 +2811,25 @@ window.switchView = function(view) {
     }
   }
 
+  // Sincronizar clases activas de la barra de navegación inferior móvil
+  let mobileActiveId = null;
+  if (view === 'tablero' || view === 'calendario') {
+    mobileActiveId = 'mobile-nav-panel';
+  } else if (view === 'agenda') {
+    mobileActiveId = 'mobile-nav-agenda';
+  } else if (view === 'clientes-lista') {
+    mobileActiveId = 'mobile-nav-clientes';
+  } else if (view === 'servicios-catalogo') {
+    mobileActiveId = 'mobile-nav-servicios';
+  } else if (view === 'configuracion') {
+    mobileActiveId = 'mobile-nav-config';
+  }
+
+  if (mobileActiveId) {
+    const activeBtn = document.getElementById(mobileActiveId);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+
   renderApp();
 };
 
@@ -2854,6 +2886,7 @@ function renderApp() {
   populateClientSelector();
   populateDatalists();
   renderKanban();
+  renderMobileVehicleList();
   if (currentView === 'calendario') {
     renderCalendar();
   } else if (currentView === 'reportes') {
@@ -11940,6 +11973,150 @@ window.closeMobileSidebarIfOpen = function() {
     sidebar.classList.remove('mobile-open');
     overlay.style.display = 'none';
   }
+};
+
+window.setMobileStageFilter = function(stage) {
+  mobileStageFilter = stage;
+  
+  // Actualizar las clases activas en los chips de la cabecera
+  const chipIds = ['all', 'recepcion', 'cotizacion', 'reparacion', 'listo'];
+  chipIds.forEach(id => {
+    const chip = document.getElementById(`mobile-filter-${id}`);
+    if (chip) {
+      if (id === stage) {
+        chip.classList.add('active');
+      } else {
+        chip.classList.remove('active');
+      }
+    }
+  });
+  
+  renderMobileVehicleList();
+};
+
+window.renderMobileVehicleList = function() {
+  const container = document.getElementById('mobile-vehicle-cards-container');
+  if (!container) return;
+
+  // Filtrar vehículos entregados
+  const activeVehicles = vehicles.filter(v => !v.delivered);
+
+  // Filtrar según etapa seleccionada
+  let filtered = activeVehicles;
+  if (mobileStageFilter !== 'all') {
+    filtered = activeVehicles.filter(v => v.stage === mobileStageFilter);
+  }
+
+  // Actualizar contadores en los chips
+  const countAll = activeVehicles.length;
+  const countRecepcion = activeVehicles.filter(v => v.stage === 'recepcion').length;
+  const countCotizacion = activeVehicles.filter(v => v.stage === 'cotizacion').length;
+  const countReparacion = activeVehicles.filter(v => v.stage === 'reparacion').length;
+  const countListo = activeVehicles.filter(v => v.stage === 'listo').length;
+
+  const setBadgeText = (id, count) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = count;
+  };
+  setBadgeText('mobile-count-all', countAll);
+  setBadgeText('mobile-count-recepcion', countRecepcion);
+  setBadgeText('mobile-count-cotizacion', countCotizacion);
+  setBadgeText('mobile-count-reparacion', countReparacion);
+  setBadgeText('mobile-count-listo', countListo);
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; border: 1.5px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-size: 13px; text-align: center; gap: 8px;">
+        <i data-lucide="info" style="width: 20px; height: 20px; opacity: 0.5;"></i>
+        <span>No hay vehículos en esta etapa.</span>
+      </div>
+    `;
+    if (typeof initLucide === 'function') initLucide();
+    return;
+  }
+
+  container.innerHTML = filtered.map(v => {
+    // Definir acción principal según la etapa
+    let btnText = '';
+    let btnClass = '';
+    let icon = '';
+    let clickHandler = '';
+
+    if (v.stage === 'recepcion') {
+      btnText = 'Recepcionar';
+      btnClass = 'btn-recepcion';
+      icon = 'clipboard-check';
+      clickHandler = `openDetailedReceptionFromCard('${v.id}')`;
+    } else if (v.stage === 'cotizacion') {
+      btnText = v.quoteCompleted ? 'Ver Cotización' : 'Crear Cotización';
+      btnClass = 'btn-cotizacion';
+      icon = 'file-spreadsheet';
+      clickHandler = `openDetailedQuoteView('${v.id}')`;
+    } else if (v.stage === 'reparacion') {
+      btnText = 'Ver Orden de Trabajo';
+      btnClass = 'btn-reparacion';
+      icon = 'wrench';
+      clickHandler = `openDetailedWorkOrderView('${v.id}')`;
+    } else if (v.stage === 'listo') {
+      btnText = 'Entregar Vehículo';
+      btnClass = 'btn-listo';
+      icon = 'check-circle-2';
+      clickHandler = `deliverVehicleFromCard('${v.id}')`;
+    }
+
+    const isGolMock = v.id === 'mock-vehicle-gol-2026';
+    const indexNum = isGolMock ? '2' : (v.id && v.id.length >= 2 ? v.id.substring(v.id.length - 2) : '01');
+    const stageColors = {
+      recepcion: 'var(--color-recepcion)',
+      cotizacion: 'var(--color-cotizacion)',
+      reparacion: 'var(--color-reparacion)',
+      listo: 'var(--color-listo)'
+    };
+    const stageColor = stageColors[v.stage] || 'var(--text-muted)';
+    const stageLabel = v.stage.charAt(0).toUpperCase() + v.stage.slice(1);
+
+    return `
+      <div class="mobile-vehicle-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="giant-plate" style="font-size: 14px; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1.5px solid var(--border-color); background-color: var(--card-bg-hover); color: var(--text-primary); font-family: var(--font-mono);">${v.plate}</span>
+              <span style="font-size: 11px; font-weight: 700; color: ${stageColor}; background-color: rgba(var(--color-accent-rgb), 0.05); padding: 2px 8px; border-radius: 20px; border: 1px solid ${stageColor}40;">${stageLabel}</span>
+            </div>
+            <strong style="font-size: 15px; color: var(--text-primary); font-family: var(--font-display); font-weight: 700; margin-top: 4px;">${v.brand} ${v.model} (${v.year})</strong>
+          </div>
+          <button class="card-actions-btn" onclick="openContextMenu(event, '${v.id}', '${v.stage}')" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px;">
+            <i data-lucide="more-horizontal" style="width: 18px; height: 18px;"></i>
+          </button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--text-secondary); border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 2px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="user" style="width: 14px; color: var(--text-muted);"></i>
+            <span>Cliente: <strong>${v.client}</strong></span>
+          </div>
+          ${v.clientPhone ? `
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="phone" style="width: 14px; color: var(--text-muted);"></i>
+            <span>Teléfono: ${v.clientPhone}</span>
+          </div>
+          ` : ''}
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 4px; width: 100%;">
+          <button onclick="${clickHandler}" class="btn-primary" style="flex: 1; display: inline-flex; justify-content: center; align-items: center; gap: 8px; padding: 10px; font-weight: 700; font-size: 12.5px; border-radius: var(--radius-md); background: ${stageColor}; border: none; color: white; cursor: pointer; box-shadow: 0 4px 10px rgba(var(--color-accent-rgb), 0.1);">
+            <i data-lucide="${icon}" style="width: 14px; height: 14px;"></i>
+            <span>${btnText}</span>
+          </button>
+          <button onclick="openDetailedReception('${v.id}')" class="btn-secondary" style="display: inline-flex; justify-content: center; align-items: center; padding: 10px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: transparent; color: var(--text-primary); cursor: pointer; width: 44px; height: 38px; box-sizing: border-box;">
+            <i data-lucide="info" style="width: 16px; height: 16px;"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (typeof initLucide === 'function') initLucide();
 };
 
 

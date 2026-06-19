@@ -293,6 +293,38 @@
 
       </section>
 
+      <!-- SECCIÓN DE VISTA DE LISTA DE VEHÍCULOS PARA MÓVILES -->
+      <section id="mobile-vehicle-list-view" class="mobile-vehicle-list-view hide-desktop" style="display: none; width: 100%;">
+        <!-- Chips de filtros de etapa -->
+        <div class="mobile-stage-filters" style="display: flex; gap: 8px; overflow-x: auto; padding: 4px 4px 12px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
+          <button class="stage-filter-chip active" id="mobile-filter-all" onclick="setMobileStageFilter('all')">
+            <span>Todos</span>
+            <span class="chip-count" id="mobile-count-all">0</span>
+          </button>
+          <button class="stage-filter-chip" id="mobile-filter-recepcion" onclick="setMobileStageFilter('recepcion')">
+            <span>Recepción</span>
+            <span class="chip-count" id="mobile-count-recepcion">0</span>
+          </button>
+          <button class="stage-filter-chip" id="mobile-filter-cotizacion" onclick="setMobileStageFilter('cotizacion')">
+            <span>Cotización</span>
+            <span class="chip-count" id="mobile-count-cotizacion">0</span>
+          </button>
+          <button class="stage-filter-chip" id="mobile-filter-reparacion" onclick="setMobileStageFilter('reparacion')">
+            <span>Reparación</span>
+            <span class="chip-count" id="mobile-count-reparacion">0</span>
+          </button>
+          <button class="stage-filter-chip" id="mobile-filter-listo" onclick="setMobileStageFilter('listo')">
+            <span>Listo</span>
+            <span class="chip-count" id="mobile-count-listo">0</span>
+          </button>
+        </div>
+
+        <!-- Contenedor vertical de tarjetas -->
+        <div id="mobile-vehicle-cards-container" style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px;">
+          <!-- Renderizado dinámico desde JS -->
+        </div>
+      </section>
+
       <!-- SECCIÓN DEL CALENDARIO (OCULTA POR DEFECTO) -->
       <section id="calendar-view-container" style="display: none; grid-template-columns: 3fr 1fr; gap: 20px; width: 100%;">
         
@@ -797,23 +829,25 @@
 
       <!-- Tabla de OTs -->
       <section class="reception-form-card" style="padding: 16px 20px;">
-        <table class="invoice-table" style="margin-top: 0;">
-          <thead>
-            <tr>
-              <th style="width: 80px;"># ID</th>
-              <th>Cliente</th>
-              <th>Teléfono</th>
-              <th>Vehículo</th>
-              <th>Descripción</th>
-              <th>Estado</th>
-              <th>Fecha</th>
-              <th style="width: 100px;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="ot-table-body">
-            <!-- Llenado dinámico desde JS -->
-          </tbody>
-        </table>
+        <div class="responsive-table-wrapper">
+          <table class="invoice-table" style="margin-top: 0; min-width: 800px;">
+            <thead>
+              <tr>
+                <th style="width: 80px;"># ID</th>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th>Vehículo</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th style="width: 100px;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="ot-table-body">
+              <!-- Llenado dinámico desde JS -->
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
 
@@ -847,21 +881,23 @@
 
       <!-- Tabla Servicios -->
       <section class="reception-form-card" style="padding: 16px 20px;">
-        <table class="invoice-table compact-catalog-table" style="margin-top: 0;">
-          <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Nombre Servicio</th>
-              <th style="text-align: right; width: 140px;">Tarifa A</th>
-              <th style="text-align: right; width: 140px;">Tarifa B</th>
-              <th style="text-align: right; width: 140px;">Tarifa C</th>
-              <th style="width: 100px; text-align: center;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="servicios-table-body">
-            <!-- Llenado dinámico desde JS -->
-          </tbody>
-        </table>
+        <div class="responsive-table-wrapper">
+          <table class="invoice-table compact-catalog-table" style="margin-top: 0; min-width: 680px;">
+            <thead>
+              <tr>
+                <th>Categoría</th>
+                <th>Nombre Servicio</th>
+                <th style="text-align: right; width: 140px;">Tarifa A</th>
+                <th style="text-align: right; width: 140px;">Tarifa B</th>
+                <th style="text-align: right; width: 140px;">Tarifa C</th>
+                <th style="width: 100px; text-align: center;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="servicios-table-body">
+              <!-- Llenado dinámico desde JS -->
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
 
@@ -892,23 +928,25 @@
 
       <!-- Tabla Repuestos -->
       <section class="reception-form-card" style="padding: 16px 20px;">
-        <table class="invoice-table" style="margin-top: 0;">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th style="width: 120px;">Marca</th>
-              <th style="width: 120px;">Modelo</th>
-              <th style="width: 80px; text-align: center;">Año</th>
-              <th>Descripción</th>
-              <th style="text-align: right; width: 140px;">Precio</th>
-              <th style="width: 130px;">Fecha Creación</th>
-              <th style="width: 100px; text-align: center;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="repuestos-table-body">
-            <!-- Llenado dinámico desde JS -->
-          </tbody>
-        </table>
+        <div class="responsive-table-wrapper">
+          <table class="invoice-table" style="margin-top: 0; min-width: 800px;">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th style="width: 120px;">Marca</th>
+                <th style="width: 120px;">Modelo</th>
+                <th style="width: 80px; text-align: center;">Año</th>
+                <th>Descripción</th>
+                <th style="text-align: right; width: 140px;">Precio</th>
+                <th style="width: 130px;">Fecha Creación</th>
+                <th style="width: 100px; text-align: center;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="repuestos-table-body">
+              <!-- Llenado dinámico desde JS -->
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
 
@@ -1070,19 +1108,21 @@
 
       <!-- Tabla Clientes -->
       <section class="reception-form-card" style="padding: 16px 20px;">
-        <table class="invoice-table" style="margin-top: 0;">
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Contacto</th>
-              <th style="width: 220px;">Registro</th>
-              <th style="width: 100px; text-align: center;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="clientes-table-body">
-            <!-- Llenado dinámico desde JS con simulación de carga -->
-          </tbody>
-        </table>
+        <div class="responsive-table-wrapper">
+          <table class="invoice-table" style="margin-top: 0; min-width: 600px;">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Contacto</th>
+                <th style="width: 220px;">Registro</th>
+                <th style="width: 100px; text-align: center;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="clientes-table-body">
+              <!-- Llenado dinámico desde JS con simulación de carga -->
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
 
@@ -2124,12 +2164,20 @@
 
                   <!-- Panel de Imágenes (Abajo del todo, Full Width) -->
                   <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                       <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">Imágenes</span>
-                      <label for="ot-image-upload" style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--color-accent); cursor: pointer; padding: 4px 12px; border: 1px solid rgba(var(--color-accent-rgb),0.25); border-radius: var(--radius-sm); transition: all 0.15s; background: transparent;">
-                        <i data-lucide="plus" style="width: 13px;"></i> Agregar
-                        <input type="file" id="ot-image-upload" accept="image/*" multiple style="display: none;" onchange="addOTImages(event)">
-                      </label>
+                      <div style="display: flex; gap: 8px; align-items: center;">
+                        <!-- Botón para Cámara (Directo) -->
+                        <label for="ot-camera-capture" style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--color-accent); cursor: pointer; padding: 4px 12px; border: 1px solid rgba(var(--color-accent-rgb),0.25); border-radius: var(--radius-sm); transition: all 0.15s; background: transparent;">
+                          <i data-lucide="camera" style="width: 13px;"></i> Tomar Foto
+                          <input type="file" id="ot-camera-capture" accept="image/*" capture="environment" style="display: none;" onchange="addOTImages(event)">
+                        </label>
+                        <!-- Botón para Galería -->
+                        <label for="ot-image-upload" style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--color-accent); cursor: pointer; padding: 4px 12px; border: 1px solid rgba(var(--color-accent-rgb),0.25); border-radius: var(--radius-sm); transition: all 0.15s; background: transparent;">
+                          <i data-lucide="image" style="width: 13px;"></i> Subir de Galería
+                          <input type="file" id="ot-image-upload" accept="image/*" multiple style="display: none;" onchange="addOTImages(event)">
+                        </label>
+                      </div>
                     </div>
 
                     <!-- Grid de miniaturas -->
@@ -3724,6 +3772,31 @@
       </div>
     </div>
   </div>
+
+  <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVILES -->
+  <nav id="mobile-bottom-nav" class="mobile-bottom-nav hide-desktop" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background: rgba(26, 26, 26, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1.5px solid var(--border-color); z-index: 1000; justify-content: space-around; align-items: center; box-sizing: border-box; padding: 4px 10px;">
+    <button class="mobile-nav-item active" id="mobile-nav-panel" onclick="switchView('tablero')">
+      <i data-lucide="layout-grid" style="width: 20px; height: 20px;"></i>
+      <span style="font-size: 10.5px; font-weight: 700; margin-top: 3px;">Inicio</span>
+    </button>
+    <button class="mobile-nav-item" id="mobile-nav-agenda" onclick="switchView('agenda')">
+      <i data-lucide="calendar" style="width: 20px; height: 20px;"></i>
+      <span style="font-size: 10.5px; font-weight: 700; margin-top: 3px;">Agenda</span>
+    </button>
+    <button class="mobile-nav-item" id="mobile-nav-clientes" onclick="switchView('clientes-lista')">
+      <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+      <span style="font-size: 10.5px; font-weight: 700; margin-top: 3px;">Clientes</span>
+    </button>
+    <button class="mobile-nav-item" id="mobile-nav-servicios" onclick="switchView('servicios-catalogo')">
+      <i data-lucide="wrench" style="width: 20px; height: 20px;"></i>
+      <span style="font-size: 10.5px; font-weight: 700; margin-top: 3px;">Servicios</span>
+    </button>
+    <button class="mobile-nav-item" id="mobile-nav-config" onclick="switchView('configuracion')">
+      <i data-lucide="settings" style="width: 20px; height: 20px;"></i>
+      <span style="font-size: 10.5px; font-weight: 700; margin-top: 3px;">Ajustes</span>
+    </button>
+  </nav>
+</div>
 
   <!-- Carga de Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
