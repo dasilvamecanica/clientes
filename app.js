@@ -1,12 +1,12 @@
 /* 
 ========================================================================
-   LÃ“GICA PRINCIPAL DEL PANEL OPERATIVO DE TALLER MECÁNICO (app.js)
+   LÓGICA PRINCIPAL DEL PANEL OPERATIVO DE TALLER MECÁNICO (app.js)
    Características: Drag & Drop, Persistencia, Temporizadores en Vivo,
    Ficha Técnica de Recepción (Foto 2), Modal Recepción (Foto 1).
 ========================================================================
 */
 
-// --- 1. CONFIGURACIÃ“N E INICIALIZACIÃ“N DEL ESTADO ---
+// --- 1. CONFIGURACIÓN E INICIALIZACIÓN DEL ESTADO ---
 
 let vehicles = [];
 let clients = [];
@@ -48,7 +48,21 @@ let workshopConfig = {
   expMaster: false,
   expHideCertificate: false,
   expHideParts: false,
-  expHideExcel: false
+  expHideExcel: false,
+  expShowAesthetics: false,
+  expShowVIN: false,
+  expShowColor: false,
+  defaultDiscount: 0
+};
+
+// Debounced auto-save helper
+let autoSaveTimeout = null;
+window.triggerAutoSave = function() {
+  if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+  autoSaveTimeout = setTimeout(() => {
+    saveState();
+    console.log('Ficha auto-guardada exitosamente.');
+  }, 1000);
 };
 
 // --- INICIALIZACIÓN DE SUPABASE ---
@@ -187,6 +201,19 @@ async function syncWithSupabase(tableName, data) {
         const { error: multError } = await supabaseClient.from(tableName).upsert(multItem);
         if (multError) console.error("Error al sincronizar category_multipliers:", multError);
       }
+
+      // Sincronizar configuraciones experimentales adicionales
+      const expItem = {
+        id: 'experimental_configs',
+        name: JSON.stringify({
+          expShowAesthetics: data.expShowAesthetics || false,
+          expShowVIN: data.expShowVIN || false,
+          expShowColor: data.expShowColor || false,
+          defaultDiscount: data.defaultDiscount || 0
+        })
+      };
+      const { error: expError } = await supabaseClient.from(tableName).upsert(expItem);
+      if (expError) console.error("Error al sincronizar experimental_configs:", expError);
     }
   } catch (err) {
     console.error("Error en sync:", err);
@@ -235,8 +262,26 @@ async function loadStateFromSupabase() {
         expMaster: dbConfig.exp_master !== undefined ? dbConfig.exp_master : false,
         expHideCertificate: dbConfig.exp_hide_certificate !== undefined ? dbConfig.exp_hide_certificate : false,
         expHideParts: dbConfig.exp_hide_parts !== undefined ? dbConfig.exp_hide_parts : false,
-        expHideExcel: dbConfig.exp_hide_excel !== undefined ? dbConfig.exp_hide_excel : false
+        expHideExcel: dbConfig.exp_hide_excel !== undefined ? dbConfig.exp_hide_excel : false,
+        expShowAesthetics: false,
+        expShowVIN: false,
+        expShowColor: false,
+        defaultDiscount: 0
       };
+
+      // Cargar configuraciones experimentales adicionales
+      const { data: expData, error: expError } = await supabaseClient.from('taller_config').select('*').eq('id', 'experimental_configs');
+      if (!expError && expData && expData.length > 0) {
+        try {
+          const parsed = JSON.parse(expData[0].name);
+          workshopConfig.expShowAesthetics = parsed.expShowAesthetics !== undefined ? parsed.expShowAesthetics : false;
+          workshopConfig.expShowVIN = parsed.expShowVIN !== undefined ? parsed.expShowVIN : false;
+          workshopConfig.expShowColor = parsed.expShowColor !== undefined ? parsed.expShowColor : false;
+          workshopConfig.defaultDiscount = parsed.defaultDiscount !== undefined ? parsed.defaultDiscount : 0;
+        } catch (e) {
+          console.error("Error al parsear experimental_configs:", e);
+        }
+      }
 
       // Rescatar logos de la base de datos si existen y guardarlos en localStorage
       if (dbConfig.logo_wide !== undefined) {
@@ -552,9 +597,21 @@ function loadWorkshopConfig() {
     document.getElementById('config-exp-hide-parts').checked = workshopConfig.expHideParts || false;
     document.getElementById('config-exp-hide-excel').checked = workshopConfig.expHideExcel || false;
     
+    const showAestheticsCheckbox = document.getElementById('config-exp-show-aesthetics');
+    if (showAestheticsCheckbox) showAestheticsCheckbox.checked = workshopConfig.expShowAesthetics || false;
+    const showVINCheckbox = document.getElementById('config-exp-show-vin');
+    if (showVINCheckbox) showVINCheckbox.checked = workshopConfig.expShowVIN || false;
+    const showColorCheckbox = document.getElementById('config-exp-show-color');
+    if (showColorCheckbox) showColorCheckbox.checked = workshopConfig.expShowColor || false;
+    
     toggleExperimentalSection(workshopConfig.expMaster || false);
   } else {
     applyExperimentalFeatures();
+  }
+  
+  const discountConfigInput = document.getElementById('config-workshop-discount');
+  if (discountConfigInput) {
+    discountConfigInput.value = workshopConfig.defaultDiscount || 0;
   }
 
   const meliSwitch = document.getElementById('meli-search-switch');
@@ -648,7 +705,11 @@ window.saveWorkshopConfig = function() {
     expMaster: document.getElementById('config-exp-master') ? document.getElementById('config-exp-master').checked : (workshopConfig.expMaster || false),
     expHideCertificate: document.getElementById('config-exp-hide-certificate') ? document.getElementById('config-exp-hide-certificate').checked : (workshopConfig.expHideCertificate || false),
     expHideParts: document.getElementById('config-exp-hide-parts') ? document.getElementById('config-exp-hide-parts').checked : (workshopConfig.expHideParts || false),
-    expHideExcel: document.getElementById('config-exp-hide-excel') ? document.getElementById('config-exp-hide-excel').checked : (workshopConfig.expHideExcel || false)
+    expHideExcel: document.getElementById('config-exp-hide-excel') ? document.getElementById('config-exp-hide-excel').checked : (workshopConfig.expHideExcel || false),
+    expShowAesthetics: document.getElementById('config-exp-show-aesthetics') ? document.getElementById('config-exp-show-aesthetics').checked : (workshopConfig.expShowAesthetics || false),
+    expShowVIN: document.getElementById('config-exp-show-vin') ? document.getElementById('config-exp-show-vin').checked : (workshopConfig.expShowVIN || false),
+    expShowColor: document.getElementById('config-exp-show-color') ? document.getElementById('config-exp-show-color').checked : (workshopConfig.expShowColor || false),
+    defaultDiscount: document.getElementById('config-workshop-discount') ? parseFloat(document.getElementById('config-workshop-discount').value) || 0 : (workshopConfig.defaultDiscount || 0)
   };
   
   localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
@@ -1438,7 +1499,7 @@ window.toggleDarkMode = function() {
 };
 
 window.clearDatabase = function() {
-  if (confirm('âš ï¸  ¡ATENCIÃ“N! ¿Está seguro de que desea eliminar toda la base de datos del taller?\n\nEsto borrará todos los vehículos, citas, clientes y catálogos de forma permanente. Esta acción no se puede deshacer.')) {
+  if (confirm('⚠️  ¡ATENCIÓN! ¿Está seguro de que desea eliminar toda la base de datos del taller?\n\nEsto borrará todos los vehículos, citas, clientes y catálogos de forma permanente. Esta acción no se puede deshacer.')) {
     localStorage.removeItem('taller_vehicles');
     localStorage.removeItem('taller_clients');
     localStorage.removeItem('taller_services');
@@ -2087,6 +2148,12 @@ window.toggleExperimentalFeature = function(feature, enabled) {
     workshopConfig.expHideParts = enabled;
   } else if (feature === 'hideExcel') {
     workshopConfig.expHideExcel = enabled;
+  } else if (feature === 'showAesthetics') {
+    workshopConfig.expShowAesthetics = enabled;
+  } else if (feature === 'showVIN') {
+    workshopConfig.expShowVIN = enabled;
+  } else if (feature === 'showColor') {
+    workshopConfig.expShowColor = enabled;
   }
   localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
   syncWithSupabase('taller_config', workshopConfig);
@@ -2136,6 +2203,25 @@ window.applyExperimentalFeatures = function() {
         }
       }
     }
+  }
+
+  // 4. Nuevas funciones experimentales
+  const showAesthetics = isMaster && !!workshopConfig.expShowAesthetics;
+  const aestheticsContainer = document.getElementById('reception-aesthetics-container');
+  if (aestheticsContainer) {
+    aestheticsContainer.style.display = showAesthetics ? 'block' : 'none';
+  }
+
+  const showVIN = isMaster && !!workshopConfig.expShowVIN;
+  const vinContainer = document.getElementById('form-vin-container');
+  if (vinContainer) {
+    vinContainer.style.display = showVIN ? 'block' : 'none';
+  }
+
+  const showColor = isMaster && !!workshopConfig.expShowColor;
+  const colorContainer = document.getElementById('form-color-container');
+  if (colorContainer) {
+    colorContainer.style.display = showColor ? 'block' : 'none';
   }
 };
 
@@ -2254,7 +2340,7 @@ function initEventListeners() {
     }
   });
 
-  // Cierre de modales al hacer clic fuera (en la zona del fondo modal-overlay)
+  // Cierre de modales al hacer clic fuera (en la zona del fondo modal-overlay o contenedores de trabajo vacíos)
   document.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal-overlay')) {
       const modalId = e.target.id;
@@ -2267,6 +2353,8 @@ function initEventListeners() {
       } else {
         closeModal(modalId);
       }
+    } else if (e.target.classList.contains('workspace-outer-container') || e.target.classList.contains('workspace-sidebar')) {
+      exitDetailedReception();
     }
   });
 
@@ -2312,10 +2400,201 @@ function initEventListeners() {
       }
     });
   }
+
+  // --- AUTO-SAVE SYSTEM ---
+  const autoSaveInputs = [
+    { id: 'det-km', event: 'input' },
+    { id: 'det-service-description', event: 'input' },
+    { id: 'det-details-toggle', event: 'change' },
+    { id: 'det-details-notes', event: 'input' },
+    { id: 'quote-delivery-date', event: 'change' },
+    { id: 'quote-delivery-time', event: 'change' },
+    { id: 'calc-discount', event: 'input' },
+    { id: 'calc-vat-inclusive', event: 'change' },
+    { id: 'ot-observations', event: 'input' },
+    { id: 'del-date', event: 'change' },
+    { id: 'del-third-name', event: 'input' },
+    { id: 'del-third-dni', event: 'input' },
+    { id: 'del-payment-status', event: 'change' },
+    { id: 'del-payment-method', event: 'change' },
+    { id: 'del-partial-amount', event: 'input' },
+    { id: 'del-notes', event: 'input' }
+  ];
+
+  autoSaveInputs.forEach(item => {
+    const el = document.getElementById(item.id);
+    if (el) {
+      el.addEventListener(item.event, () => {
+        if (!activeReceptionVehicleId) return;
+        const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+        if (!vehicle) return;
+
+        if (item.id === 'det-km') {
+          vehicle.kilometers = parseFloat(el.value) || 0;
+          if (typeof updateSidebarOdometer === 'function') updateSidebarOdometer(el.value);
+        } else if (item.id === 'det-service-description') {
+          vehicle.services = el.value.trim();
+        } else if (item.id === 'det-details-toggle') {
+          vehicle.hasDetails = el.checked;
+        } else if (item.id === 'det-details-notes') {
+          vehicle.detailsNotes = el.value.trim();
+        } else if (item.id === 'quote-delivery-date') {
+          vehicle.deliveryDate = el.value;
+        } else if (item.id === 'quote-delivery-time') {
+          vehicle.deliveryTime = el.value;
+        } else if (item.id === 'calc-discount') {
+          vehicle.discountPercent = parseFloat(el.value) || 0;
+          updateCalculatedTotals();
+        } else if (item.id === 'calc-vat-inclusive') {
+          vehicle.vatInclusive = el.checked;
+          updateCalculatedTotals();
+        } else if (item.id === 'ot-observations') {
+          vehicle.otObservations = el.value.trim();
+        } else if (item.id === 'del-date') {
+          vehicle.deliveryDate = el.value;
+        } else if (item.id === 'del-third-name') {
+          vehicle.deliveryThirdName = el.value.trim();
+        } else if (item.id === 'del-third-dni') {
+          vehicle.deliveryThirdDni = el.value.trim();
+        } else if (item.id === 'del-payment-status') {
+          vehicle.deliveryPaymentStatus = el.value;
+          if (typeof togglePartialPaymentField === 'function') togglePartialPaymentField(el.value);
+        } else if (item.id === 'del-payment-method') {
+          vehicle.deliveryPaymentMethod = el.value;
+        } else if (item.id === 'del-partial-amount') {
+          vehicle.deliveryPartialAmount = parseFloat(el.value) || 0;
+          if (typeof updateDeliveryBalance === 'function') updateDeliveryBalance();
+        } else if (item.id === 'del-notes') {
+          vehicle.deliveryNotes = el.value.trim();
+        }
+
+        triggerAutoSave();
+      });
+    }
+  });
+
+  const receiverRadios = document.querySelectorAll('input[name="del-receiver-type"]');
+  receiverRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (!activeReceptionVehicleId) return;
+      const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+      if (!vehicle) return;
+      const checkedRadio = document.querySelector('input[name="del-receiver-type"]:checked');
+      vehicle.deliveryReceiverType = checkedRadio ? checkedRadio.value : 'titular';
+      triggerAutoSave();
+    });
+  });
 }
 
+window.filterQuoteItemSuggestions = function(inputEl, type) {
+  const query = inputEl.value.trim().toLowerCase();
+  const dropdown = inputEl.nextElementSibling;
+  if (!dropdown) return;
+
+  const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+  const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
+
+  let items = [];
+  if (type === 'service') {
+    items = servicesCatalog.filter(s => s.name.toLowerCase().includes(query)).map(s => {
+      const price = getServicePrice(s, cat);
+      const catLabel = s.category ? `[${s.category}] ` : '';
+      return {
+        name: s.name,
+        displayName: `${catLabel}${s.name}`,
+        price: price
+      };
+    });
+  } else {
+    items = partsCatalog.filter(p => p.name.toLowerCase().includes(query)).map(p => {
+      const compat = [];
+      if (p.brand && p.brand !== 'Universal') compat.push(p.brand);
+      if (p.model && p.model !== 'Multimarca') compat.push(p.model);
+      if (p.year && p.year !== '—') compat.push(p.year);
+      const suffix = compat.length > 0 ? ` [${compat.join(' ')}]` : '';
+      return {
+        name: `${p.name}${suffix}`,
+        displayName: `${p.name}${suffix}`,
+        price: p.price || 0
+      };
+    });
+  }
+
+  if (items.length === 0) {
+    dropdown.style.display = 'none';
+    return;
+  }
+
+  dropdown.innerHTML = items.map(item => {
+    return `
+      <div class="quote-dropdown-item" 
+           style="padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color-light); transition: background 0.15s; font-size: 13.5px;"
+           onmouseover="this.style.background='var(--card-bg-hover)'"
+           onmouseout="this.style.background='transparent'"
+           onmousedown="selectQuoteItemSuggestion('${type}', \`${item.name}\`, ${item.price}, this)">
+        <span style="font-weight: 600; color: var(--text-primary); text-align: left; flex: 1; padding-right: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.displayName}">
+          ${item.displayName}
+        </span>
+        <span style="font-weight: 800; color: var(--color-accent); font-family: var(--font-mono); font-size: 13px; flex-shrink: 0;">
+          ${formatCurrency(item.price)}
+        </span>
+      </div>
+    `;
+  }).join('');
+  dropdown.style.display = 'block';
+};
+
+window.selectQuoteItemSuggestion = function(type, name, price, el) {
+  const container = el.closest('.inline-edit-item');
+  if (!container) return;
+  const nameInput = container.querySelector('#inline-item-name');
+  const valueInput = container.querySelector('#inline-item-value');
+  if (nameInput && valueInput) {
+    nameInput.value = name;
+    valueInput.value = price;
+    valueInput.focus();
+  }
+  const dropdown = container.querySelector('.quote-item-dropdown');
+  if (dropdown) dropdown.style.display = 'none';
+};
+
+window.delayCloseQuoteItemSuggestions = function(inputEl) {
+  setTimeout(() => {
+    const dropdown = inputEl.nextElementSibling;
+    if (dropdown) dropdown.style.display = 'none';
+  }, 200);
+};
+
+window.handleQuoteCategoryChange = function() {
+  if (!activeReceptionVehicleId) return;
+  const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+  if (!vehicle) return;
+
+  const newCat = document.getElementById('quote-category').value;
+  vehicle.category = newCat;
+
+  // Actualizar UI del badge lateral inmediatamente
+  const detVehicleCategoryBadge = document.getElementById('det-vehicle-category-badge');
+  if (detVehicleCategoryBadge) {
+    detVehicleCategoryBadge.innerHTML = getVehicleCategoryBadgeHtml(newCat);
+  }
+
+  // Re-calcular precios de servicios agregados basándose en la nueva categoría si existen en el catálogo
+  activeQuoteServices = activeQuoteServices.map(item => {
+    const catalogItem = servicesCatalog.find(s => s.name === item.name);
+    if (catalogItem) {
+      return { name: item.name, value: getServicePrice(catalogItem, newCat) };
+    }
+    return item;
+  });
+
+  saveState();
+  renderQuoteTab();
+  updateCalculatedTotals();
+};
+
 // Intercambiar Vistas (Tablero / Calendario / Ficha Recepción / Reportes / Ingresos / Cotizaciones / Agenda)
-// Intercambiar Vistas (Tablero / Calendario / Ficha Recepción / Reportes / Ingresos / Cotizaciones / Agenda / Ã“rdenes de Trabajo / Servicios / Equipo / Clientes / Cuentas)
+// Intercambiar Vistas (Tablero / Calendario / Ficha Recepción / Reportes / Ingresos / Cotizaciones / Agenda / Órdenes de Trabajo / Servicios / Equipo / Clientes / Cuentas)
 window.switchView = function(view) {
   if (typeof window.closeMobileSidebarIfOpen === 'function') {
     window.closeMobileSidebarIfOpen();
@@ -2713,8 +2992,7 @@ function renderKanban() {
                 Ver Orden de Trabajo
               </button>
             ` : vehicle.stage === 'recepcion' ? (() => {
-                const hasServices = typeof vehicle.services === 'string' ? vehicle.services.trim().length > 0 : (vehicle.services || []).length > 0;
-                const isReceptionCreated = vehicle.kilometers > 0 || hasServices;
+                const isReceptionCreated = true;
                 if (!isReceptionCreated) {
                   return `
                     <button class="view-quote-btn" onclick="openDetailedReceptionFromCard('${vehicle.id}')" style="color: var(--color-recepcion);">
@@ -2803,11 +3081,26 @@ window.handleDrop = function(e, targetStage) {
   const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(vehicleId));
   
   if (vehicleIndex !== -1) {
-    vehicles[vehicleIndex].stage = targetStage;
+    const vehicle = vehicles[vehicleIndex];
+    
+    // Auto-approve and transition to repair if dropping onto reparacion
+    if (targetStage === 'reparacion') {
+      if (vehicle.stage === 'recepcion' || vehicle.stage === 'cotizacion') {
+        vehicle.quoteCompleted = true;
+        if (!vehicle.otTasks || vehicle.otTasks.length === 0) {
+          const services = vehicle.quoteServices || [];
+          const parts = vehicle.quoteParts || [];
+          const combinedNames = [...services.map(s => s.name), ...parts.map(p => p.name)];
+          vehicle.otTasks = combinedNames.map(name => ({ name, completed: false, observation: '' }));
+        }
+      }
+    }
+    
+    vehicle.stage = targetStage;
     
     // Si se mueve a Cotización y no tenía valor, le asignamos uno simulado para mantener consistencia
-    if (targetStage === 'cotizacion' && vehicles[vehicleIndex].value === 0) {
-      vehicles[vehicleIndex].value = 90000;
+    if (targetStage === 'cotizacion' && vehicle.value === 0) {
+      vehicle.value = 90000;
     }
     
     saveState();
@@ -2849,7 +3142,7 @@ function updateAllElapsedTimes() {
   });
 }
 
-// --- 6. CÁLCULO DE MÃ‰TRICAS DEL HEADER ---
+// --- 6. CÁLCULO DE MÉTRICAS DEL HEADER ---
 
 function updateMetrics() {
   const totalIncome = vehicles
@@ -3319,7 +3612,7 @@ window.populateAutocompleteDatalists = function() {
   }
 };
 
-// --- 9. GESTIÃ“N DEL MODAL DE REGISTRO E INGRESOS ---
+// --- 9. GESTIÓN DEL MODAL DE REGISTRO E INGRESOS ---
 
 window.openAddVehicleModal = function(defaultStage = 'recepcion') {
   // Resetear Formulario
@@ -3559,7 +3852,7 @@ window.handleVehicleFormSubmit = function(e) {
 };
 
 
-// --- 10. LÃ“GICA DE LA FICHA TÃ‰CNICA DE RECEPCIÃ“N (FOTO 2) ---
+// --- 10. LÓGICA DE LA FICHA TÉCNICA DE RECEPCIÓN (FOTO 2) ---
 
 window.openDetailedReception = function(vehicleId, isReadOnly = false) {
   window.isDetailedViewReadOnly = isReadOnly;
@@ -4103,7 +4396,7 @@ window.handleContextDelete = function() {
   document.getElementById('card-context-menu').classList.remove('show');
 };
 
-// --- 12. MODAL DETALLE DE COTIZACIÃ“N (FACTURA) ---
+// --- 12. MODAL DETALLE DE COTIZACIÓN (FACTURA) ---
 
 window.openQuoteModal = function(vehicleId) {
   const vehicle = vehicles.find(v => v.id === vehicleId);
@@ -4144,7 +4437,7 @@ window.openQuoteModal = function(vehicleId) {
         <span style="color: var(--text-muted); font-size: 10px; font-weight: 700; text-transform: uppercase;">Detalles Cotización</span>
         <strong>Ingreso #${vehicle.id.substring(vehicle.id.length - 4, vehicle.id.length) === '2026' ? '1' : vehicle.id.substring(vehicle.id.length - 4, vehicle.id.length)}</strong>
         <span>Fecha de Ingreso: ${vehicle.entryDate}</span>
-        <span>Estado: <span style="font-weight: 700; text-transform: uppercase; color: ${vehicle.stage === 'recepcion' ? 'var(--color-recepcion)' : vehicle.stage === 'cotizacion' ? 'var(--color-cotizacion)' : vehicle.stage === 'reparacion' ? 'var(--color-reparacion)' : vehicle.stage === 'listo' ? 'var(--color-listo)' : 'var(--color-accent)'};">${vehicle.stage === 'recepcion' ? 'RECEPCIÃ“N' : vehicle.stage === 'cotizacion' ? 'COTIZACIÃ“N' : vehicle.stage === 'reparacion' ? 'ORDEN DE TRABAJO' : vehicle.stage === 'listo' ? 'LISTO' : vehicle.stage.toUpperCase()}</span></span>
+        <span>Estado: <span style="font-weight: 700; text-transform: uppercase; color: ${vehicle.stage === 'recepcion' ? 'var(--color-recepcion)' : vehicle.stage === 'cotizacion' ? 'var(--color-cotizacion)' : vehicle.stage === 'reparacion' ? 'var(--color-reparacion)' : vehicle.stage === 'listo' ? 'var(--color-listo)' : 'var(--color-accent)'};">${vehicle.stage === 'recepcion' ? 'RECEPCIÓN' : vehicle.stage === 'cotizacion' ? 'COTIZACIÓN' : vehicle.stage === 'reparacion' ? 'ORDEN DE TRABAJO' : vehicle.stage === 'listo' ? 'LISTO' : vehicle.stage.toUpperCase()}</span></span>
       </div>
     </div>
     
@@ -4286,7 +4579,7 @@ function formatDateString(date) {
   return `${y}-${m}-${d}`;
 }
 
-// --- 14. LÃ“GICA DE LA PESTAÃ‘A DE COTIZACIÃ“N INTERACTIVA (FOTO 3) ---
+// --- 14. LÓGICA DE LA PESTAÑA DE COTIZACIÓN INTERACTIVA (FOTO 3) ---
 
 let activeQuoteServices = [];
 let activeQuoteParts = [];
@@ -4375,6 +4668,20 @@ window.setActiveTab = function(tabName) {
   } else if (tabName === 'workorder') {
     document.getElementById('tab-workorder-btn').classList.add('active');
     document.getElementById('tab-content-workorder').style.display = 'block';
+    
+    const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
+    if (vehicle && (vehicle.stage === 'recepcion' || vehicle.stage === 'cotizacion')) {
+      vehicle.stage = 'reparacion';
+      vehicle.quoteCompleted = true;
+      if (!vehicle.otTasks || vehicle.otTasks.length === 0) {
+        const services = vehicle.quoteServices || [];
+        const parts = vehicle.quoteParts || [];
+        const combinedNames = [...services.map(s => s.name), ...parts.map(p => p.name)];
+        vehicle.otTasks = combinedNames.map(name => ({ name, completed: false, observation: '' }));
+      }
+      saveState();
+      renderApp();
+    }
     renderOTTab();
   } else if (tabName === 'delivery') {
     if (tabDelBtn) tabDelBtn.classList.add('active');
@@ -4411,8 +4718,7 @@ window.setActiveTab = function(tabName) {
   const tabBlockingEnabled = localStorage.getItem('taller_tab_blocking_enabled') !== 'false'; // Default to true!
   
   if (activeVehicle) {
-    const hasServices = typeof activeVehicle.services === 'string' ? activeVehicle.services.trim().length > 0 : (activeVehicle.services || []).length > 0;
-    const isReceptionDone = (activeVehicle.kilometers > 0 || hasServices);
+    const isReceptionDone = true;
     const isQuoteDone = activeVehicle.quoteCompleted || ['reparacion', 'listo', 'entregado'].includes(activeVehicle.stage);
     const isWorkOrderDone = ['listo', 'entregado'].includes(activeVehicle.stage) || activeVehicle.delivered;
 
@@ -4679,20 +4985,8 @@ window.toggleDetailedQuoteApproval = function(event) {
   const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
   if (vehicle) {
     if (checked) {
-      // Si se aprueba, debemos validar primero si hay fecha y hora estimadas de entrega
-      const deliveryDateVal = document.getElementById('quote-delivery-date')?.value || '';
-      const deliveryTimeVal = document.getElementById('quote-delivery-time')?.value || '';
-      
-      if (!deliveryDateVal || !deliveryTimeVal) {
-        // Deshacer el check
-        event.target.checked = false;
-        alert('Por favor, ingresa primero la fecha y hora estimada de entrega en la cotización.');
-        const dateInput = document.getElementById('quote-delivery-date');
-        const timeInput = document.getElementById('quote-delivery-time');
-        if (!deliveryDateVal && dateInput) dateInput.focus();
-        else if (!deliveryTimeVal && timeInput) timeInput.focus();
-        return;
-      }
+       const deliveryDateVal = document.getElementById('quote-delivery-date')?.value || '';
+       const deliveryTimeVal = document.getElementById('quote-delivery-time')?.value || '';
       
       // Guardar fecha y hora
       vehicle.deliveryDate = deliveryDateVal;
@@ -4989,11 +5283,13 @@ window.addInlineQuoteItem = function(type) {
   row.className = 'inline-edit-item';
   row.style.cssText = 'padding: 6px 16px; border: 1.5px dashed var(--color-accent); background-color: var(--card-bg-hover); display: flex; align-items: center; gap: 12px; min-height: 48px; border-radius: var(--radius-sm); margin-bottom: 8px; box-sizing: border-box;';
   
-  const datalistId = type === 'service' ? 'quote-services-suggestions' : 'quote-parts-suggestions';
   const placeholderName = type === 'service' ? 'Ej. Cambio de aceite' : 'Ej. Filtro de aceite';
   
   row.innerHTML = `
-    <input type="text" id="inline-item-name" class="form-input" list="${datalistId}" placeholder="${placeholderName}" style="flex: 1; padding: 6px 10px; font-size: 13px; font-weight: 600; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); border-radius: var(--radius-sm);" onchange="handleInlineNameChange(this, '${type}')" onkeydown="handleInlineKeydown(event, '${type}', this)">
+    <div style="position: relative; flex: 1; display: flex; flex-direction: column;">
+      <input type="text" id="inline-item-name" class="form-input" autocomplete="off" placeholder="${placeholderName}" style="width: 100%; padding: 6px 10px; font-size: 13px; font-weight: 600; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); border-radius: var(--radius-sm);" oninput="filterQuoteItemSuggestions(this, '${type}')" onfocus="filterQuoteItemSuggestions(this, '${type}')" onblur="delayCloseQuoteItemSuggestions(this)" onchange="handleInlineNameChange(this, '${type}')" onkeydown="handleInlineKeydown(event, '${type}', this)">
+      <div class="quote-item-dropdown" id="quote-item-dropdown-${type}" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); max-height: 200px; overflow-y: auto; z-index: 9999; box-shadow: var(--shadow-lg);"></div>
+    </div>
     <input type="number" id="inline-item-value" class="form-input" placeholder="Costo" style="width: 90px; padding: 6px 10px; font-size: 13px; font-weight: 700; text-align: right; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); border-radius: var(--radius-sm);" onkeydown="handleInlineKeydown(event, '${type}', this)">
     ${type === 'part' && localStorage.getItem('taller_meli_search_enabled') !== 'false' ? `
     <button class="meli-search-btn" type="button" onmousedown="const r = this.closest('.inline-edit-item'); if (r) r.dataset.searchingMeli = 'true';" onclick="searchInMercadoLibreFromInline()" style="background-color: #FFE600 !important; color: #2D3277 !important; border: 1px solid #d4c000 !important; border-radius: var(--radius-sm) !important; padding: 6px 10px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; cursor: pointer !important; height: 32px !important; font-weight: 700 !important; font-size: 11px !important; transition: all 0.2s ease !important; box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;" title="Buscar en Mercado Libre">
@@ -5076,7 +5372,7 @@ window.handleInlineNameChange = function(input, type) {
       const compat = [];
       if (p.brand && p.brand !== 'Universal') compat.push(p.brand);
       if (p.model && p.model !== 'Multimarca') compat.push(p.model);
-      if (p.year && p.year !== 'â€”') compat.push(p.year);
+      if (p.year && p.year !== '—') compat.push(p.year);
       const suffix = compat.length > 0 ? ` [${compat.join(' ')}]` : '';
       const fullName = `${p.name}${suffix}`;
       return fullName.toLowerCase() === name.toLowerCase() || p.name.toLowerCase() === name.toLowerCase();
@@ -5146,7 +5442,7 @@ function ensurePartExistsInCatalog(partName, price, vehicle) {
   const compat = [];
   if (brand && brand !== 'Universal') compat.push(brand);
   if (model && model !== 'Multimarca') compat.push(model);
-  if (year && year !== 'â€”') compat.push(year);
+  if (year && year !== '—') compat.push(year);
   const suffix = compat.length > 0 ? ` [${compat.join(' ')}]` : '';
   return `${cleanName}${suffix}`;
 }
@@ -5234,6 +5530,16 @@ window.updateCalculatedTotals = function() {
       }
     }
   }
+
+  const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
+  if (vehicle) {
+    vehicle.quoteServices = [...activeQuoteServices];
+    vehicle.quoteParts = [...activeQuoteParts];
+    vehicle.discountPercent = discPercent;
+    vehicle.vatInclusive = vatInclusive;
+    vehicle.value = Math.round(total);
+    triggerAutoSave();
+  }
 };
 
 window.toggleQuoteNotes = function() {
@@ -5282,16 +5588,8 @@ window.confirmQuoteCreation = function() {
     activeInlineRow.remove();
   }
 
-  const dateVal = document.getElementById('quote-delivery-date').value;
-  const timeVal = document.getElementById('quote-delivery-time').value;
-  if (!dateVal || !timeVal) {
-    alert('Por favor, selecciona la fecha y hora estimada de entrega del vehículo para la cotización.');
-    const dateInput = document.getElementById('quote-delivery-date');
-    const timeInput = document.getElementById('quote-delivery-time');
-    if (!dateVal && dateInput) dateInput.focus();
-    else if (!timeVal && timeInput) timeInput.focus();
-    return;
-  }
+  const dateVal = document.getElementById('quote-delivery-date')?.value || '';
+  const timeVal = document.getElementById('quote-delivery-time')?.value || '';
 
   const vehicleIndex = vehicles.findIndex(v => v.id === activeReceptionVehicleId);
   if (vehicleIndex === -1) return;
@@ -5335,7 +5633,7 @@ window.confirmQuoteCreation = function() {
   exitDetailedReception();
 };
 
-// --- 15. NUEVA SECCIÃ“N: VISTA PREVIA Y ACCIONES DE COTIZACIÃ“N CREADA (FOTO 4) ---
+// --- 15. NUEVA SECCIÓN: VISTA PREVIA Y ACCIONES DE COTIZACIÓN CREADA (FOTO 4) ---
 
 window.openDetailedQuoteView = function(vehicleId) {
   openDetailedReception(vehicleId);
@@ -5386,7 +5684,7 @@ window.renderQuotePreview = function(vehicle) {
       const timeStr = vehicle.deliveryTime ? ` a las ${vehicle.deliveryTime} hs` : '';
       deliveryLabel.textContent = `${formattedDate}${timeStr}`;
     } else {
-      deliveryLabel.textContent = 'â€”';
+      deliveryLabel.textContent = '—';
     }
   }
   
@@ -5409,7 +5707,7 @@ window.renderQuotePreview = function(vehicle) {
       const servicesSum = services.reduce((sum, item) => sum + item.value, 0);
       servicesBody.innerHTML = services.map(item => `
         <tr>
-          <td style="font-family: var(--font-mono); color: var(--text-muted); padding: 12px 14px;">â€”</td>
+          <td style="font-family: var(--font-mono); color: var(--text-muted); padding: 12px 14px;">—</td>
           <td style="font-weight: 500; color: var(--text-primary); padding: 12px 14px;">${item.name}</td>
           <td style="color: var(--text-secondary); padding: 12px 14px;">1 servicio</td>
           <td style="text-align: right; color: var(--text-secondary); padding: 12px 14px;">${formatVal(item.value)}</td>
@@ -5432,7 +5730,7 @@ window.renderQuotePreview = function(vehicle) {
       const partsSum = parts.reduce((sum, item) => sum + item.value, 0);
       partsBody.innerHTML = parts.map(item => `
         <tr>
-          <td style="font-family: var(--font-mono); color: var(--text-muted); padding: 12px 14px;">â€”</td>
+          <td style="font-family: var(--font-mono); color: var(--text-muted); padding: 12px 14px;">—</td>
           <td style="font-weight: 500; color: var(--text-primary); padding: 12px 14px;">${item.name}</td>
           <td style="color: var(--text-secondary); padding: 12px 14px;">1 unidad</td>
           <td style="text-align: right; color: var(--text-secondary); padding: 12px 14px;">${formatVal(item.value)}</td>
@@ -5502,16 +5800,6 @@ window.approveQuoteAndCreateWorkOrder = function() {
   const deliveryDateVal = document.getElementById('quote-delivery-date')?.value || '';
   const deliveryTimeVal = document.getElementById('quote-delivery-time')?.value || '';
   
-  if (!deliveryDateVal || !deliveryTimeVal) {
-    setActiveTab('quote');
-    alert('Por favor, ingresa primero la fecha y hora estimada de entrega en la cotización.');
-    const dateInput = document.getElementById('quote-delivery-date');
-    const timeInput = document.getElementById('quote-delivery-time');
-    if (!deliveryDateVal && dateInput) dateInput.focus();
-    else if (!deliveryTimeVal && timeInput) timeInput.focus();
-    return;
-  }
-  
   // Guardar en el vehículo
   vehicle.deliveryDate = deliveryDateVal;
   vehicle.deliveryTime = deliveryTimeVal;
@@ -5568,7 +5856,7 @@ window.renderOTTab = function() {
       const timeStr = vehicle.deliveryTime ? ` a las ${vehicle.deliveryTime} hs` : '';
       otDeliveryLabel.textContent = `${formattedDate}${timeStr}`;
     } else {
-      otDeliveryLabel.textContent = 'â€”';
+      otDeliveryLabel.textContent = '—';
     }
   }
   
@@ -5758,7 +6046,7 @@ window.saveOTTaskObs = function(index) {
   saveState();
 };
 
-// â”€â”€ Aceptar y Actualizar OT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Aceptar y Actualizar OT ────────────────────────────────────────────────
 window.saveOTAndUpdate = function() {
   if (!activeReceptionVehicleId) return;
   const vehicleIndex = vehicles.findIndex(v => v.id === activeReceptionVehicleId);
@@ -5773,7 +6061,7 @@ window.saveOTAndUpdate = function() {
 
   // Toast de confirmación
   const toast = document.createElement('div');
-  toast.textContent = 'âœ“ Orden de trabajo actualizada';
+  toast.textContent = '✓ Orden de trabajo actualizada';
   toast.style.cssText = `
     position: fixed; bottom: 24px; right: 24px; z-index: 9999;
     background: #00b050; color: white; font-weight: 700; font-size: 13px;
@@ -5786,7 +6074,7 @@ window.saveOTAndUpdate = function() {
   setTimeout(() => toast.remove(), 2500);
 };
 
-// â”€â”€ Observaciones generales de la OT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Observaciones generales de la OT ──────────────────────────────────────
 window.saveOTObservations = function() {
   if (!activeReceptionVehicleId) return;
   const vehicleIndex = vehicles.findIndex(v => v.id === activeReceptionVehicleId);
@@ -5796,7 +6084,7 @@ window.saveOTObservations = function() {
   saveState();
 };
 
-// â”€â”€ Imágenes de la OT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Imágenes de la OT ──────────────────────────────────────────────────────
 window.addOTImages = function(event) {
   if (!activeReceptionVehicleId) return;
   const vehicleIndex = vehicles.findIndex(v => v.id === activeReceptionVehicleId);
@@ -5857,7 +6145,7 @@ window.renderOTImages = function() {
         style="width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer;"
         onclick="window.open('${img.src}', '_blank')">
       <button onclick="removeOTImage(${i})" title="Eliminar imagen"
-        style="position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.65); border: none; color: white; font-size: 11px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;">Ã—</button>
+        style="position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.65); border: none; color: white; font-size: 11px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;">×</button>
     </div>
   `).join('');
 };
@@ -5882,7 +6170,7 @@ window.deleteActiveVehicleFromFicha = function() {
 ========================================================================
 */
 
-// --- ACORDEÃ“N DE LA BARRA LATERAL ---
+// --- ACORDEÓN DE LA BARRA LATERAL ---
 window.toggleMenuCollapse = function(groupId) {
   const sublist = document.getElementById(groupId);
   if (!sublist) return;
@@ -6567,7 +6855,7 @@ window.renderProximasCitas = function() {
       card.className = 'next-cita-item';
 
       if (item.type === 'reminder') {
-        // â”€â”€ REMINDER CARD â”€â”€
+        // ── REMINDER CARD ──
         const r = item.data;
         const cardWidth = isDashboard ? 'width: 280px; flex-shrink: 0;' : 'width: 100%;';
         card.style.cssText = `background-color: var(--card-bg); border: 1px solid rgba(139,92,246,0.25); border-radius: var(--radius-md); padding: 12px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: all 0.2s ease; ${cardWidth} border-left: 4px solid #8b5cf6;`;
@@ -6585,7 +6873,7 @@ window.renderProximasCitas = function() {
           card.style.borderTopColor = 'rgba(139,92,246,0.25)';
           card.style.borderRightColor = 'rgba(139,92,246,0.25)';
           card.style.borderBottomColor = 'rgba(139,92,246,0.25)';
-          // borderLeftColor stays #8b5cf6 â€” never reset
+          // borderLeftColor stays #8b5cf6 — never reset
         });
 
         const dateObj = new Date(r.date + 'T00:00:00');
@@ -6609,12 +6897,12 @@ window.renderProximasCitas = function() {
         card.addEventListener('click', () => openReminderModal(r.date, r.id));
 
       } else {
-        // â”€â”€ VEHICLE CARD â”€â”€
+        // ── VEHICLE CARD ──
         const v = item.data;
         const cardWidth = isDashboard ? 'width: 280px; flex-shrink: 0;' : 'width: 100%;';
 
         // Use concrete hex values so they resolve correctly in all contexts (dashboard + calendar)
-        let stageColor = '#3b82f6'; // Azul recepción â€” matches badge-blue
+        let stageColor = '#3b82f6'; // Azul recepción — matches badge-blue
         let stageName = 'Recepción';
         let badgeClass = 'badge-blue';
         if (v.stage === 'cotizacion') {
@@ -6627,7 +6915,7 @@ window.renderProximasCitas = function() {
           stageColor = '#f59e0b'; stageName = 'Cita Agendada'; badgeClass = 'badge-gold';
         }
 
-        // Border color embedded directly into cssText â€” avoids double-assignment bug
+        // Border color embedded directly into cssText — avoids double-assignment bug
         card.style.cssText = `background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: all 0.2s ease; ${cardWidth} border-left: 4px solid ${stageColor};`;
 
         card.addEventListener('mouseenter', () => {
@@ -6643,7 +6931,7 @@ window.renderProximasCitas = function() {
           card.style.borderTopColor = 'var(--border-color)';
           card.style.borderRightColor = 'var(--border-color)';
           card.style.borderBottomColor = 'var(--border-color)';
-          // borderLeftColor stays as stageColor â€” never reset
+          // borderLeftColor stays as stageColor — never reset
         });
 
         const displayDate = v.deliveryDate || v.entryDate;
@@ -6959,10 +7247,10 @@ window.handleCitaFormSubmit = function(event) {
       plate: plateVal,
       brand: brandVal ? brandVal : 'Cita',
       model: modelVal ? modelVal : 'Pendiente',
-      year: 'â€”',
-      km: 'â€”',
-      fuel: 'â€”',
-      color: 'â€”',
+      year: '—',
+      km: '—',
+      fuel: '—',
+      color: '—',
       description: descVal,
       delivered: false,
       services: [],
@@ -7193,7 +7481,7 @@ let teamLoaded = false;
 let clientsLoading = false;
 let clientsLoaded = false;
 
-// --- 1. Ã“RDENES DE TRABAJO (OPERACIONES TÃ‰CNICAS) ---
+// --- 1. ÓRDENES DE TRABAJO (OPERACIONES TÉCNICAS) ---
 window.renderOrdenesTrabajoView = function() {
   const searchInput = document.getElementById('ot-search-input');
   const sidebarSearchInput = document.getElementById('sidebar-search-input');
@@ -7371,7 +7659,7 @@ window.deleteOTFromDB = async function(vehicleId) {
 };
 
 
-// --- 2. SERVICIOS DEL CATÁLOGO (OPERACIONES TÃ‰CNICAS) ---
+// --- 2. SERVICIOS DEL CATÁLOGO (OPERACIONES TÉCNICAS) ---
 window.renderServiciosCatalogView = function() {
   const searchInput = document.getElementById('catalogo-servicios-search');
   const tbody = document.getElementById('servicios-table-body');
@@ -7511,6 +7799,37 @@ window.handleEditServiceSubmit = function(e) {
   const priceB = parseFloat(document.getElementById('es-price-b').value) || 0;
   const priceC = parseFloat(document.getElementById('es-price-c').value) || 0;
 
+  if (id.startsWith('quote-service-') || id.startsWith('quote-part-')) {
+    const isService = id.startsWith('quote-service-');
+    const index = parseInt(id.replace('quote-service-', '').replace('quote-part-', ''), 10);
+    
+    const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
+    const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
+    const price = cat === 'A' ? priceA : (cat === 'C' ? priceC : priceB);
+    
+    if (isService) {
+      if (activeQuoteServices[index]) {
+        activeQuoteServices[index].name = name;
+        activeQuoteServices[index].value = price;
+      }
+    } else {
+      if (activeQuoteParts[index]) {
+        activeQuoteParts[index].name = name;
+        activeQuoteParts[index].value = price;
+      }
+    }
+    
+    if (vehicle) {
+      vehicle.quoteServices = [...activeQuoteServices];
+      vehicle.quoteParts = [...activeQuoteParts];
+      triggerAutoSave();
+    }
+    
+    closeModal('edit-service-modal');
+    renderQuoteTab();
+    updateCalculatedTotals();
+    return;
+  }
   const service = servicesCatalog.find(s => s.id === id);
   if (service) {
     service.name = name;
@@ -7702,9 +8021,9 @@ window.renderRepuestosCatalogView = function() {
     return `
       <tr>
         <td style="font-weight: 700; color: var(--text-primary);">${p.name}</td>
-        <td style="color: var(--text-secondary); font-size: 13px;">${p.brand || 'â€”'}</td>
-        <td style="color: var(--text-secondary); font-size: 13px;">${p.model || 'â€”'}</td>
-        <td style="text-align: center; color: var(--text-secondary); font-size: 13px;">${p.year || 'â€”'}</td>
+        <td style="color: var(--text-secondary); font-size: 13px;">${p.brand || '—'}</td>
+        <td style="color: var(--text-secondary); font-size: 13px;">${p.model || '—'}</td>
+        <td style="text-align: center; color: var(--text-secondary); font-size: 13px;">${p.year || '—'}</td>
         <td style="color: var(--text-secondary); font-size: 12.5px;">${p.description}</td>
         <td style="text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);">${formatCurrency(p.price)}</td>
         <td style="color: var(--text-muted); font-size: 12px;">${p.date}</td>
@@ -7737,7 +8056,7 @@ window.handleNewPartSubmit = function(e) {
   const description = document.getElementById('np-description').value.trim() || 'Sin descripción';
   const brand = document.getElementById('np-brand').value.trim() || 'Universal';
   const model = document.getElementById('np-model').value.trim() || 'Multimarca';
-  const year = document.getElementById('np-year').value.trim() || 'â€”';
+  const year = document.getElementById('np-year').value.trim() || '—';
   const price = parseFloat(document.getElementById('np-price').value) || 0;
 
   const newPart = {
@@ -7769,7 +8088,7 @@ window.deletePartFromCatalog = function(partId) {
   }
 };
 
-// --- 3. GESTIÃ“N DE EQUIPO (GESTIÃ“N DE RECURSOS) ---
+// --- 3. GESTIÓN DE EQUIPO (GESTIÓN DE RECURSOS) ---
 window.renderEquipoListaView = function() {
   const tbody = document.getElementById('equipo-table-body');
   if (!tbody) return;
@@ -8473,7 +8792,7 @@ window.renderCuentasCobrarView = function() {
   initLucide();
 };
 
-// --- 6. VEHÍCULOS (GESTIÃ“N DE RECURSOS) ---
+// --- 6. VEHÍCULOS (GESTIÓN DE RECURSOS) ---
 window.renderVehiculosView = function() {
   const searchInput = document.getElementById('veh-search-input');
   const brandSelect = document.getElementById('veh-brand-select');
@@ -9296,31 +9615,38 @@ window.populateDatalists = function() {
 };
 
 window.editQuoteServicePrice = function(index) {
-  const currentVal = activeQuoteServices[index].value;
-  const newValStr = prompt(`Ingrese el nuevo precio para el servicio "${activeQuoteServices[index].name}":`, currentVal);
-  if (newValStr === null) return; // cancelado
-  const newVal = parseFloat(newValStr);
-  if (isNaN(newVal) || newVal < 0) {
-    alert('Precio inválido.');
-    return;
-  }
-  activeQuoteServices[index].value = newVal;
-  renderQuoteTab();
-  updateCalculatedTotals();
+  const item = activeQuoteServices[index];
+  const service = servicesCatalog.find(s => s.name === item.name);
+
+  document.getElementById('es-id').value = `quote-service-${index}`;
+  document.getElementById('es-category').value = service ? (service.category || 'GENERAL') : 'GENERAL';
+  document.getElementById('es-name').value = item.name;
+  document.getElementById('es-description').value = service ? (service.description || '') : '';
+  
+  const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+  const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
+  document.getElementById('es-price-a').value = service ? (service.priceA || 0) : (cat === 'A' ? item.value : 0);
+  document.getElementById('es-price-b').value = service ? (service.priceB || 0) : (cat === 'B' ? item.value : item.value);
+  document.getElementById('es-price-c').value = service ? (service.priceC || 0) : (cat === 'C' ? item.value : 0);
+
+  document.getElementById('edit-service-modal').classList.add('open');
 };
 
 window.editQuotePartPrice = function(index) {
-  const currentVal = activeQuoteParts[index].value;
-  const newValStr = prompt(`Ingrese el nuevo precio para el repuesto "${activeQuoteParts[index].name}":`, currentVal);
-  if (newValStr === null) return; // cancelado
-  const newVal = parseFloat(newValStr);
-  if (isNaN(newVal) || newVal < 0) {
-    alert('Precio inválido.');
-    return;
-  }
-  activeQuoteParts[index].value = newVal;
-  renderQuoteTab();
-  updateCalculatedTotals();
+  const item = activeQuoteParts[index];
+  const part = partsCatalog.find(p => p.name === item.name);
+
+  document.getElementById('es-id').value = `quote-part-${index}`;
+  document.getElementById('es-category').value = 'REPUESTOS';
+  document.getElementById('es-name').value = item.name;
+  document.getElementById('es-description').value = part ? (part.description || '') : '';
+  
+  const price = item.value;
+  document.getElementById('es-price-a').value = price;
+  document.getElementById('es-price-b').value = price;
+  document.getElementById('es-price-c').value = price;
+
+  document.getElementById('edit-service-modal').classList.add('open');
 };
 
 window.applyDetailedModalReadOnlyState = function() {
@@ -9376,7 +9702,7 @@ window.applyDetailedModalReadOnlyState = function() {
 };
 
 // ========================================================================
-//   20. SISTEMA DE PALETA DE BÃšSQUEDA GLOBAL / COMMAND PALETTE
+//   20. SISTEMA DE PALETA DE BÚSQUEDA GLOBAL / COMMAND PALETTE
 // ========================================================================
 
 window.openGlobalSearch = function() {
@@ -9724,7 +10050,7 @@ document.addEventListener('click', function() {
   }
 });
 
-// --- Navegación profunda al Historial de Ã“rdenes de Trabajo por Patente ---
+// --- Navegación profunda al Historial de Órdenes de Trabajo por Patente ---
 window.viewWorkOrderHistoryOfActiveVehicle = function() {
   if (!activeReceptionVehicleId) return;
   const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
@@ -10314,10 +10640,10 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
           `)}
         </div>
         <div class="workshop-info-area">
-          <div class="workshop-name">${workshopConfig.name || 'â€”'}</div>
-          <div class="workshop-detail">Tel: ${workshopConfig.phone1 || 'â€”'}${workshopConfig.phone2 ? ' / ' + workshopConfig.phone2 : ''}</div>
-          <div class="workshop-detail">${workshopConfig.address || 'â€”'}</div>
-          <div class="workshop-detail">RUT: ${workshopConfig.rut || 'â€”'}</div>
+          <div class="workshop-name">${workshopConfig.name || '—'}</div>
+          <div class="workshop-detail">Tel: ${workshopConfig.phone1 || '—'}${workshopConfig.phone2 ? ' / ' + workshopConfig.phone2 : ''}</div>
+          <div class="workshop-detail">${workshopConfig.address || '—'}</div>
+          <div class="workshop-detail">RUT: ${workshopConfig.rut || '—'}</div>
         </div>
       </div>
 
@@ -10325,18 +10651,18 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
         <div class="info-block">
           <div class="info-block-header">CLIENTE</div>
           <table class="info-table">
-            <tr><td class="info-label">Nombre</td><td>${vehicle.client || 'â€”'}</td></tr>
-            <tr><td class="info-label">Teléfono</td><td>${vehicle.clientPhone || 'â€”'}</td></tr>
-            <tr><td class="info-label">Email</td><td>${vehicle.clientEmail || 'â€”'}</td></tr>
+            <tr><td class="info-label">Nombre</td><td>${vehicle.client || '—'}</td></tr>
+            <tr><td class="info-label">Teléfono</td><td>${vehicle.clientPhone || '—'}</td></tr>
+            <tr><td class="info-label">Email</td><td>${vehicle.clientEmail || '—'}</td></tr>
           </table>
         </div>
         <div class="info-block">
-          <div class="info-block-header">VEHÃ CULO</div>
+          <div class="info-block-header">VEHÍCULO</div>
           <table class="info-table">
-            <tr><td class="info-label">Marca / Modelo</td><td>${vehicle.brand || 'â€”'} ${vehicle.model || 'â€”'}</td></tr>
-            <tr><td class="info-label">Año / Color</td><td>${vehicle.year || 'â€”'} / ${vehicle.color || 'â€”'}</td></tr>
-            <tr><td class="info-label">Motor</td><td>${vehicle.motor || 'â€”'}</td></tr>
-            <tr><td class="info-label">Patente</td><td><span class="plate-pill">${vehicle.plate || 'â€”'}</span></td></tr>
+            <tr><td class="info-label">Marca / Modelo</td><td>${vehicle.brand || '—'} ${vehicle.model || '—'}</td></tr>
+            <tr><td class="info-label">Año / Color</td><td>${vehicle.year || '—'} / ${vehicle.color || '—'}</td></tr>
+            <tr><td class="info-label">Motor</td><td>${vehicle.motor || '—'}</td></tr>
+            <tr><td class="info-label">Patente</td><td><span class="plate-pill">${vehicle.plate || '—'}</span></td></tr>
           </table>
         </div>
       </div>
@@ -10410,7 +10736,7 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
 };
 
 // ============================================================
-// REGISTRO DE MARCAS, MODELOS Y MOTORES EN CONFIGURACIÃ“N
+// REGISTRO DE MARCAS, MODELOS Y MOTORES EN CONFIGURACIÓN
 // ============================================================
 
 window.renderVehicleRegistryPanel = function() {

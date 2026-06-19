@@ -214,7 +214,7 @@
         </div>
       </section>
 
-      <!-- SECCIÃ“N DEL TABLERO KANBAN -->
+      <!-- SECCIÓN DEL TABLERO KANBAN -->
       <section class="kanban-board" id="kanban-view-container">
         
         <!-- Columna 1: Recepción -->
@@ -339,7 +339,7 @@
 
       </section>
 
-      <!-- BOTÃ“N FLOTANTE (FAB) -->
+      <!-- BOTÓN FLOTANTE (FAB) -->
       <button class="fab-btn" onclick="openAddVehicleModal('recepcion')" id="fab-create-btn">
         <i data-lucide="file-text"></i>
       </button>
@@ -534,7 +534,7 @@
 
     </main>
 
-    <!-- SECCIÃ“N: VEHÍCULOS INGRESADOS -->
+    <!-- SECCIÓN: VEHÍCULOS INGRESADOS -->
     <main class="main-content" id="vehiculos-ingresados-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
@@ -570,7 +570,7 @@
 
     </main>
 
-    <!-- SECCIÃ“N: COTIZACIONES -->
+    <!-- SECCIÓN: COTIZACIONES -->
     <main class="main-content" id="cotizaciones-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
@@ -625,7 +625,7 @@
 
     </main>
 
-    <!-- SECCIÃ“N: AGENDA -->
+    <!-- SECCIÓN: AGENDA -->
     <main class="main-content" id="agenda-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
@@ -728,11 +728,11 @@
 
     </main>
 
-    <!-- SECCIÃ“N: Ã“RDENES DE TRABAJO (OPERACIONES TÃ‰CNICAS) -->
+    <!-- SECCIÓN: ÓRDENES DE TRABAJO (OPERACIONES TÉCNICAS) -->
     <main class="main-content" id="ordenes-trabajo-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
-          <h1 style="font-family: var(--font-display); font-weight: 700; font-size: 28px; color: var(--text-primary);">Ã“rdenes de Trabajo</h1>
+          <h1 style="font-family: var(--font-display); font-weight: 700; font-size: 28px; color: var(--text-primary);">Órdenes de Trabajo</h1>
           <span style="font-size: 13px; color: var(--text-secondary);">Gestiona todas las órdenes de trabajo del taller</span>
         </div>
         <button class="btn-primary" style="background-color: var(--color-accent); color: white; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; padding: 10px 18px;" onclick="openAddVehicleModal('recepcion')">
@@ -817,7 +817,7 @@
       </section>
     </main>
 
-    <!-- SECCIÃ“N: CATÁLOGO DE SERVICIOS (OPERACIONES TÃ‰CNICAS) -->
+    <!-- SECCIÓN: CATÁLOGO DE SERVICIOS (OPERACIONES TÉCNICAS) -->
     <main class="main-content" id="servicios-catalogo-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
@@ -865,7 +865,7 @@
       </section>
     </main>
 
-    <!-- SECCIÃ“N: CATÁLOGO DE REPUESTOS (OPERACIONES TÃ‰CNICAS) -->
+    <!-- SECCIÓN: CATÁLOGO DE REPUESTOS (OPERACIONES TÉCNICAS) -->
     <main class="main-content" id="repuestos-catalogo-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
@@ -912,7 +912,7 @@
       </section>
     </main>
 
-    <!-- SECCIÃ“N: GESTIÃ“N DE EQUIPO (GESTIÃ“N DE RECURSOS) -->
+    <!-- SECCIÓN: GESTIÓN DE EQUIPO (GESTIÓN DE RECURSOS) -->
     <main class="main-content" id="equipo-lista-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
@@ -1019,7 +1019,7 @@
       </section>
     </main>
 
-    <!-- SECCIÃ“N: CLIENTES DE LA BASE DE DATOS (GESTIÃ“N DE RECURSOS) -->
+    <!-- SECCIÓN: CLIENTES DE LA BASE DE DATOS (GESTIÓN DE RECURSOS) -->
     <main class="main-content" id="clientes-lista-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
@@ -1088,7 +1088,7 @@
 
 
 
-    <!-- SECCIÃ“N: VEHÍCULOS (GESTIÃ“N DE RECURSOS) -->
+    <!-- SECCIÓN: VEHÍCULOS (GESTIÓN DE RECURSOS) -->
     <main class="main-content" id="vehiculos-lista-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
@@ -1364,9 +1364,15 @@
             </div>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 4px;">
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Dirección</label>
-            <input type="text" id="config-workshop-address" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--text-primary);" placeholder="Ej: Av. Vitacura 1234, Santiago">
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Dirección</label>
+              <input type="text" id="config-workshop-address" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--text-primary);" placeholder="Ej: Av. Vitacura 1234, Santiago">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Descuento por Defecto (%)</label>
+              <input type="number" id="config-workshop-discount" min="0" max="100" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; color: var(--text-primary);" placeholder="Ej: 10">
+            </div>
           </div>
 
 
@@ -1640,6 +1646,51 @@
             </label>
           </div>
 
+          <!-- 5. Daños Estéticos -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 12px;">
+              <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Habilitar opción "Daños Estéticos"</span>
+                <span style="font-size: 9px; font-weight: 700; background-color: rgba(249, 115, 22, 0.12); color: #f97316; padding: 2px 6px; border-radius: 10px; margin-left: 8px; border: 1px solid rgba(249, 115, 22, 0.2); text-transform: uppercase;">Beta</span>
+              </div>
+              <span style="font-size: 11px; color: var(--text-muted);">Muestra la opción de registrar daños estéticos del vehículo durante la recepción.</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="config-exp-show-aesthetics" onchange="toggleExperimentalFeature('showAesthetics', this.checked)">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <!-- 6. Número de Chasis -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 12px;">
+              <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Habilitar campo "Número de Chasis"</span>
+                <span style="font-size: 9px; font-weight: 700; background-color: rgba(249, 115, 22, 0.12); color: #f97316; padding: 2px 6px; border-radius: 10px; margin-left: 8px; border: 1px solid rgba(249, 115, 22, 0.2); text-transform: uppercase;">Beta</span>
+              </div>
+              <span style="font-size: 11px; color: var(--text-muted);">Habilita el ingreso opcional del número de chasis (VIN) al registrar un vehículo.</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="config-exp-show-vin" onchange="toggleExperimentalFeature('showVIN', this.checked)">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <!-- 7. Color -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 12px;">
+              <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Habilitar campo "Color"</span>
+                <span style="font-size: 9px; font-weight: 700; background-color: rgba(249, 115, 22, 0.12); color: #f97316; padding: 2px 6px; border-radius: 10px; margin-left: 8px; border: 1px solid rgba(249, 115, 22, 0.2); text-transform: uppercase;">Beta</span>
+              </div>
+              <span style="font-size: 11px; color: var(--text-muted);">Habilita el ingreso del color al registrar un vehículo.</span>
+            </div>
+            <label class="ios-switch">
+              <input type="checkbox" id="config-exp-show-color" onchange="toggleExperimentalFeature('showColor', this.checked)">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
           <!-- 5. Datos de prueba -->
           <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background-color: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md);">
             <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 12px;">
@@ -1676,7 +1727,7 @@
       </section>
     </main>
 
-    <!-- 3. NUEVO PANEL DE RECEPCIÃ“N DETALLADA (FOTO 2) -->
+    <!-- 3. NUEVO PANEL DE RECEPCIÓN DETALLADA (FOTO 2) -->
     <div class="modal-overlay" id="reception-panel-view" style="display: none; z-index: 105; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
       <div class="workspace-outer-container" style="display: flex; gap: 24px; width: 95vw; max-width: 1350px; height: 85vh; max-height: 85vh; align-items: stretch; box-sizing: border-box; margin: auto;">
         
@@ -1862,14 +1913,14 @@
                 <section class="reception-form-card">
                   <!-- Kilometraje y Nivel Combustible -->
                   <div class="form-row">
-                    <div class="form-group">
+                    <div class="form-group" style="flex: 1;">
                       <label class="form-label">Kilometraje</label>
                       <div class="input-icon-group">
                         <i data-lucide="gauge"></i>
                         <input type="number" class="form-input" id="det-km" placeholder="Ej: 45000" min="0" oninput="updateSidebarOdometer(this.value)">
                       </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="display: none !important;">
                       <label class="form-label">Nivel Combustible</label>
                       <div class="input-icon-group">
                         <i data-lucide="droplet"></i>
@@ -1890,22 +1941,24 @@
                     <textarea class="form-input" id="det-service-description" rows="5" placeholder="Explicación del cliente y problemas del auto" style="resize: vertical; min-height: 120px; font-size: 14px; line-height: 1.5;"></textarea>
                   </div>
 
-                  <!-- Daños y Detalles Físicos -->
-                  <div class="switch-row">
-                    <div class="switch-label-wrapper">
-                      <i data-lucide="alert-triangle"></i>
-                      <span>¿El vehículo presenta detalles / daños estéticos?</span>
+                  <!-- Contenedor Experimental de Daños y Detalles Físicos -->
+                  <div id="reception-aesthetics-container" style="display: none;">
+                    <div class="switch-row" style="margin-bottom: 14px;">
+                      <div class="switch-label-wrapper">
+                        <i data-lucide="alert-triangle"></i>
+                        <span>¿El vehículo presenta detalles / daños estéticos?</span>
+                      </div>
+                      <label class="ios-switch">
+                        <input type="checkbox" id="det-details-toggle" onchange="toggleDetailsArea()">
+                        <span class="switch-slider"></span>
+                      </label>
                     </div>
-                    <label class="ios-switch">
-                      <input type="checkbox" id="det-details-toggle" onchange="toggleDetailsArea()">
-                      <span class="switch-slider"></span>
-                    </label>
-                  </div>
-                  
-                  <!-- Textarea oculto condicional -->
-                  <div class="form-group" id="det-details-notes-group" style="display: none; animation: slide-down 0.2s ease;">
-                    <label class="form-label" for="det-details-notes">Descripción de detalles estéticos (rayones, bollos, etc.)</label>
-                    <textarea class="form-input" id="det-details-notes" rows="2" placeholder="Ej. Pequeño rayón en puerta trasera izquierda, óptica delantera derecha opaca..." style="resize: none;"></textarea>
+                    
+                    <!-- Textarea oculto condicional -->
+                    <div class="form-group" id="det-details-notes-group" style="display: none; animation: slide-down 0.2s ease; margin-bottom: 14px;">
+                      <label class="form-label" for="det-details-notes">Descripción de detalles estéticos (rayones, bollos, etc.)</label>
+                      <textarea class="form-input" id="det-details-notes" rows="2" placeholder="Ej. Pequeño rayón en puerta trasera izquierda, óptica delantera derecha opaca..." style="resize: none;"></textarea>
+                    </div>
                   </div>
 
                   <!-- Barra de Acciones Oculta (Mapeada al footer global) -->
@@ -1951,7 +2004,7 @@
                       <!-- Columna 1: Fecha y hora de entrega comprometida -->
                       <div style="display: flex; flex-direction: column; gap: 8px;">
                         <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">
-                          Entrega Comprometida <span style="color: #ef4444;">*</span>
+                          Entrega Comprometida <span style="font-size: 10px; font-weight: normal; color: var(--text-muted); font-style: italic;">(Opcional)</span>
                         </span>
                         <div style="display: flex; gap: 8px;">
                           <div onclick="document.getElementById('quote-delivery-date').showPicker()" style="position: relative; flex: 1; min-width: 130px; cursor: pointer;">
@@ -1965,8 +2018,16 @@
                         </div>
                       </div>
 
-                      <!-- Columna 2: Configuración (Descuento & IVA) -->
-                      <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 10px; border-left: 1px solid var(--border-color-light);">
+                      <!-- Columna 2: Configuración (Tarifa, Descuento & IVA) -->
+                      <div style="display: flex; flex-direction: column; gap: 8px; padding-left: 10px; border-left: 1px solid var(--border-color-light);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                          <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Tarifa:</span>
+                          <select id="quote-category" class="form-input" style="width: 110px; padding: 4px 8px; font-size: 12px; font-weight: 600; height: 30px; background-color: var(--card-bg-hover); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm);" onchange="handleQuoteCategoryChange()">
+                            <option value="A">Cat. A (Compacto)</option>
+                            <option value="B">Cat. B (SUV/Sedán)</option>
+                            <option value="C">Cat. C (Pickup/Alta)</option>
+                          </select>
+                        </div>
                         <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                           <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Descuento:</span>
                           <div style="position: relative; display: flex; align-items: center;">
@@ -2309,7 +2370,7 @@
             </div>
 
             <!-- Color -->
-            <div class="form-group" style="margin-bottom: 0;">
+            <div class="form-group" id="form-color-container" style="margin-bottom: 0; display: none;">
               <label class="form-label" for="form-color">Color <span style="font-size: 11px; font-weight: normal; color: var(--text-muted); font-style: italic;">(Opcional)</span></label>
               <input type="text" class="form-input" id="form-color" placeholder="Ej. Blanco">
             </div>
@@ -2327,13 +2388,13 @@
             </div>
 
             <!-- Chasis / VIN -->
-            <div class="form-group" style="margin-bottom: 0;">
+            <div class="form-group" id="form-vin-container" style="margin-bottom: 0; display: none;">
               <label class="form-label" for="form-vin">Chasis / VIN <span style="font-size: 11px; font-weight: normal; color: var(--text-muted); font-style: italic;">(Opcional)</span></label>
               <input type="text" class="form-input" id="form-vin" placeholder="Ej. 9BWCA41G2GT12345">
             </div>
 
-            <!-- Categoría de Tarifa -->
-            <div class="form-group" style="margin-bottom: 0;">
+            <!-- Categoría de Tarifa (Oculta en Alta de Vehículo, mudada a Cotización) -->
+            <div class="form-group" id="form-category-container" style="margin-bottom: 0; display: none !important;">
               <label class="form-label" for="form-category">Categoría de Tarifa <span style="font-size: 11px; font-weight: normal; color: var(--text-muted); font-style: italic;">(Automática)</span></label>
               <select class="form-input" id="form-category" style="background-color: var(--card-bg); color: var(--text-primary);">
                 <option value="A">Categoría A (Pequeño/Compacto)</option>
@@ -3086,7 +3147,7 @@
     </div>
   </div>
 
-  <!-- MENÃš CONTEXTUAL DE TARJETA -->
+  <!-- MENÚ CONTEXTUAL DE TARJETA -->
   <div class="dropdown-menu" id="card-context-menu">
     <button class="dropdown-item" onclick="handleContextEdit()">
       <i data-lucide="pencil" style="width: 14px;"></i> Editar
