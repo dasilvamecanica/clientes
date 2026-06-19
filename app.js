@@ -2682,6 +2682,10 @@ window.switchView = function(view) {
     if (boardContainer) boardContainer.style.display = 'grid';
     if (calendarContainer) calendarContainer.style.display = 'none';
 
+    // Mostrar listado móvil en tablero
+    const mobList = document.getElementById('mobile-vehicle-list-view');
+    if (mobList) mobList.style.setProperty('display', 'block', 'important');
+
     const pageTitle = document.getElementById('page-title');
     if (pageTitle) pageTitle.textContent = 'Panel Operativo';
 
@@ -2699,6 +2703,10 @@ window.switchView = function(view) {
     const calendarContainer = document.getElementById('calendar-view-container');
     if (boardContainer) boardContainer.style.display = 'none';
     if (calendarContainer) calendarContainer.style.display = 'grid';
+
+    // Ocultar listado móvil en calendario
+    const mobList = document.getElementById('mobile-vehicle-list-view');
+    if (mobList) mobList.style.setProperty('display', 'none', 'important');
 
     const pageTitle = document.getElementById('page-title');
     if (pageTitle) pageTitle.textContent = 'Calendario de Ingresos';
