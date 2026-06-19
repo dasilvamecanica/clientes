@@ -240,6 +240,7 @@ async function loadStateFromSupabase() {
     if (!configError && configData && configData.length > 0) {
       const dbConfig = configData[0];
       workshopConfig = {
+        ...workshopConfig,
         name: dbConfig.name || workshopConfig.name,
         phone1: dbConfig.phone1 || workshopConfig.phone1,
         phone2: dbConfig.phone2 || workshopConfig.phone2,
@@ -262,11 +263,7 @@ async function loadStateFromSupabase() {
         expMaster: dbConfig.exp_master !== undefined ? dbConfig.exp_master : false,
         expHideCertificate: dbConfig.exp_hide_certificate !== undefined ? dbConfig.exp_hide_certificate : false,
         expHideParts: dbConfig.exp_hide_parts !== undefined ? dbConfig.exp_hide_parts : false,
-        expHideExcel: dbConfig.exp_hide_excel !== undefined ? dbConfig.exp_hide_excel : false,
-        expShowAesthetics: false,
-        expShowVIN: false,
-        expShowColor: false,
-        defaultDiscount: 0
+        expHideExcel: dbConfig.exp_hide_excel !== undefined ? dbConfig.exp_hide_excel : false
       };
 
       // Cargar configuraciones experimentales adicionales
@@ -2997,14 +2994,14 @@ function renderKanban() {
                   return `
                     <button class="view-quote-btn" onclick="openDetailedReceptionFromCard('${vehicle.id}')" style="color: var(--color-recepcion);">
                       <i data-lucide="clipboard-check" style="width: 14px; color: var(--color-recepcion);"></i>
-                      Registrar Recepción
+                      Recepcionar
                     </button>
                   `;
                 } else {
                   return `
                     <button class="view-quote-btn" onclick="openDetailedReceptionFromCard('${vehicle.id}')" style="color: var(--color-recepcion);">
                       <i data-lucide="clipboard-check" style="width: 14px; color: var(--color-recepcion);"></i>
-                      Editar recepcion
+                      Recepcionar
                     </button>
                   `;
                 }
@@ -3027,7 +3024,7 @@ function renderKanban() {
 
 window.openDetailedReceptionFromKanban = function(vehicleId) {
   openDetailedReception(vehicleId);
-  const vehicle = vehicles.find(v => v.id === vehicleId);
+  const vehicle = vehicles.find(v => String(v.id) === String(vehicleId));
   if (vehicle) {
     if (vehicle.stage === 'recepcion') {
       setActiveTab('reception');
@@ -3856,7 +3853,7 @@ window.handleVehicleFormSubmit = function(e) {
 
 window.openDetailedReception = function(vehicleId, isReadOnly = false) {
   window.isDetailedViewReadOnly = isReadOnly;
-  const vehicle = vehicles.find(v => v.id === vehicleId);
+  const vehicle = vehicles.find(v => String(v.id) === String(vehicleId));
   if (!vehicle) return;
 
   activeReceptionVehicleId = vehicle.id;
@@ -4301,7 +4298,7 @@ window.openContextMenu = function(e, vehicleId, stage) {
   
   // Mostrar "Ver cotización" en los 3 puntos
   if (viewQuoteBtn) {
-    const vehicle = vehicles.find(v => v.id === vehicleId);
+    const vehicle = vehicles.find(v => String(v.id) === String(vehicleId));
     if (vehicle && (vehicle.quoteCompleted || vehicle.stage === 'cotizacion' || vehicle.stage === 'reparacion' || vehicle.stage === 'listo')) {
       viewQuoteBtn.style.display = 'flex';
     } else {
@@ -4325,7 +4322,7 @@ window.handleContextEdit = function() {
 
 // Carga para edición desde el menú contextual
 window.openEditVehicleModal = function(vehicleId) {
-  const vehicle = vehicles.find(v => v.id === vehicleId);
+  const vehicle = vehicles.find(v => String(v.id) === String(vehicleId));
   if (!vehicle) return;
 
   // Abrir en Ficha técnica si está en recepción, sino en modal regular
@@ -4342,7 +4339,7 @@ window.openEditVehicleModal = function(vehicleId) {
 window.handleContextDeliver = function() {
   if (!activeContextVehicleId) return;
   
-  const vehicleIndex = vehicles.findIndex(v => v.id === activeContextVehicleId);
+  const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(activeContextVehicleId));
   if (vehicleIndex !== -1) {
     vehicles[vehicleIndex].delivered = true;
     vehicles[vehicleIndex].deliveryTime = Date.now();
@@ -4360,7 +4357,7 @@ window.handleContextViewQuote = function() {
 };
 
 window.deliverVehicleFromCard = function(vehicleId) {
-  const vehicleIndex = vehicles.findIndex(v => v.id === vehicleId);
+  const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(vehicleId));
   if (vehicleIndex !== -1) {
     vehicles[vehicleIndex].delivered = true;
     vehicles[vehicleIndex].deliveryTime = Date.now();
@@ -4399,7 +4396,7 @@ window.handleContextDelete = function() {
 // --- 12. MODAL DETALLE DE COTIZACIÓN (FACTURA) ---
 
 window.openQuoteModal = function(vehicleId) {
-  const vehicle = vehicles.find(v => v.id === vehicleId);
+  const vehicle = vehicles.find(v => String(v.id) === String(vehicleId));
   if (!vehicle) return;
   
   const invoiceContent = document.getElementById('quote-invoice-content');
@@ -4668,20 +4665,6 @@ window.setActiveTab = function(tabName) {
   } else if (tabName === 'workorder') {
     document.getElementById('tab-workorder-btn').classList.add('active');
     document.getElementById('tab-content-workorder').style.display = 'block';
-    
-    const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
-    if (vehicle && (vehicle.stage === 'recepcion' || vehicle.stage === 'cotizacion')) {
-      vehicle.stage = 'reparacion';
-      vehicle.quoteCompleted = true;
-      if (!vehicle.otTasks || vehicle.otTasks.length === 0) {
-        const services = vehicle.quoteServices || [];
-        const parts = vehicle.quoteParts || [];
-        const combinedNames = [...services.map(s => s.name), ...parts.map(p => p.name)];
-        vehicle.otTasks = combinedNames.map(name => ({ name, completed: false, observation: '' }));
-      }
-      saveState();
-      renderApp();
-    }
     renderOTTab();
   } else if (tabName === 'delivery') {
     if (tabDelBtn) tabDelBtn.classList.add('active');
@@ -5804,8 +5787,9 @@ window.approveQuoteAndCreateWorkOrder = function() {
   vehicle.deliveryDate = deliveryDateVal;
   vehicle.deliveryTime = deliveryTimeVal;
   
-  // Aprobar la cotización (quoteCompleted = true) pero la comanda no se mueve a OT
+  // Aprobar la cotización (quoteCompleted = true) y transicionar la comanda a OT (reparacion)
   vehicle.quoteCompleted = true;
+  vehicle.stage = 'reparacion';
 
   // Sincronizar switch del footer si existe
   const quoteSwitch = document.getElementById('input-approve-quote-switch');
