@@ -4252,4 +4252,12 @@ aside.sidebar.collapsed .sidebar-user-container {
     margin-top: 2px !important;
     line-height: 1.1 !important;
   }
+
+  /* Ocultar elementos solicitados para la versión móvil */
+  #menu-vehiculos,
+  #menu-agenda,
+  #menu-repuestos,
+  #mobile-nav-agenda {
+    display: none !important;
+  }
 }
