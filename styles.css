@@ -4024,18 +4024,23 @@ aside.sidebar.collapsed .sidebar-user-container {
 
 /* --- ESTILOS COMPLEMENTARIOS PARA LA VERSIÓN MÓVIL --- */
 @media (max-width: 768px) {
-  /* Ocultar barra lateral, métricas y tablero Kanban */
-  #main-sidebar {
-    display: none !important;
-  }
+  /* Ocultar métricas y tablero Kanban */
   .metrics-grid {
     display: none !important;
   }
   #kanban-view-container {
     display: none !important;
   }
-  #mobile-menu-btn {
-    display: none !important;
+  
+  /* Asegurar que la barra lateral drawer sea visible y tenga z-index superior */
+  #main-sidebar {
+    display: flex !important;
+    z-index: 1100 !important;
+  }
+  
+  /* Asegurar overlay sobre la navegación inferior */
+  #mobile-sidebar-overlay {
+    z-index: 1050 !important;
   }
   
   /* Ajuste de márgenes del contenido para acomodar la barra inferior */
