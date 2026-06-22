@@ -2227,7 +2227,10 @@ button {
   .metrics-grid {
     grid-template-columns: 1fr;
     gap: 16px;
-  }
+}
+
+.hide-desktop {
+  display: none !important;
 }
 
 @media (max-width: 768px) {
@@ -4255,9 +4258,45 @@ aside.sidebar.collapsed .sidebar-user-container {
 
   /* Ocultar elementos solicitados para la versión móvil */
   #menu-vehiculos,
-  #menu-agenda,
-  #menu-repuestos,
-  #mobile-nav-agenda {
+  #menu-repuestos {
     display: none !important;
+  }
+
+  /* Ocultar cabecera y selector de vista del panel operativo */
+  #dashboard-view-panel .header-actions,
+  #dashboard-view-panel .view-control-bar {
+    display: none !important;
+  }
+
+  /* Reestructurar el menú lateral (drawer) para celulares */
+  .menu-group-header {
+    display: none !important;
+  }
+
+  .menu-group-sublist {
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    margin-top: 0 !important;
+  }
+
+  .nav-item-wide.sub {
+    padding-left: 14px !important;
+    font-size: 13px !important;
+  }
+
+  .nav-item-wide.sub.active {
+    background-color: var(--color-accent) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.35) !important;
+    border-left: none !important;
+    border-radius: 8px !important;
+  }
+
+  /* Adaptación de tablas en modo celular */
+  .responsive-table-wrapper table {
+    width: 100% !important;
+    min-width: max-content !important;
   }
 }

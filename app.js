@@ -23,6 +23,10 @@ let activeReceptionServices = []; // Lista temporal de servicios para Ficha Foto
 let isRecordingVoice = false;
 let mobileStageFilter = 'all';
 
+// Caja globals
+let cajaAccounts = [];
+let cajaOperations = [];
+
 // Registro global de Marcas, Modelos y Motores utilizados en el taller
 let vehicleRegistry = {
   brands: [],
@@ -163,6 +167,15 @@ async function syncWithSupabase(tableName, data) {
       const { error } = await supabaseClient.from(tableName).upsert(mappedData);
       if (error) console.error(`Error de sync en ${tableName}:`, error);
     } else {
+      if (data.id && data.id !== 'workshop_config') {
+        const genericItem = {
+          id: data.id,
+          name: data.name
+        };
+        const { error } = await supabaseClient.from(tableName).upsert(genericItem);
+        if (error) console.error(`Error de sync en ${tableName} (${data.id}):`, error);
+        return;
+      }
       const configItem = {
         id: 'workshop_config',
         name: data.name,
@@ -313,6 +326,24 @@ async function loadStateFromSupabase() {
       } catch (e) {
         console.error("Error parsing category multipliers from Supabase:", e);
       }
+    }
+
+    // Cargar datos de Caja
+    try {
+      const { data: accountsData, error: accountsError } = await supabaseClient.from('taller_config').select('*').eq('id', 'caja_accounts');
+      if (!accountsError && accountsData && accountsData.length > 0) {
+        cajaAccounts = JSON.parse(accountsData[0].name || '[]');
+      } else {
+        cajaAccounts = JSON.parse(localStorage.getItem('taller_caja_accounts') || '[]');
+      }
+      const { data: operationsData, error: operationsError } = await supabaseClient.from('taller_config').select('*').eq('id', 'caja_operations');
+      if (!operationsError && operationsData && operationsData.length > 0) {
+        cajaOperations = JSON.parse(operationsData[0].name || '[]');
+      } else {
+        cajaOperations = JSON.parse(localStorage.getItem('taller_caja_operations') || '[]');
+      }
+    } catch (e) {
+      console.error("Error loading Caja from Supabase:", e);
     }
 
     const { data: clientData, error: clientError } = await supabaseClient.from('taller_clients').select('*');
@@ -1211,6 +1242,9 @@ window.archiveVehicle = function() {
     exitDetailedReception();
     renderApp();
 
+    // Redirigir a Caja autocompletada
+    goToCajaWithAutoFill(vehicle);
+
     // Toast de éxito de archivado
     const toast = document.createElement('div');
     toast.textContent = '✓ Vehículo finalizado y archivado correctamente';
@@ -1721,6 +1755,15 @@ function loadState() {
 
   // 7. Registro de Vehículos (Marcas, Modelos, Motores)
   loadVehicleRegistry();
+
+  // 8. Caja
+  try {
+    cajaAccounts = JSON.parse(localStorage.getItem('taller_caja_accounts') || '[]');
+    cajaOperations = JSON.parse(localStorage.getItem('taller_caja_operations') || '[]');
+  } catch (e) {
+    cajaAccounts = [];
+    cajaOperations = [];
+  }
 }
 
 function saveState() {
@@ -2657,7 +2700,8 @@ window.switchView = function(view) {
     'cuentas-cobrar-view-panel',
     'vehiculos-lista-view-panel',
     'reception-panel-view',
-    'configuracion-view-panel'
+    'configuracion-view-panel',
+    'caja-view-panel'
   ];
   allPanels.forEach(p => {
     const el = document.getElementById(p);
@@ -2677,7 +2721,8 @@ window.switchView = function(view) {
     'menu-equipo',
     'menu-clientes-db',
     'menu-cuentas',
-    'menu-vehiculos-db'
+    'menu-vehiculos-db',
+    'menu-caja'
   ];
   sidebarButtons.forEach(btnId => {
     const btn = document.getElementById(btnId);
@@ -2729,7 +2774,7 @@ window.switchView = function(view) {
 
     // Mostrar listado móvil en tablero
     const mobList = document.getElementById('mobile-vehicle-list-view');
-    if (mobList) mobList.style.setProperty('display', 'block', 'important');
+    if (mobList) mobList.style.display = '';
 
     const pageTitle = document.getElementById('page-title');
     if (pageTitle) pageTitle.textContent = 'Panel Operativo';
@@ -2829,6 +2874,12 @@ window.switchView = function(view) {
     if (typeof renderVehicleRegistryPanel === 'function') {
       renderVehicleRegistryPanel();
     }
+  }
+  else if (view === 'caja') {
+    getAndShow('caja-view-panel');
+    const menuBtn = document.getElementById('menu-caja');
+    if (menuBtn) menuBtn.classList.add('active');
+    renderCajaView();
   }
 
   // Asegurar que el enrutamiento defensivo no rompa clases antiguas
@@ -4427,11 +4478,15 @@ window.handleContextDeliver = function() {
   
   const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(activeContextVehicleId));
   if (vehicleIndex !== -1) {
+    const vehicle = vehicles[vehicleIndex];
     vehicles[vehicleIndex].delivered = true;
     vehicles[vehicleIndex].deliveryTime = Date.now();
     saveState();
     renderApp();
-    alert(`El vehículo "${vehicles[vehicleIndex].brand} ${vehicles[vehicleIndex].model}" ha sido entregado al cliente con éxito.`);
+    
+    // Crear toast y redirigir a caja
+    showDeliveryToast(vehicle);
+    goToCajaWithAutoFill(vehicle);
   }
   document.getElementById('card-context-menu').classList.remove('show');
 };
@@ -4445,13 +4500,31 @@ window.handleContextViewQuote = function() {
 window.deliverVehicleFromCard = function(vehicleId) {
   const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(vehicleId));
   if (vehicleIndex !== -1) {
+    const vehicle = vehicles[vehicleIndex];
     vehicles[vehicleIndex].delivered = true;
     vehicles[vehicleIndex].deliveryTime = Date.now();
     saveState();
     renderApp();
-    alert(`El vehículo "${vehicles[vehicleIndex].brand} ${vehicles[vehicleIndex].model}" ha sido entregado al cliente con éxito.`);
+    
+    showDeliveryToast(vehicle);
+    goToCajaWithAutoFill(vehicle);
   }
 };
+
+function showDeliveryToast(vehicle) {
+  const toast = document.createElement('div');
+  toast.textContent = `✓ Vehículo ${vehicle.brand} ${vehicle.model} entregado. Redirigiendo a Caja...`;
+  toast.style.cssText = `
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    background: var(--color-listo); color: white; font-weight: 700; font-size: 13px;
+    padding: 12px 24px; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(16,185,129,0.3);
+    animation: slide-up 0.2s ease;
+    pointer-events: none;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
 
 window.handleContextDelete = function() {
   if (!activeContextVehicleId) return;
@@ -12168,6 +12241,304 @@ window.renderMobileVehicleList = function() {
       </div>
     `;
   }).join('');
+
+  if (typeof initLucide === 'function') initLucide();
+};
+
+// ========================================================================
+//   MÓDULO DE CAJA (LÓGICA Y RENDERIZADO)
+// ========================================================================
+
+window.saveCajaState = function() {
+  localStorage.setItem('taller_caja_accounts', JSON.stringify(cajaAccounts));
+  localStorage.setItem('taller_caja_operations', JSON.stringify(cajaOperations));
+  if (supabaseClient) {
+    syncWithSupabase('taller_config', { id: 'caja_accounts', name: JSON.stringify(cajaAccounts) });
+    syncWithSupabase('taller_config', { id: 'caja_operations', name: JSON.stringify(cajaOperations) });
+  }
+};
+
+// Modales Cuentas
+window.openCreateAccountModal = function() {
+  document.getElementById('caja-new-account-name').value = '';
+  document.getElementById('caja-create-account-modal').style.display = 'flex';
+};
+
+window.closeCreateAccountModal = function() {
+  document.getElementById('caja-create-account-modal').style.display = 'none';
+};
+
+window.handleCreateAccountSubmit = function(e) {
+  e.preventDefault();
+  const name = document.getElementById('caja-new-account-name').value.trim();
+  if (!name) return;
+
+  if (cajaAccounts.some(acc => acc.name.toLowerCase() === name.toLowerCase())) {
+    alert('Ya existe una cuenta con ese nombre.');
+    return;
+  }
+
+  const newAcc = {
+    id: 'acc_' + Date.now(),
+    name: name
+  };
+
+  cajaAccounts.push(newAcc);
+  saveCajaState();
+  closeCreateAccountModal();
+  renderCajaView();
+};
+
+// Modales Operaciones
+window.openCajaModal = function(type) {
+  document.getElementById('caja-operation-type').value = type;
+  document.getElementById('caja-op-concept').value = '';
+  document.getElementById('caja-op-amount').value = '';
+  document.getElementById('caja-op-method').value = 'efectivo';
+  document.getElementById('caja-op-payment-type').value = 'transferencia';
+  document.getElementById('caja-op-installments').value = '';
+  document.getElementById('caja-op-installment-amount').value = '';
+
+  const titleEl = document.getElementById('caja-operation-modal-title');
+  const submitBtn = document.getElementById('caja-op-submit-btn');
+
+  if (type === 'ingreso') {
+    if (titleEl) titleEl.innerHTML = '<i data-lucide="plus-circle" style="color: var(--color-listo);"></i> Ingresar Dinero';
+    if (submitBtn) {
+      submitBtn.textContent = 'Ingresar Dinero';
+      submitBtn.style.backgroundColor = 'var(--color-listo)';
+    }
+    document.getElementById('caja-op-payment-type-container').style.display = 'flex';
+  } else {
+    if (titleEl) titleEl.innerHTML = '<i data-lucide="minus-circle" style="color: var(--color-reparacion);"></i> Retirar Dinero';
+    if (submitBtn) {
+      submitBtn.textContent = 'Retirar Dinero';
+      submitBtn.style.backgroundColor = 'var(--color-reparacion)';
+    }
+    document.getElementById('caja-op-payment-type-container').style.display = 'none';
+  }
+
+  // Cargar selector de cuentas
+  const accSelect = document.getElementById('caja-op-account-id');
+  if (accSelect) {
+    accSelect.innerHTML = cajaAccounts.map(acc => `<option value="${acc.id}">${acc.name}</option>`).join('');
+    if (cajaAccounts.length === 0) {
+      accSelect.innerHTML = '<option value="">(No hay cuentas creadas)</option>';
+    }
+  }
+
+  handleCajaOpMethodChange();
+  handleCajaOpPaymentTypeChange();
+  
+  document.getElementById('caja-operation-modal').style.display = 'flex';
+  if (typeof initLucide === 'function') initLucide();
+};
+
+window.closeCajaModal = function() {
+  document.getElementById('caja-operation-modal').style.display = 'none';
+};
+
+window.handleCajaOpMethodChange = function() {
+  const method = document.getElementById('caja-op-method').value;
+  const container = document.getElementById('caja-op-account-selector-container');
+  if (container) {
+    container.style.display = (method === 'banco') ? 'flex' : 'none';
+  }
+};
+
+window.handleCajaOpPaymentTypeChange = function() {
+  const pType = document.getElementById('caja-op-payment-type').value;
+  const type = document.getElementById('caja-operation-type').value;
+  const container = document.getElementById('caja-op-installments-container');
+  if (container) {
+    container.style.display = (type === 'ingreso' && pType === 'cuotas') ? 'flex' : 'none';
+  }
+};
+
+window.handleCajaOperationSubmit = function(e) {
+  e.preventDefault();
+  const type = document.getElementById('caja-operation-type').value;
+  const concept = document.getElementById('caja-op-concept').value.trim();
+  const amount = parseFloat(document.getElementById('caja-op-amount').value) || 0;
+  const method = document.getElementById('caja-op-method').value;
+  const accountId = method === 'banco' ? document.getElementById('caja-op-account-id').value : null;
+  const paymentType = type === 'ingreso' ? document.getElementById('caja-op-payment-type').value : 'transferencia';
+
+  let installments = null;
+  let installmentAmount = null;
+
+  if (type === 'ingreso' && paymentType === 'cuotas') {
+    installments = parseInt(document.getElementById('caja-op-installments').value) || 0;
+    installmentAmount = parseFloat(document.getElementById('caja-op-installment-amount').value) || 0;
+
+    if (installments <= 0 || installmentAmount <= 0) {
+      alert('Por favor ingrese valores de cuota válidos.');
+      return;
+    }
+  }
+
+  if (amount <= 0) {
+    alert('El monto debe ser mayor a cero.');
+    return;
+  }
+
+  if (method === 'banco' && !accountId) {
+    alert('Por favor seleccione una cuenta bancaria. Si no tiene una, créela primero en "Crear Nueva Cuenta".');
+    return;
+  }
+
+  const newOp = {
+    id: 'op_' + Date.now(),
+    type: type,
+    concept: concept,
+    amount: amount,
+    method: method,
+    accountId: accountId,
+    paymentType: paymentType,
+    installments: installments,
+    installmentAmount: installmentAmount,
+    date: new Date().toISOString()
+  };
+
+  cajaOperations.push(newOp);
+  saveCajaState();
+  closeCajaModal();
+  renderCajaView();
+};
+
+window.deleteCajaOperation = function(opId) {
+  if (confirm('¿Está seguro de que desea eliminar este registro de caja de forma permanente?')) {
+    cajaOperations = cajaOperations.filter(op => op.id !== opId);
+    saveCajaState();
+    renderCajaView();
+  }
+};
+
+window.goToCajaWithAutoFill = function(vehicle) {
+  // Redireccionar a Caja
+  switchView('caja');
+
+  // Abrir modal e ingresar datos
+  openCajaModal('ingreso');
+
+  const conceptInput = document.getElementById('caja-op-concept');
+  const amountInput = document.getElementById('caja-op-amount');
+
+  if (conceptInput) {
+    conceptInput.value = `Entrega vehículo: ${vehicle.brand} ${vehicle.model} (${vehicle.plate}) - Cliente: ${vehicle.client}`;
+  }
+  if (amountInput) {
+    amountInput.value = vehicle.value || 0;
+  }
+};
+
+// Renderizado Caja
+window.renderCajaView = function() {
+  // 1. Calcular Balances
+  const efectivoIn = cajaOperations.filter(op => op.method === 'efectivo' && op.type === 'ingreso').reduce((s, op) => s + op.amount, 0);
+  const efectivoOut = cajaOperations.filter(op => op.method === 'efectivo' && op.type === 'retiro').reduce((s, op) => s + op.amount, 0);
+  const efectivoBalance = efectivoIn - efectivoOut;
+
+  const bancoIn = cajaOperations.filter(op => op.method === 'banco' && op.type === 'ingreso').reduce((s, op) => s + op.amount, 0);
+  const bancoOut = cajaOperations.filter(op => op.method === 'banco' && op.type === 'retiro').reduce((s, op) => s + op.amount, 0);
+  const bancoBalance = bancoIn - bancoOut;
+
+  const totalBalance = efectivoBalance + bancoBalance;
+
+  // Actualizar elementos DOM
+  const formatCurrency = (val) => {
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(Math.round(val));
+  };
+
+  const efEl = document.getElementById('caja-balance-efectivo');
+  const bcEl = document.getElementById('caja-balance-bancos');
+  const totEl = document.getElementById('caja-balance-total');
+
+  if (efEl) efEl.textContent = formatCurrency(efectivoBalance);
+  if (bcEl) bcEl.textContent = formatCurrency(bancoBalance);
+  if (totEl) totEl.textContent = formatCurrency(totalBalance);
+
+  // 2. Renderizar Cuentas Bancarias con sus balances individuales
+  const accountsContainer = document.getElementById('caja-cuentas-list-container');
+  if (accountsContainer) {
+    if (cajaAccounts.length === 0) {
+      accountsContainer.innerHTML = `<span style="font-size: 13px; color: var(--text-muted); font-style: italic;">No hay cuentas bancarias creadas.</span>`;
+    } else {
+      accountsContainer.innerHTML = cajaAccounts.map(acc => {
+        const accIn = cajaOperations.filter(op => op.method === 'banco' && op.accountId === acc.id && op.type === 'ingreso').reduce((s, op) => s + op.amount, 0);
+        const accOut = cajaOperations.filter(op => op.method === 'banco' && op.accountId === acc.id && op.type === 'retiro').reduce((s, op) => s + op.amount, 0);
+        const accBalance = accIn - accOut;
+
+        return `
+          <div class="account-card" style="background: var(--card-bg-hover); border: 1.5px solid var(--border-color); padding: 14px 20px; border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 6px; min-width: 160px; box-shadow: var(--shadow-sm);">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${acc.name}</span>
+            <strong style="font-size: 18px; color: var(--text-primary); font-family: var(--font-display); font-weight: 800;">${formatCurrency(accBalance)}</strong>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 3. Renderizar Transacciones Históricas
+  const tableBody = document.getElementById('caja-transactions-table-body');
+  if (tableBody) {
+    if (cajaOperations.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="8" style="padding: 30px; text-align: center; color: var(--text-muted); font-style: italic;">
+            No se han registrado operaciones de caja.
+          </td>
+        </tr>
+      `;
+    } else {
+      // Ordenar transacciones de más reciente a más antigua
+      const sortedOps = [...cajaOperations].sort((a, b) => new Date(b.date) - new Date(a.date));
+      tableBody.innerHTML = sortedOps.map(op => {
+        const opDate = new Date(op.date);
+        const dateStr = opDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + opDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+        const typeBadge = op.type === 'ingreso' 
+          ? `<span style="background-color: rgba(16,185,129,0.12); color: var(--color-listo); padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16,185,129,0.25);">Ingreso</span>`
+          : `<span style="background-color: rgba(239,68,68,0.12); color: var(--color-reparacion); padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; border: 1px solid rgba(239,68,68,0.25);">Retiro</span>`;
+
+        let destStr = 'Efectivo';
+        if (op.method === 'banco') {
+          const acc = cajaAccounts.find(a => a.id === op.accountId);
+          destStr = `Banco (${acc ? acc.name : 'Desconocida'})`;
+        }
+
+        const paymentTypeStr = op.type === 'ingreso'
+          ? (op.paymentType === 'cuotas' ? 'Cuotas' : 'Transferencia/Débito')
+          : '—';
+
+        const installmentStr = op.type === 'ingreso' && op.paymentType === 'cuotas'
+          ? `<strong>${op.installments}</strong> cuotas de <strong>${formatCurrency(op.installmentAmount)}</strong>`
+          : '—';
+
+        const amountColor = op.type === 'ingreso' ? 'var(--color-listo)' : 'var(--color-reparacion)';
+        const amountPrefix = op.type === 'ingreso' ? '+' : '-';
+
+        return `
+          <tr style="border-bottom: 1px solid var(--border-color); font-size: 13px;">
+            <td style="padding: 12px 14px; color: var(--text-secondary);">${dateStr}</td>
+            <td style="padding: 12px 14px;">${typeBadge}</td>
+            <td style="padding: 12px 14px; font-weight: 600; color: var(--text-primary);">${op.concept}</td>
+            <td style="padding: 12px 14px; color: var(--text-secondary);">${destStr}</td>
+            <td style="padding: 12px 14px; color: var(--text-secondary);">${paymentTypeStr}</td>
+            <td style="padding: 12px 14px; color: var(--text-secondary);">${installmentStr}</td>
+            <td style="padding: 12px 14px; font-family: var(--font-display); font-weight: 800; text-align: right; color: ${amountColor};">
+              ${amountPrefix} ${formatCurrency(op.amount)}
+            </td>
+            <td style="padding: 12px 14px; text-align: center;">
+              <button onclick="deleteCajaOperation('${op.id}')" style="background: none; border: none; color: var(--color-reparacion); cursor: pointer; padding: 4px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; transition: background-color 0.2s;" title="Eliminar registro" onmouseover="this.style.backgroundColor='rgba(239,68,68,0.1)';" onmouseout="this.style.backgroundColor='transparent';">
+                <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
 
   if (typeof initLucide === 'function') initLucide();
 };
