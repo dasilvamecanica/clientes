@@ -995,6 +995,51 @@ window.initLogos = function() {
   }
   favicon.href = logoSquare ? logoSquare : 'logo2.png';
 
+  // 4. Update Mobile Header and Sidebar custom names
+  const wName = workshopConfig.name || 'AutoTech';
+  
+  // Mobile Header Update
+  const mobLogoImg = document.getElementById('mobile-logo-img');
+  const mobLogoPlaceholder = document.getElementById('mobile-logo-placeholder');
+  const mobLogoText = document.getElementById('mobile-logo-text');
+  const mobLogoIcon = document.getElementById('mobile-logo-icon');
+
+  if (logoWide) {
+    if (mobLogoImg) {
+      mobLogoImg.src = logoWide;
+      mobLogoImg.style.setProperty('display', 'block', 'important');
+    }
+    if (mobLogoPlaceholder) {
+      mobLogoPlaceholder.style.setProperty('display', 'none', 'important');
+    }
+  } else {
+    if (mobLogoImg) {
+      mobLogoImg.src = '';
+      mobLogoImg.style.setProperty('display', 'none', 'important');
+    }
+    if (mobLogoPlaceholder) {
+      mobLogoPlaceholder.style.setProperty('display', 'flex', 'important');
+    }
+    if (mobLogoText) mobLogoText.textContent = wName;
+    if (mobLogoIcon) mobLogoIcon.textContent = wName.charAt(0).toUpperCase();
+  }
+
+  // Sidebar Placeholder Text & Icon Update
+  const logoWideText = document.getElementById('logo-wide-placeholder-text');
+  const logoWideIcon = document.getElementById('logo-wide-placeholder-icon');
+  if (logoWideText) {
+    logoWideText.textContent = wName;
+  }
+  if (logoWideIcon) {
+    logoWideIcon.textContent = wName.charAt(0).toUpperCase();
+  }
+
+  // Collapsed Sidebar Placeholder Icon Update
+  const logoSquarePlaceholder = document.getElementById('logo-square-placeholder');
+  if (logoSquarePlaceholder) {
+    logoSquarePlaceholder.textContent = wName.charAt(0).toUpperCase();
+  }
+
   // Re-initialize Lucide icons
   if (typeof initLucide === 'function') initLucide();
 };

@@ -31,9 +31,15 @@
       <button id="mobile-menu-btn" onclick="toggleMobileSidebar()" style="background: none; border: none; color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
         <i data-lucide="menu" style="width: 24px; height: 24px;"></i>
       </button>
-      <div class="mobile-logo" style="display: flex; align-items: center; gap: 8px;">
-        <div style="width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, var(--color-accent) 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; color: white;">A</div>
-        <span style="font-family: var(--font-display); font-weight: 800; font-size: 17px; color: white; text-transform: uppercase; letter-spacing: -0.5px;">AutoTech</span>
+      <div class="mobile-logo" id="mobile-logo-container" style="display: flex; align-items: center; gap: 8px; height: 36px; max-width: 180px;">
+        <!-- Mobile Logo Image -->
+        <img id="mobile-logo-img" src="" alt="Logo" style="height: 32px; max-width: 150px; object-fit: contain; display: none;">
+        
+        <!-- Mobile Logo Placeholder -->
+        <div id="mobile-logo-placeholder" style="display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 800; font-size: 17px; color: white; text-transform: uppercase; letter-spacing: -0.5px;">
+          <div id="mobile-logo-icon" style="width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, var(--color-accent) 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; color: white;">A</div>
+          <span id="mobile-logo-text">AutoTech</span>
+        </div>
       </div>
       <div style="width: 40px;"></div>
     </div>
@@ -51,8 +57,8 @@
         
         <!-- Rectangular Placeholder (Wide) -->
         <div id="logo-wide-placeholder" class="sidebar-header-logo" style="display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 800; font-size: 20px; color: white; width: 100%;">
-          <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--color-accent) 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1.5px solid rgba(255,255,255,0.1); flex-shrink: 0;">A</div>
-          <span style="letter-spacing: -0.5px; background: linear-gradient(to right, #ffffff 60%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">appli<span style="color: var(--color-accent); -webkit-text-fill-color: var(--color-accent);">car</span></span>
+          <div id="logo-wide-placeholder-icon" style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--color-accent) 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1.5px solid rgba(255,255,255,0.1); flex-shrink: 0;">A</div>
+          <span id="logo-wide-placeholder-text" style="letter-spacing: -0.5px; background: linear-gradient(to right, #ffffff 60%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">appli<span style="color: var(--color-accent); -webkit-text-fill-color: var(--color-accent);">car</span></span>
         </div>
 
         <!-- Square Logo Image (Collapsed) -->
