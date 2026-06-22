@@ -2227,6 +2227,7 @@ button {
   .metrics-grid {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
 }
 
 .hide-desktop {
