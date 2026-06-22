@@ -441,7 +441,7 @@ button {
 
 .nav-item {
   width: 48px;
-  height: 48px;
+  height: 32px;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -2111,6 +2111,9 @@ button {
     grid-template-columns: 1fr;
     gap: 18px;
   }
+  #dashboard-upcoming-appointments-panel {
+    display: none !important;
+  }
 }
 
 /* Switch de detalles de daño */
@@ -2302,7 +2305,7 @@ button {
     width: 100% !important;
     display: flex !important;
     align-items: center !important;
-    padding: 10px 14px !important;
+    padding: 6.6px 14px !important;
   }
   
   .nav-item-wide span {
@@ -2589,7 +2592,7 @@ button {
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 10px 14px;
+  padding: 6.6px 14px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;

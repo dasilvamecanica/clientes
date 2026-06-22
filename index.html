@@ -1966,33 +1966,29 @@
             <div class="reception-header-right" style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-grow: 1;">
 
                <!-- Grupo Cotización -->
-               <div id="group-quote-actions" style="display: none; flex-direction: row; align-items: center; gap: 0; border-radius: var(--radius-md); overflow: hidden;">
-                 <button class="history-btn" id="btn-download-pdf-quote" onclick="downloadQuotePDF()" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-md) 0 0 var(--radius-md); border-right: none; font-size: 13px; font-weight: 600; margin: 0;" title="Descargar presupuesto en PDF">
+               <div id="group-quote-actions" style="display: none; align-items: center; gap: 8px;">
+                 <button class="history-btn" id="btn-download-pdf-quote" onclick="downloadQuotePDF()" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; margin: 0;" title="Descargar presupuesto en PDF">
                    <i data-lucide="download" style="width: 14px; height: 14px; flex-shrink: 0;"></i> Cotización
                  </button>
-                 <!-- Separador doble verde+gris -->
-                 <div style="display: flex; flex-direction: row; align-self: stretch; align-items: stretch; width: 3px; flex-shrink: 0; background: linear-gradient(to right, #25d366 50%, rgba(255,255,255,0.12) 50%);"></div>
-                 <button id="btn-whatsapp-quote" class="history-btn" onclick="sendQuoteWhatsApp()" style="display: flex; align-items: center; justify-content: center; width: 36px; min-width: 36px; padding: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; border-left: none; cursor: pointer; transition: all 0.2s; margin: 0; border: 1.5px solid #25d366; border-left: none;" title="Enviar presupuesto por WhatsApp">
+                 <button id="btn-whatsapp-quote" class="history-btn" onclick="sendQuoteWhatsApp()" style="display: flex; align-items: center; justify-content: center; width: 36px; min-width: 36px; height: 36px; padding: 0; border: 1.5px solid #25d366; background-color: transparent; cursor: pointer; transition: all 0.2s; margin: 0;" title="Enviar presupuesto por WhatsApp" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">
                    <img src="whatsapp-logo-variant-svgrepo-com.svg" style="width: 18px; height: 18px; filter: invert(62%) sepia(77%) saturate(401%) hue-rotate(98deg) brightness(95%) contrast(100%);" alt="WhatsApp">
                  </button>
                </div>
 
                <!-- Certificado de Entrega -->
-               <div id="group-certificate-actions" style="display: none; flex-direction: row; align-items: center; gap: 0; border-radius: var(--radius-md); overflow: hidden;">
-                 <button class="history-btn" id="btn-download-pdf-delivery" onclick="downloadDeliveryPDF()" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-md) 0 0 var(--radius-md); border-right: none; font-size: 13px; font-weight: 600; margin: 0;" title="Descargar certificado de entrega en PDF">
+               <div id="group-certificate-actions" style="display: none; align-items: center; gap: 8px;">
+                 <button class="history-btn" id="btn-download-pdf-delivery" onclick="downloadDeliveryPDF()" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; margin: 0;" title="Descargar certificado de entrega en PDF">
                    <i data-lucide="award" style="width: 14px; height: 14px;"></i> Certificado
                  </button>
-                 <!-- Separador doble verde+gris -->
-                 <div style="display: flex; flex-direction: row; align-self: stretch; align-items: stretch; width: 3px; flex-shrink: 0; background: linear-gradient(to right, #25d366 50%, rgba(255,255,255,0.12) 50%);"></div>
-                 <button class="history-btn" id="btn-whatsapp-delivery" onclick="sendDeliveryWhatsApp()" style="display: flex; align-items: center; justify-content: center; width: 36px; min-width: 36px; padding: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; border: 1.5px solid #25d366; border-left: none; cursor: pointer; transition: all 0.2s; margin: 0;" title="Enviar certificado por WhatsApp">
+                 <button class="history-btn" id="btn-whatsapp-delivery" onclick="sendDeliveryWhatsApp()" style="display: flex; align-items: center; justify-content: center; width: 36px; min-width: 36px; height: 36px; padding: 0; border: 1.5px solid #25d366; background-color: transparent; cursor: pointer; transition: all 0.2s; margin: 0;" title="Enviar certificado por WhatsApp" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">
                    <img src="whatsapp-logo-variant-svgrepo-com.svg" style="width: 18px; height: 18px; filter: invert(62%) sepia(77%) saturate(401%) hue-rotate(98deg) brightness(95%) contrast(100%);" alt="WhatsApp">
                  </button>
                </div>
 
                <!-- Grupo Factura -->
-               <div id="group-invoice-actions" style="display: none; flex-direction: row; align-items: center; gap: 0; position: relative; border-radius: var(--radius-md); overflow: visible;">
+               <div id="group-invoice-actions" style="display: none; align-items: center; gap: 8px; position: relative;">
                  <div style="position: relative; display: flex; align-items: stretch;">
-                   <button class="history-btn" onclick="toggleInvoicePdfDropdown(event)" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-md) 0 0 var(--radius-md); border-right: none; font-size: 13px; font-weight: 600; margin: 0;">
+                   <button class="history-btn" onclick="toggleInvoicePdfDropdown(event)" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; margin: 0;">
                      <i data-lucide="receipt" style="width: 14px; height: 14px; flex-shrink: 0;"></i> Factura <i data-lucide="chevron-down" style="width: 11px; height: 11px; margin-left: 2px;"></i>
                    </button>
                    <div class="invoice-dropdown-menu" id="invoice-pdf-dropdown-menu" style="display: none; top: 100%; left: 0; z-index: 110; min-width: 180px;">
@@ -2001,10 +1997,8 @@
                      <a onclick="downloadTaxInvoicePDF('C', event)" style="display: flex; align-items: center; gap: 6px;"><i data-lucide="download" style="width: 12px;"></i> Descargar Factura C</a>
                    </div>
                  </div>
-                 <!-- Separador doble verde+gris -->
-                 <div style="align-self: stretch; width: 3px; flex-shrink: 0; background: linear-gradient(to right, #25d366 50%, rgba(255,255,255,0.12) 50%);"></div>
                  <div style="position: relative; display: flex; align-items: stretch;">
-                   <button class="history-btn" onclick="toggleInvoiceWaDropdown(event)" style="display: flex; align-items: center; justify-content: center; width: 36px; min-width: 36px; padding: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; border: 1.5px solid #25d366; border-left: none; cursor: pointer; transition: all 0.2s; margin: 0;" title="Enviar factura por WhatsApp">
+                   <button class="history-btn" onclick="toggleInvoiceWaDropdown(event)" style="display: flex; align-items: center; justify-content: center; width: 36px; min-width: 36px; height: 36px; padding: 0; border: 1.5px solid #25d366; background-color: transparent; cursor: pointer; transition: all 0.2s; margin: 0;" title="Enviar factura por WhatsApp" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">
                      <img src="whatsapp-logo-variant-svgrepo-com.svg" style="width: 18px; height: 18px; filter: invert(62%) sepia(77%) saturate(401%) hue-rotate(98deg) brightness(95%) contrast(100%);" alt="WhatsApp">
                    </button>
                    <div class="invoice-dropdown-menu" id="invoice-wa-dropdown-menu" style="display: none; top: 100%; right: 0; z-index: 110; min-width: 180px;">
@@ -2058,27 +2052,12 @@
               <!-- PESTAÑA A: RECEPCIÓn -->
               <div class="tab-content-wrapper" id="tab-content-reception">
                 <section class="reception-form-card">
-                  <!-- Kilometraje y Nivel Combustible -->
-                  <div class="form-row">
-                    <div class="form-group" style="flex: 1;">
-                      <label class="form-label">Kilometraje</label>
-                      <div class="input-icon-group">
-                        <i data-lucide="gauge"></i>
-                        <input type="number" class="form-input" id="det-km" placeholder="Ej: 45000" min="0" oninput="updateSidebarOdometer(this.value)">
-                      </div>
-                    </div>
-                    <div class="form-group" style="display: none !important;">
-                      <label class="form-label">Nivel Combustible</label>
-                      <div class="input-icon-group">
-                        <i data-lucide="droplet"></i>
-                        <select class="form-input" id="det-fuel">
-                          <option value="Reserva">Reserva (Muy bajo)</option>
-                          <option value="1/4">1/4 de Tanque</option>
-                          <option value="1/2" selected>1/2 de Tanque (Medio)</option>
-                          <option value="3/4">3/4 de Tanque</option>
-                          <option value="Lleno">Tanque Lleno</option>
-                        </select>
-                      </div>
+                  <!-- Kilometraje (Ancho Completo) -->
+                  <div class="form-group" style="width: 100%; margin-bottom: 14px;">
+                    <label class="form-label">Kilometraje</label>
+                    <div class="input-icon-group" style="width: 100%;">
+                      <i data-lucide="gauge"></i>
+                      <input type="number" class="form-input" id="det-km" placeholder="Ej: 45000" min="0" oninput="updateSidebarOdometer(this.value)" style="width: 100%;">
                     </div>
                   </div>
 
@@ -2167,7 +2146,7 @@
 
                       <!-- Columna 2: Configuración (Tarifa, Descuento & IVA) -->
                       <div style="display: flex; flex-direction: column; gap: 8px; padding-left: 10px; border-left: 1px solid var(--border-color-light);">
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                        <div style="display: none !important; align-items: center; justify-content: space-between; gap: 10px;">
                           <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Tarifa:</span>
                           <select id="quote-category" class="form-input" style="width: 110px; padding: 4px 8px; font-size: 12px; font-weight: 600; height: 30px; background-color: var(--card-bg-hover); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm);" onchange="handleQuoteCategoryChange()">
                             <option value="A">Cat. A (Compacto)</option>
@@ -2233,22 +2212,9 @@
                 <!-- Elemento oculto para preservar compatibilidad con JS -->
                 <span id="ot-tasks-header" style="display: none !important;">Tareas 0/0 completadas</span>
 
-                <section class="reception-form-card" style="gap: 24px; padding: 0px; border: none !important; background: transparent !important; box-shadow: none !important;">
-
-                  <!-- Bloque Superior/Medio: Tareas de la orden (Checklist) -->
-                  <div style="display: flex; flex-direction: column; gap: 16px;">
-                    <div style="display: flex; flex-direction: column; gap: 2px;" id="ot-tasks-list">
-                      <!-- Renderizado dinámico de tareas desde JS -->
-                    </div>
-                  </div>
-
-                  <!-- Fecha de entrega comprometida -->
-                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 8px;">
-                    <span style="font-weight: 700; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Entrega comprometida:</span>
-                    <strong style="color: var(--text-primary); font-size: 13px;" id="ot-delivery-label">—</strong>
-                  </div>
-
-                  <!-- Descripción del trabajo (Full Width & Más alto) -->
+                <section class="reception-form-card" style="gap: 24px; padding: 0px; border: none !important; background: transparent !important; box-shadow: none !important; display: flex; flex-direction: column;">
+                  
+                  <!-- 1. Descripción del trabajo -->
                   <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
                     <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">Descripción del trabajo</span>
                     <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px; background-color: var(--card-bg-hover); font-size: 13px; color: var(--text-primary); line-height: 1.5; min-height: 100px; max-height: 180px; overflow-y: auto; box-sizing: border-box;" id="ot-job-description">
@@ -2256,50 +2222,68 @@
                     </div>
                   </div>
 
-                  <!-- Observaciones del trabajo (Full Width, mismo alto) -->
-                  <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
-                    <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">Observaciones</span>
-                    <textarea
-                      id="ot-observations"
-                      class="form-input"
-                      rows="3"
-                      placeholder="Notas técnicas, hallazgos, recomendaciones al cliente..."
-                      style="resize: none; font-size: 13px; line-height: 1.5; padding: 12px 14px; min-height: 100px; height: 100px; box-sizing: border-box; background-color: var(--card-bg-hover);"
-                      onblur="saveOTObservations()"
-                    ></textarea>
+                  <!-- 2. Entrega comprometida -->
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 4px; margin-bottom: 4px;">
+                    <span style="font-weight: 700; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Entrega comprometida:</span>
+                    <strong style="color: var(--text-primary); font-size: 13px;" id="ot-delivery-label">—</strong>
                   </div>
 
-                  <!-- Panel de Imágenes (Abajo del todo, Full Width) -->
-                  <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                      <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">Imágenes</span>
-                      <div style="display: flex; gap: 8px; align-items: center;">
+                  <!-- 3. Servicios -->
+                  <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: flex; flex-direction: column; gap: 2px;" id="ot-services-list">
+                      <!-- Renderizado dinámico desde JS -->
+                    </div>
+                  </div>
+
+                  <!-- 4. Repuestos e insumos -->
+                  <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: flex; flex-direction: column; gap: 2px;" id="ot-parts-list">
+                      <!-- Renderizado dinámico desde JS -->
+                    </div>
+                  </div>
+
+                  <!-- Elemento oculto para preservar compatibilidad con JS antiguo -->
+                  <div id="ot-tasks-list" style="display: none !important;"></div>
+
+                  <!-- 5. Observaciones (con fotos integradas en su interior) -->
+                  <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
+                    <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">Observaciones</span>
+                    
+                    <div style="display: flex; flex-direction: column; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--card-bg-hover); overflow: hidden; min-height: 150px; box-sizing: border-box; width: 100%;">
+                      <textarea
+                        id="ot-observations"
+                        class="form-input"
+                        placeholder="Notas técnicas, hallazgos, recomendaciones al cliente..."
+                        style="resize: none; font-size: 13px; line-height: 1.5; padding: 12px 14px; flex-grow: 1; border: none; background: transparent; min-height: 85px; width: 100%; box-sizing: border-box; outline: none; box-shadow: none;"
+                        onblur="saveOTObservations()"
+                      ></textarea>
+                      
+                      <!-- Grid de miniaturas (dentro del cuadro) -->
+                      <div id="ot-images-grid" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 0 14px 10px 14px;">
+                        <!-- Renderizado dinámico desde JS -->
+                      </div>
+                      
+                      <!-- Estado vacío oculto para mantener compatibilidad JS -->
+                      <div id="ot-images-empty" style="display: none !important;"></div>
+                      
+                      <!-- Barra de acciones inferior (dentro del cuadro) -->
+                      <div style="display: flex; justify-content: flex-end; gap: 14px; padding: 8px 14px; border-top: 1px solid var(--border-color-light); background-color: var(--card-bg); align-items: center;">
+                        <span style="font-size: 11px; color: var(--text-muted); flex-grow: 1; font-weight: 500;">Adjuntar fotos del trabajo:</span>
                         <!-- Botón para Cámara (Directo) -->
-                        <label for="ot-camera-capture" style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--color-accent); cursor: pointer; padding: 4px 12px; border: 1px solid rgba(var(--color-accent-rgb),0.25); border-radius: var(--radius-sm); transition: all 0.15s; background: transparent;">
-                          <i data-lucide="camera" style="width: 13px;"></i> Tomar Foto
+                        <label for="ot-camera-capture" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; color: var(--color-accent); cursor: pointer; transition: all 0.2s; background: var(--card-bg-hover); border: 1px solid var(--border-color);" title="Tomar Foto">
+                          <i data-lucide="camera" style="width: 16px; height: 16px;"></i>
                           <input type="file" id="ot-camera-capture" accept="image/*" capture="environment" style="display: none;" onchange="addOTImages(event)">
                         </label>
                         <!-- Botón para Galería -->
-                        <label for="ot-image-upload" style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--color-accent); cursor: pointer; padding: 4px 12px; border: 1px solid rgba(var(--color-accent-rgb),0.25); border-radius: var(--radius-sm); transition: all 0.15s; background: transparent;">
-                          <i data-lucide="image" style="width: 13px;"></i> Subir de Galería
+                        <label for="ot-image-upload" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; color: var(--color-accent); cursor: pointer; transition: all 0.2s; background: var(--card-bg-hover); border: 1px solid var(--border-color);" title="Subir de Galería">
+                          <i data-lucide="image" style="width: 16px; height: 16px;"></i>
                           <input type="file" id="ot-image-upload" accept="image/*" multiple style="display: none;" onchange="addOTImages(event)">
                         </label>
                       </div>
                     </div>
-
-                    <!-- Grid de miniaturas -->
-                    <div id="ot-images-grid" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
-                      <!-- Renderizado dinámico desde JS -->
-                    </div>
-
-                    <!-- Estado vacío -->
-                    <div id="ot-images-empty" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 18px; border: 1.5px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-muted); font-size: 12px; min-height: 60px; box-sizing: border-box;">
-                      <i data-lucide="image" style="width: 15px; opacity: 0.5;"></i>
-                      <span>Sin imágenes adjuntas</span>
-                    </div>
                   </div>
 
-                  <!-- Barra de Acciones Oculta (Mapeada al footer global) -->
+                  <!-- Barra de Acciones Oculta -->
                   <div class="ficha-actions-bar" style="display: none !important;">
                     <button class="btn-recepcionar-confirm" onclick="saveOTAndUpdate()">
                       Aceptar
@@ -3329,19 +3313,37 @@
       </header>
       <form onsubmit="handleQuoteItemSubmit(event)">
         <input type="hidden" id="add-quote-item-type" value="service">
-        <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
-          <div class="form-group">
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px; padding: 16px 24px;">
+          
+          <div class="form-group" style="position: relative; margin-bottom: 0;" id="quote-item-normal-form">
             <label class="form-label" id="add-quote-item-name-label">Nombre del Servicio*</label>
-            <input type="text" class="form-input" id="add-quote-item-name" list="quote-services-suggestions" required placeholder="Ej. Cambio de aceite">
-            <datalist id="quote-services-suggestions"></datalist>
+            <div style="position: relative; width: 100%;">
+              <input type="text" class="form-input" id="add-quote-item-name" required placeholder="Ej. Cambio de aceite" autocomplete="off" style="width: 100%;">
+              <div id="custom-quote-services-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); max-height: 200px; overflow-y: auto; z-index: 130; box-shadow: var(--shadow-lg);"></div>
+            </div>
+            <datalist id="quote-services-suggestions" style="display: none !important;"></datalist>
             <datalist id="quote-parts-suggestions"></datalist>
+            
+            <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
+              <label class="form-label">Costo ($)*</label>
+              <input type="number" class="form-input" id="add-quote-item-value" required min="0" placeholder="Ej. 35000">
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Costo ($)*</label>
-            <input type="number" class="form-input" id="add-quote-item-value" required min="0" placeholder="Ej. 35000">
+          
+          <!-- Panel de Selección de Tarifa (se abre cuando no eligen precio directo) -->
+          <div id="tariff-picker-panel" style="display: none; flex-direction: column; gap: 12px; padding: 12px 0; width: 100%;">
+            <h4 style="margin: 0; font-size: 13.5px; font-weight: 700; color: var(--text-primary); text-align: center;">Seleccionar Tarifa</h4>
+            <p style="margin: 0; font-size: 12px; color: var(--text-muted); text-align: center;">Por favor, elige la tarifa para este servicio:</p>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+              <button type="button" id="btn-picker-tar-a" onclick="selectPickerTariff('A')" style="padding: 10px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); font-weight: 700; font-size: 13px; color: var(--text-primary); cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">Cat. A (Compacto)</button>
+              <button type="button" id="btn-picker-tar-b" onclick="selectPickerTariff('B')" style="padding: 10px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); font-weight: 700; font-size: 13px; color: var(--text-primary); cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">Cat. B (SUV/Sedán)</button>
+              <button type="button" id="btn-picker-tar-c" onclick="selectPickerTariff('C')" style="padding: 10px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); font-weight: 700; font-size: 13px; color: var(--text-primary); cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;">Cat. C (Pickup/Alta)</button>
+            </div>
+            <button type="button" class="btn-secondary" onclick="hideTariffPickerPanel()" style="margin-top: 8px; width: 100%; height: 34px; padding: 0;">Atrás</button>
           </div>
+
         </div>
-        <footer class="modal-footer">
+        <footer class="modal-footer" id="quote-item-modal-footer" style="padding: 12px 24px 20px;">
           <button type="button" class="btn-secondary" onclick="closeModal('add-quote-item-modal')">Cancelar</button>
           <button type="submit" class="btn-primary">Aceptar</button>
         </footer>

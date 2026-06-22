@@ -2464,28 +2464,71 @@ function initEventListeners() {
     });
   }
 
-  // Autocompletar precio de servicio/repuesto al seleccionar en cotización
+  // Autocompletar precio de servicio/repuesto al seleccionar en cotización con dropdown personalizado
   const quoteItemName = document.getElementById('add-quote-item-name');
+  const customDropdown = document.getElementById('custom-quote-services-dropdown');
+
   if (quoteItemName) {
+    const showCustomSuggestions = () => {
+      const type = document.getElementById('add-quote-item-type').value;
+      if (type !== 'service' || !customDropdown) return;
+      
+      const query = quoteItemName.value.toLowerCase().trim();
+      
+      // Filtrar catálogo de servicios
+      const matches = servicesCatalog.filter(s => s.name.toLowerCase().includes(query));
+      
+      if (matches.length === 0) {
+        customDropdown.style.display = 'none';
+        return;
+      }
+      
+      customDropdown.style.display = 'block';
+      customDropdown.innerHTML = matches.map(s => {
+        const priceA = s.priceA || 0;
+        const priceB = s.priceB || 0;
+        const priceC = s.priceC || 0;
+        return `
+          <div style="padding: 10px 12px; border-bottom: 1.5px solid var(--border-color-light); display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-weight: 700; font-size: 13px; color: var(--text-primary); cursor: pointer; display: block;" onclick="selectServiceWithNameOnly('${s.name.replace(/'/g, "\\'")}')">${s.name}</span>
+            <div style="display: flex; gap: 6px; justify-content: flex-start; margin-top: 2px;">
+              <button type="button" onclick="selectServiceWithTariff('${s.name.replace(/'/g, "\\'")}', ${priceA}, 'A')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid #25d366; background: transparent; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">A: $${priceA.toLocaleString('es-AR')}</button>
+              <button type="button" onclick="selectServiceWithTariff('${s.name.replace(/'/g, "\\'")}', ${priceB}, 'B')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid #25d366; background: transparent; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">B: $${priceB.toLocaleString('es-AR')}</button>
+              <button type="button" onclick="selectServiceWithTariff('${s.name.replace(/'/g, "\\'")}', ${priceC}, 'C')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid #25d366; background: transparent; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">C: $${priceC.toLocaleString('es-AR')}</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
     quoteItemName.addEventListener('input', () => {
-      const selectedName = quoteItemName.value.trim();
       const type = document.getElementById('add-quote-item-type').value;
       if (type === 'service') {
-        const service = servicesCatalog.find(s => s.name === selectedName);
-        if (service) {
-          const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
-          const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
-          const price = getServicePrice(service, cat);
-          document.getElementById('add-quote-item-value').value = price;
-        }
+        showCustomSuggestions();
       } else {
+        if (customDropdown) customDropdown.style.display = 'none';
+        const selectedName = quoteItemName.value.trim();
         const part = partsCatalog.find(p => p.name === selectedName);
         if (part) {
           document.getElementById('add-quote-item-value').value = part.price;
         }
       }
     });
+
+    quoteItemName.addEventListener('focus', () => {
+      const type = document.getElementById('add-quote-item-type').value;
+      if (type === 'service') {
+        showCustomSuggestions();
+      }
+    });
   }
+
+  // Cerrar el dropdown personalizado al hacer clic fuera del mismo
+  document.addEventListener('click', (e) => {
+    if (customDropdown && quoteItemName && !customDropdown.contains(e.target) && e.target !== quoteItemName) {
+      customDropdown.style.display = 'none';
+    }
+  });
 
   // --- AUTO-SAVE SYSTEM ---
   const autoSaveInputs = [
@@ -3918,6 +3961,14 @@ window.handleVehicleFormSubmit = function(e) {
         }
       }
 
+      const wasCita = vehicle.stage === 'cita';
+      if (wasCita) {
+        vehicle.stage = 'recepcion';
+        vehicle.entryTime = Date.now();
+        vehicle.entryDate = new Date().toISOString().split('T')[0];
+        vehicle.delivered = false;
+      }
+
       vehicle.client = client.name;
       vehicle.clientPhone = client.phone;
       vehicle.clientEmail = client.email;
@@ -3928,6 +3979,9 @@ window.handleVehicleFormSubmit = function(e) {
       saveState();
       closeModal('vehicle-modal');
       renderApp();
+      if (wasCita || vehicle.stage === 'recepcion') {
+        openDetailedReception(vehicle.id);
+      }
       return;
     }
   }
@@ -4181,7 +4235,14 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
   if (delPaymentStatus) delPaymentStatus.value = vehicle.deliveryPaymentStatus || 'Totalmente Pagado';
 
   const delPaymentMethod = document.getElementById('del-payment-method');
-  if (delPaymentMethod) delPaymentMethod.value = vehicle.deliveryPaymentMethod || 'Efectivo';
+  if (delPaymentMethod) {
+    let optionsHtml = '<option value="Efectivo">Efectivo</option>';
+    cajaAccounts.forEach(acc => {
+      optionsHtml += `<option value="${acc.id}">${acc.name}</option>`;
+    });
+    delPaymentMethod.innerHTML = optionsHtml;
+    delPaymentMethod.value = vehicle.deliveryPaymentMethod || 'Efectivo';
+  }
 
   const delPartialAmount = document.getElementById('del-partial-amount');
   if (delPartialAmount) delPartialAmount.value = vehicle.deliveryPartialAmount || '';
@@ -4210,18 +4271,11 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
   }
 
   // Dynamic header based on Stage
-  if (vehicle.stage === 'reparacion') {
-    const nameEl = document.getElementById('det-vehicle-name');
-    const subEl = document.getElementById('det-vehicle-id-sub');
-    if (nameEl) nameEl.innerHTML = `<i data-lucide="wrench" style="width: 18px; color: #dc2626; display: inline-block; vertical-align: middle; margin-right: 6px;"></i> Reparación`;
-    if (subEl) subEl.textContent = 'Ficha de trabajo en taller';
-  } else {
-    const motorStr = vehicle.motor ? ` · Motor: ${vehicle.motor}` : '';
-    const nameEl = document.getElementById('det-vehicle-name');
-    const subEl = document.getElementById('det-vehicle-id-sub');
-    if (nameEl) nameEl.textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}`;
-    if (subEl) subEl.textContent = `Nº ${indexNum}`;
-  }
+  const motorStr = vehicle.motor ? ` · Motor: ${vehicle.motor}` : '';
+  const nameEl = document.getElementById('det-vehicle-name');
+  const subEl = document.getElementById('det-vehicle-id-sub');
+  if (nameEl) nameEl.textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}`;
+  if (subEl) subEl.textContent = `Nº ${indexNum}`;
   
   // Dynamic Tab Selection based on vehicle stage
   if (vehicle.stage === 'listo') {
@@ -5265,11 +5319,20 @@ window.openAddQuoteItemModal = function(type) {
   inputName.value = '';
   inputValue.value = '';
   
+  // Resetear tarifa seleccionada
+  window.selectedServiceTariff = null;
+  if (typeof hideTariffPickerPanel === 'function') {
+    hideTariffPickerPanel();
+  }
+  
+  const customDropdown = document.getElementById('custom-quote-services-dropdown');
+  if (customDropdown) customDropdown.style.display = 'none';
+
   if (type === 'service') {
     title.textContent = 'Agregar Servicio';
     label.textContent = 'Nombre del Servicio*';
     inputName.placeholder = 'Ej. Cambio de aceite';
-    inputName.setAttribute('list', 'quote-services-suggestions');
+    inputName.removeAttribute('list'); // Remove native suggestions list
   } else {
     title.textContent = 'Agregar Repuesto / Insumo';
     label.textContent = 'Nombre del Repuesto*';
@@ -5288,6 +5351,26 @@ window.handleQuoteItemSubmit = function(e) {
   const name = document.getElementById('add-quote-item-name').value.trim();
   const val = parseFloat(document.getElementById('add-quote-item-value').value) || 0;
   
+  if (type === 'service' && window.selectedServiceTariff === null) {
+    // Si no ha seleccionado tarifa de la lista, abrir panel de tarifas
+    const service = servicesCatalog.find(s => s.name === name);
+    if (service) {
+      document.getElementById('btn-picker-tar-a').innerHTML = `<span>Cat. A (Compacto)</span> <strong>$${(service.priceA || 0).toLocaleString('es-AR')}</strong>`;
+      document.getElementById('btn-picker-tar-b').innerHTML = `<span>Cat. B (SUV/Sedán)</span> <strong>$${(service.priceB || 0).toLocaleString('es-AR')}</strong>`;
+      document.getElementById('btn-picker-tar-c').innerHTML = `<span>Cat. C (Pickup/Alta)</span> <strong>$${(service.priceC || 0).toLocaleString('es-AR')}</strong>`;
+    } else {
+      document.getElementById('btn-picker-tar-a').innerHTML = '<span>Cat. A (Compacto)</span> <strong>$0</strong>';
+      document.getElementById('btn-picker-tar-b').innerHTML = '<span>Cat. B (SUV/Sedán)</span> <strong>$0</strong>';
+      document.getElementById('btn-picker-tar-c').innerHTML = '<span>Cat. C (Pickup/Alta)</span> <strong>$0</strong>';
+    }
+    
+    document.getElementById('quote-item-normal-form').style.display = 'none';
+    document.getElementById('tariff-picker-panel').style.display = 'flex';
+    const footer = document.getElementById('quote-item-modal-footer');
+    if (footer) footer.style.display = 'none';
+    return;
+  }
+
   if (type === 'service') {
     activeQuoteServices.push({ name, value: val });
   } else {
@@ -5297,6 +5380,79 @@ window.handleQuoteItemSubmit = function(e) {
   closeModal('add-quote-item-modal');
   renderQuoteTab();
   updateCalculatedTotals();
+};
+
+window.selectServiceWithTariff = function(name, price, category) {
+  document.getElementById('add-quote-item-name').value = name;
+  document.getElementById('add-quote-item-value').value = price;
+  window.selectedServiceTariff = category;
+
+  // Actualizar la categoría del vehículo
+  const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+  if (vehicle) {
+    vehicle.category = category;
+    saveState();
+    const quoteCategory = document.getElementById('quote-category');
+    if (quoteCategory) quoteCategory.value = category;
+  }
+
+  const customDropdown = document.getElementById('custom-quote-services-dropdown');
+  if (customDropdown) customDropdown.style.display = 'none';
+
+  // Guardar y cerrar inmediatamente para mejorar experiencia de usuario
+  activeQuoteServices.push({ name, value: price });
+  closeModal('add-quote-item-modal');
+  renderQuoteTab();
+  updateCalculatedTotals();
+};
+
+window.selectServiceWithNameOnly = function(name) {
+  document.getElementById('add-quote-item-name').value = name;
+  window.selectedServiceTariff = null;
+
+  // Autocompletar con precio B
+  const service = servicesCatalog.find(s => s.name === name);
+  if (service) {
+    document.getElementById('add-quote-item-value').value = service.priceB || 0;
+  }
+
+  const customDropdown = document.getElementById('custom-quote-services-dropdown');
+  if (customDropdown) customDropdown.style.display = 'none';
+};
+
+window.selectPickerTariff = function(category) {
+  const name = document.getElementById('add-quote-item-name').value.trim();
+  const service = servicesCatalog.find(s => s.name === name);
+  let price = parseFloat(document.getElementById('add-quote-item-value').value) || 0;
+  
+  if (service) {
+    price = category === 'A' ? (service.priceA || 0) : category === 'B' ? (service.priceB || 0) : (service.priceC || 0);
+  }
+
+  // Actualizar la categoría del vehículo
+  const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+  if (vehicle) {
+    vehicle.category = category;
+    saveState();
+    const quoteCategory = document.getElementById('quote-category');
+    if (quoteCategory) quoteCategory.value = category;
+  }
+
+  activeQuoteServices.push({ name, value: price });
+
+  hideTariffPickerPanel();
+  closeModal('add-quote-item-modal');
+  renderQuoteTab();
+  updateCalculatedTotals();
+};
+
+window.hideTariffPickerPanel = function() {
+  const normalForm = document.getElementById('quote-item-normal-form');
+  const pickerPanel = document.getElementById('tariff-picker-panel');
+  const footer = document.getElementById('quote-item-modal-footer');
+  if (normalForm) normalForm.style.display = 'block';
+  if (pickerPanel) pickerPanel.style.display = 'none';
+  if (footer) footer.style.display = 'flex';
 };
 
 window.removeQuoteService = function(index) {
@@ -6009,9 +6165,10 @@ window.renderOTTab = function() {
     descBox.textContent = vehicle.services || 'Sin especificaciones detalladas.';
   }
   
-  // 2. Tareas de la orden
-  const tasksList = document.getElementById('ot-tasks-list');
-  if (!tasksList) return;
+  // 2. Tareas de la orden (Servicios y Repuestos separados)
+  const servicesList = document.getElementById('ot-services-list');
+  const partsList = document.getElementById('ot-parts-list');
+  if (!servicesList || !partsList) return;
   
   // Inicializar otTasks si no existían
   if (!vehicle.otTasks || vehicle.otTasks.length === 0) {
@@ -6038,24 +6195,20 @@ window.renderOTTab = function() {
   const serviceTasks = vehicle.otTasks.filter(t => t.type === 'service');
   const partTasks = vehicle.otTasks.filter(t => t.type === 'part');
 
-  // Renderizado dinámico de tareas con las mismas tablas compactas que Cotización
-  let html = '';
-
-  // A. Bloque de Tareas de Servicios
+  // Renderizado dinámico de servicios
   const completedServices = serviceTasks.filter(t => t.completed).length;
-  html += `
+  let servicesHtml = `
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background-color: var(--card-bg-hover); border-radius: var(--radius-md); font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--text-primary); margin-bottom: 8px;">
       <div style="display: flex; align-items: center; gap: 8px;">
         <span>Servicios</span>
-        <span style="font-weight: normal; font-size: 12px; color: var(--text-muted);">(${completedServices}/${serviceTasks.length})</span>
-        <span style="background-color: rgba(22, 163, 74, 0.08); color: #16a34a; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 12px; display: inline-block; margin-left: 4px; text-transform: uppercase;">Checklist</span>
+        <span style="font-weight: normal; font-size: 12px; color: var(--text-muted);">${completedServices}/${serviceTasks.length}</span>
       </div>
       <span>Estado</span>
     </div>
   `;
 
   if (serviceTasks.length > 0) {
-    html += serviceTasks.map(task => {
+    servicesHtml += serviceTasks.map(task => {
       const globalIndex = vehicle.otTasks.findIndex(t => t === task);
       return `
         <div class="compact-quote-row" style="display: flex; flex-direction: column; padding: 10px 16px; border-bottom: 1.5px solid var(--border-color); min-height: 40px; box-sizing: border-box; transition: background-color 0.15s;" onmouseover="this.style.backgroundColor='var(--card-bg-hover)'" onmouseout="this.style.backgroundColor='transparent'">
@@ -6081,24 +6234,23 @@ window.renderOTTab = function() {
       `;
     }).join('');
   } else {
-    html += `<span style="font-size: 12px; color: var(--text-muted); font-style: italic; padding: 10px 16px; display: block;">No hay servicios en esta orden.</span>`;
+    servicesHtml += `<span style="font-size: 12px; color: var(--text-muted); font-style: italic; padding: 10px 16px; display: block;">No hay servicios en esta orden.</span>`;
   }
 
-  // B. Bloque de Tareas de Repuestos
+  // Renderizado dinámico de repuestos
   const completedParts = partTasks.filter(t => t.completed).length;
-  html += `
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background-color: var(--card-bg-hover); border-radius: var(--radius-md); font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--text-primary); margin-top: 24px; margin-bottom: 8px;">
+  let partsHtml = `
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background-color: var(--card-bg-hover); border-radius: var(--radius-md); font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--text-primary); margin-bottom: 8px;">
       <div style="display: flex; align-items: center; gap: 8px;">
         <span>Repuestos e Insumos</span>
-        <span style="font-weight: normal; font-size: 12px; color: var(--text-muted);">(${completedParts}/${partTasks.length})</span>
-        <span style="background-color: rgba(22, 163, 74, 0.08); color: #16a34a; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 12px; display: inline-block; margin-left: 4px; text-transform: uppercase;">Checklist</span>
+        <span style="font-weight: normal; font-size: 12px; color: var(--text-muted);">${completedParts}/${partTasks.length}</span>
       </div>
       <span>Estado</span>
     </div>
   `;
 
   if (partTasks.length > 0) {
-    html += partTasks.map(task => {
+    partsHtml += partTasks.map(task => {
       const globalIndex = vehicle.otTasks.findIndex(t => t === task);
       return `
         <div class="compact-quote-row" style="display: flex; flex-direction: column; padding: 10px 16px; border-bottom: 1.5px solid var(--border-color); min-height: 40px; box-sizing: border-box; transition: background-color 0.15s;" onmouseover="this.style.backgroundColor='var(--card-bg-hover)'" onmouseout="this.style.backgroundColor='transparent'">
@@ -6124,10 +6276,11 @@ window.renderOTTab = function() {
       `;
     }).join('');
   } else {
-    html += `<span style="font-size: 12px; color: var(--text-muted); font-style: italic; padding: 10px 16px; display: block;">No hay repuestos en esta orden.</span>`;
+    partsHtml += `<span style="font-size: 12px; color: var(--text-muted); font-style: italic; padding: 10px 16px; display: block;">No hay repuestos en esta orden.</span>`;
   }
 
-  tasksList.innerHTML = html;
+  servicesList.innerHTML = servicesHtml;
+  partsList.innerHTML = partsHtml;
   
   initLucide();
 
@@ -6171,11 +6324,11 @@ window.toggleOTTaskObs = function(index) {
   const arrow = document.getElementById(`ot-task-arrow-${index}`);
   if (box.style.display === 'none') {
     box.style.display = 'block';
-    arrow.style.transform = 'rotate(180deg)';
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
     document.getElementById(`ot-task-obs-text-${index}`).focus();
   } else {
     box.style.display = 'none';
-    arrow.style.transform = 'none';
+    if (arrow) arrow.style.transform = 'none';
   }
 };
 
@@ -6952,6 +7105,13 @@ window.renderProximasCitas = function() {
   // Get active appointments and deliveries (vehicles not delivered yet)
   const activeCitas = vehicles.filter(v => !v.delivered && (v.stage === 'cita' || v.isCita || v.deliveryDate));
   const getEventDate = (v) => v.deliveryDate || v.entryDate;
+
+  // Toggle visibility of the upcoming appointments panel on the dashboard
+  const upcomingPanel = document.getElementById('dashboard-upcoming-appointments-panel');
+  if (upcomingPanel) {
+    const hasItems = activeCitas.length > 0 || (reminders && reminders.length > 0);
+    upcomingPanel.style.display = hasItems ? 'flex' : 'none';
+  }
 
   const renderToContainer = (target) => {
     if (!target) return;
@@ -12423,12 +12583,27 @@ window.goToCajaWithAutoFill = function(vehicle) {
 
   const conceptInput = document.getElementById('caja-op-concept');
   const amountInput = document.getElementById('caja-op-amount');
+  const methodSelect = document.getElementById('caja-op-method');
+  const accountSelect = document.getElementById('caja-op-account-id');
 
   if (conceptInput) {
     conceptInput.value = `Entrega vehículo: ${vehicle.brand} ${vehicle.model} (${vehicle.plate}) - Cliente: ${vehicle.client}`;
   }
   if (amountInput) {
     amountInput.value = vehicle.value || 0;
+  }
+
+  if (methodSelect) {
+    const selectedMethod = vehicle.deliveryPaymentMethod || 'Efectivo';
+    if (selectedMethod === 'Efectivo') {
+      methodSelect.value = 'efectivo';
+    } else {
+      methodSelect.value = 'banco';
+      if (accountSelect) {
+        accountSelect.value = selectedMethod;
+      }
+    }
+    handleCajaOpMethodChange();
   }
 };
 
