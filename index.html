@@ -2235,7 +2235,7 @@
                       <!-- 1. Descripción del trabajo -->
                       <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
                         <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">Descripción del trabajo</span>
-                        <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px; background-color: var(--card-bg-hover); font-size: 13px; color: var(--text-primary); line-height: 1.5; min-height: 120px; max-height: 220px; overflow-y: auto; box-sizing: border-box;" id="ot-job-description">
+                        <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px; background-color: var(--card-bg-hover); font-size: 13px; color: var(--text-primary); line-height: 1.5; min-height: 240px; max-height: 360px; overflow-y: auto; box-sizing: border-box;" id="ot-job-description">
                           —
                         </div>
                       </div>
@@ -3464,6 +3464,39 @@
         </div>
         <footer class="modal-footer">
           <button type="button" class="btn-secondary" onclick="closeModal('edit-service-modal')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Cambios</button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR ITEM DEL PRESUPUESTO (COTIZACIÓN) -->
+  <div class="modal-overlay" id="edit-quote-item-modal" style="z-index: 140;">
+    <div class="modal-window" style="max-width: 400px;">
+      <header class="modal-header">
+        <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px; color: var(--color-accent);">
+          <i data-lucide="edit"></i>
+          Editar Item del Presupuesto
+        </h3>
+        <button class="modal-close-btn" onclick="closeModal('edit-quote-item-modal')">
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+      <form onsubmit="handleEditQuoteItemSubmit(event)">
+        <input type="hidden" id="eqi-index">
+        <input type="hidden" id="eqi-type">
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="eqi-name">Nombre*</label>
+            <input type="text" class="form-input" id="eqi-name" required placeholder="Ej. Cambio de bujías" style="background-color: white;">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="eqi-price">Precio / Costo ($)*</label>
+            <input type="number" class="form-input" id="eqi-price" required placeholder="Ej. 15000" style="background-color: white;">
+          </div>
+        </div>
+        <footer class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('edit-quote-item-modal')">Cancelar</button>
           <button type="submit" class="btn-primary">Guardar Cambios</button>
         </footer>
       </form>

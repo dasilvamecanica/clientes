@@ -2663,18 +2663,30 @@ window.filterQuoteItemSuggestions = function(inputEl, type) {
 
   dropdown.innerHTML = items.map(item => {
     if (type === 'service') {
+      let buttonsHtml = '';
+      if (item.priceA > 0) {
+        buttonsHtml += `<button type="button" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.priceA}, this, 'A')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid var(--color-accent); background: transparent; color: var(--color-accent); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(var(--color-accent-rgb), 0.08)'" onmouseout="this.style.backgroundColor='transparent'">A: $${item.priceA.toLocaleString('es-AR')}</button>`;
+      }
+      if (item.priceB > 0) {
+        buttonsHtml += `<button type="button" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.priceB}, this, 'B')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid var(--color-accent); background: transparent; color: var(--color-accent); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(var(--color-accent-rgb), 0.08)'" onmouseout="this.style.backgroundColor='transparent'">B: $${item.priceB.toLocaleString('es-AR')}</button>`;
+      }
+      if (item.priceC > 0) {
+        buttonsHtml += `<button type="button" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.priceC}, this, 'C')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid var(--color-accent); background: transparent; color: var(--color-accent); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(var(--color-accent-rgb), 0.08)'" onmouseout="this.style.backgroundColor='transparent'">C: $${item.priceC.toLocaleString('es-AR')}</button>`;
+      }
+
+      const defaultCat = (item.priceB > 0) ? 'B' : ((item.priceA > 0) ? 'A' : 'C');
+      const defaultPrice = item['price' + defaultCat] || item.price || 0;
+
       return `
         <div class="quote-dropdown-item" 
              style="padding: 8px 14px; border-bottom: 1px solid var(--border-color-light); display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13.5px; transition: background 0.15s;"
              onmouseover="this.style.background='var(--card-bg-hover)'"
              onmouseout="this.style.background='transparent'">
-          <span style="font-weight: 600; color: var(--text-primary); text-align: left; flex: 1; padding-right: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;" title="${item.name}" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.priceB}, this, 'B')">
+          <span style="font-weight: 600; color: var(--text-primary); text-align: left; flex: 1; padding-right: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;" title="${item.name}" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${defaultPrice}, this, '${defaultCat}')">
             ${item.name}
           </span>
           <div style="display: flex; gap: 4px; flex-shrink: 0;" onmousedown="event.stopPropagation()">
-            <button type="button" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.priceA}, this, 'A')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid #25d366; background: transparent; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">A: $${item.priceA.toLocaleString('es-AR')}</button>
-            <button type="button" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.priceB}, this, 'B')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid #25d366; background: transparent; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">B: $${item.priceB.toLocaleString('es-AR')}</button>
-            <button type="button" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.priceC}, this, 'C')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid #25d366; background: transparent; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">C: $${item.priceC.toLocaleString('es-AR')}</button>
+            ${buttonsHtml}
           </div>
         </div>
       `;
@@ -2741,20 +2753,29 @@ window.updateInlineServiceTieredPrices = function(inputEl) {
   const catalogItem = servicesCatalog.find(s => s.name.toLowerCase() === name.toLowerCase());
 
   const renderTieredButtons = (item) => {
-    const priceA = item.priceA || item.price || 0;
-    const priceB = item.priceB || item.price || 0;
-    const priceC = item.priceC || item.price || 0;
+    const priceA = item.priceA || 0;
+    const priceB = item.priceB || 0;
+    const priceC = item.priceC || 0;
 
     const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
     const currentCat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
 
-    tieredContainer.innerHTML = `
+    let buttonsHtml = '';
+    if (priceA > 0) {
+      buttonsHtml += `<button type="button" onmousedown="event.preventDefault(); selectTieredPrice('A', ${priceA}, this)" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid ${currentCat === 'A' ? 'var(--color-accent)' : 'rgba(var(--color-accent-rgb), 0.5)'}; background: ${currentCat === 'A' ? 'rgba(var(--color-accent-rgb), 0.15)' : 'transparent'}; color: var(--color-accent); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(var(--color-accent-rgb), 0.25)'" onmouseout="this.style.backgroundColor='${currentCat === 'A' ? 'rgba(var(--color-accent-rgb), 0.15)' : 'transparent'}'" title="Tarifa A (Pequeño)">A: $${priceA.toLocaleString('es-AR')}</button>`;
+    }
+    if (priceB > 0) {
+      buttonsHtml += `<button type="button" onmousedown="event.preventDefault(); selectTieredPrice('B', ${priceB}, this)" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid ${currentCat === 'B' ? 'var(--color-accent)' : 'rgba(var(--color-accent-rgb), 0.5)'}; background: ${currentCat === 'B' ? 'rgba(var(--color-accent-rgb), 0.15)' : 'transparent'}; color: var(--color-accent); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(var(--color-accent-rgb), 0.25)'" onmouseout="this.style.backgroundColor='${currentCat === 'B' ? 'rgba(var(--color-accent-rgb), 0.15)' : 'transparent'}'" title="Tarifa B (Mediano)">B: $${priceB.toLocaleString('es-AR')}</button>`;
+    }
+    if (priceC > 0) {
+      buttonsHtml += `<button type="button" onmousedown="event.preventDefault(); selectTieredPrice('C', ${priceC}, this)" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid ${currentCat === 'C' ? 'var(--color-accent)' : 'rgba(var(--color-accent-rgb), 0.5)'}; background: ${currentCat === 'C' ? 'rgba(var(--color-accent-rgb), 0.15)' : 'transparent'}; color: var(--color-accent); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(var(--color-accent-rgb), 0.25)'" onmouseout="this.style.backgroundColor='${currentCat === 'C' ? 'rgba(var(--color-accent-rgb), 0.15)' : 'transparent'}'" title="Tarifa C (Grande)">C: $${priceC.toLocaleString('es-AR')}</button>`;
+    }
+
+    tieredContainer.innerHTML = buttonsHtml ? `
       <div style="display: flex; gap: 4px; align-items: center; margin-right: 4px;">
-        <button type="button" onmousedown="event.preventDefault(); selectTieredPrice('A', ${priceA}, this)" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid ${currentCat === 'A' ? 'var(--color-accent)' : '#25d366'}; background: ${currentCat === 'A' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.25)'" onmouseout="this.style.backgroundColor='${currentCat === 'A' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}'" title="Tarifa A (Pequeño)">A: $${priceA.toLocaleString('es-AR')}</button>
-        <button type="button" onmousedown="event.preventDefault(); selectTieredPrice('B', ${priceB}, this)" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid ${currentCat === 'B' ? 'var(--color-accent)' : '#25d366'}; background: ${currentCat === 'B' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.25)'" onmouseout="this.style.backgroundColor='${currentCat === 'B' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}'" title="Tarifa B (Mediano)">B: $${priceB.toLocaleString('es-AR')}</button>
-        <button type="button" onmousedown="event.preventDefault(); selectTieredPrice('C', ${priceC}, this)" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid ${currentCat === 'C' ? 'var(--color-accent)' : '#25d366'}; background: ${currentCat === 'C' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.25)'" onmouseout="this.style.backgroundColor='${currentCat === 'C' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}'" title="Tarifa C (Grande)">C: $${priceC.toLocaleString('es-AR')}</button>
+        ${buttonsHtml}
       </div>
-    `;
+    ` : '';
   };
 
   if (catalogItem) {
@@ -2794,8 +2815,8 @@ window.selectTieredPrice = function(category, price, btn) {
   const buttons = container.querySelectorAll('#inline-service-tiered-prices button');
   buttons.forEach(b => {
     const isThis = b === btn;
-    b.style.background = isThis ? 'rgba(37, 211, 102, 0.15)' : 'transparent';
-    b.style.borderColor = isThis ? 'var(--color-accent)' : '#25d366';
+    b.style.background = isThis ? 'rgba(var(--color-accent-rgb), 0.15)' : 'transparent';
+    b.style.borderColor = isThis ? 'var(--color-accent)' : 'rgba(var(--color-accent-rgb), 0.5)';
   });
 };
 
@@ -7062,7 +7083,8 @@ window.renderCotizacionesTable = function() {
 
   if (searchVal) {
     list = list.filter(v => {
-      const indexNum = v.id === 'mock-vehicle-gol-2026' ? '2' : v.id.substring(v.id.length - 2, v.id.length);
+      const idStr = String(v.id);
+      const indexNum = v.id === 'mock-vehicle-gol-2026' ? '2' : idStr.substring(idStr.length - 2, idStr.length);
       return (v.client || '').toLowerCase().includes(searchVal) || 
              (v.clientPhone && v.clientPhone.includes(searchVal)) || 
              v.plate.toLowerCase().includes(searchVal) || 
@@ -7963,7 +7985,7 @@ window.renderOrdenesTrabajoView = function() {
              brand.includes(searchVal) || 
              model.includes(searchVal) || 
              desc.includes(searchVal) || 
-             (v.id && v.id.toLowerCase().includes(searchVal)) ||
+             (v.id && String(v.id).toLowerCase().includes(searchVal)) ||
              `#${indexNum}`.includes(searchVal);
     });
   }
@@ -10048,37 +10070,56 @@ window.populateDatalists = function() {
 
 window.editQuoteServicePrice = function(index) {
   const item = activeQuoteServices[index];
-  const service = servicesCatalog.find(s => s.name === item.name);
-
-  document.getElementById('es-id').value = `quote-service-${index}`;
-  document.getElementById('es-category').value = service ? (service.category || 'GENERAL') : 'GENERAL';
-  document.getElementById('es-name').value = item.name;
-  document.getElementById('es-description').value = service ? (service.description || '') : '';
-  
-  const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
-  const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
-  document.getElementById('es-price-a').value = service ? (service.priceA || 0) : (cat === 'A' ? item.value : 0);
-  document.getElementById('es-price-b').value = service ? (service.priceB || 0) : (cat === 'B' ? item.value : item.value);
-  document.getElementById('es-price-c').value = service ? (service.priceC || 0) : (cat === 'C' ? item.value : 0);
-
-  document.getElementById('edit-service-modal').classList.add('open');
+  if (!item) return;
+  document.getElementById('eqi-index').value = index;
+  document.getElementById('eqi-type').value = 'service';
+  document.getElementById('eqi-name').value = item.name;
+  document.getElementById('eqi-price').value = item.value;
+  document.getElementById('edit-quote-item-modal').classList.add('open');
 };
 
 window.editQuotePartPrice = function(index) {
   const item = activeQuoteParts[index];
-  const part = partsCatalog.find(p => p.name === item.name);
+  if (!item) return;
+  document.getElementById('eqi-index').value = index;
+  document.getElementById('eqi-type').value = 'part';
+  document.getElementById('eqi-name').value = item.name;
+  document.getElementById('eqi-price').value = item.value;
+  document.getElementById('edit-quote-item-modal').classList.add('open');
+};
 
-  document.getElementById('es-id').value = `quote-part-${index}`;
-  document.getElementById('es-category').value = 'REPUESTOS';
-  document.getElementById('es-name').value = item.name;
-  document.getElementById('es-description').value = part ? (part.description || '') : '';
-  
-  const price = item.value;
-  document.getElementById('es-price-a').value = price;
-  document.getElementById('es-price-b').value = price;
-  document.getElementById('es-price-c').value = price;
+window.handleEditQuoteItemSubmit = function(e) {
+  e.preventDefault();
+  const index = parseInt(document.getElementById('eqi-index').value, 10);
+  const type = document.getElementById('eqi-type').value;
+  const name = document.getElementById('eqi-name').value.trim();
+  const price = parseFloat(document.getElementById('eqi-price').value) || 0;
 
-  document.getElementById('edit-service-modal').classList.add('open');
+  if (isNaN(index)) return;
+
+  const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
+
+  if (type === 'service') {
+    if (activeQuoteServices[index]) {
+      activeQuoteServices[index].name = name;
+      activeQuoteServices[index].value = price;
+    }
+  } else {
+    if (activeQuoteParts[index]) {
+      activeQuoteParts[index].name = name;
+      activeQuoteParts[index].value = price;
+    }
+  }
+
+  if (vehicle) {
+    vehicle.quoteServices = [...activeQuoteServices];
+    vehicle.quoteParts = [...activeQuoteParts];
+    saveState();
+  }
+
+  closeModal('edit-quote-item-modal');
+  renderQuoteTab();
+  updateCalculatedTotals();
 };
 
 window.applyDetailedModalReadOnlyState = function() {
