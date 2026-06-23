@@ -3344,22 +3344,32 @@ function renderKanban() {
 }
 
 window.openDetailedReceptionFromKanban = function(vehicleId) {
-  openDetailedReception(vehicleId);
-  const vehicle = vehicles.find(v => String(v.id) === String(vehicleId));
-  if (vehicle) {
-    if (vehicle.stage === 'recepcion') {
-      setActiveTab('reception');
-    } else if (vehicle.stage === 'cotizacion') {
-      setActiveTab('quote');
-    } else if (vehicle.stage === 'reparacion') {
-      setActiveTab('workorder');
+  try {
+    openDetailedReception(vehicleId);
+    const vehicle = vehicles.find(v => String(v.id) === String(vehicleId));
+    if (vehicle) {
+      if (vehicle.stage === 'recepcion') {
+        setActiveTab('reception');
+      } else if (vehicle.stage === 'cotizacion') {
+        setActiveTab('quote');
+      } else if (vehicle.stage === 'reparacion') {
+        setActiveTab('workorder');
+      }
     }
+  } catch (err) {
+    console.error("Error en openDetailedReceptionFromKanban:", err);
+    alert("Error al abrir recepción desde Kanban: " + err.message);
   }
 };
 
 window.openDetailedReceptionFromCard = function(vehicleId) {
-  openDetailedReception(vehicleId);
-  setActiveTab('reception');
+  try {
+    openDetailedReception(vehicleId);
+    setActiveTab('reception');
+  } catch (err) {
+    console.error("Error en openDetailedReceptionFromCard:", err);
+    alert("Error al abrir recepción desde Tarjeta: " + err.message);
+  }
 };
 
 // --- 4. DRAG AND DROP NATIVO ---
@@ -4184,264 +4194,282 @@ window.handleVehicleFormSubmit = function(e) {
 // --- 10. LÓGICA DE LA FICHA TÉCNICA DE RECEPCIÓN (FOTO 2) ---
 
 window.openDetailedReception = function(vehicleId, isReadOnly = false) {
-  window.isDetailedViewReadOnly = isReadOnly;
-  const vehicle = vehicles.find(v => String(v.id) === String(vehicleId));
-  if (!vehicle) return;
+  try {
+    window.isDetailedViewReadOnly = isReadOnly;
+    const vehicle = vehicles.find(v => String(v.id) === String(vehicleId));
+    if (!vehicle) return;
 
-  activeReceptionVehicleId = vehicle.id;
-  
-  const groupQuoteActions = document.getElementById('group-quote-actions');
-  const groupInvoiceActions = document.getElementById('group-invoice-actions');
-  if (groupQuoteActions) {
-    const hasQuoteItems = (vehicle.quoteServices && vehicle.quoteServices.length > 0) || (vehicle.quoteParts && vehicle.quoteParts.length > 0);
-    const isQuoteStageOrLater = ['cotizacion', 'reparacion', 'listo'].includes(vehicle.stage);
-    const shouldShow = hasQuoteItems || isQuoteStageOrLater;
-    groupQuoteActions.style.display = shouldShow ? 'flex' : 'none';
-    if (groupInvoiceActions) {
-      groupInvoiceActions.style.display = shouldShow ? 'flex' : 'none';
-    }
-  }
-
-  activeReceptionServices = typeof vehicle.services === 'string' ? vehicle.services : (vehicle.services || []).join('\n');
-  
-  // Cargar datos de cotización en arrays de trabajo
-  activeQuoteServices = [...(vehicle.quoteServices || [])];
-  activeQuoteParts = [...(vehicle.quoteParts || [])];
-
-  // Rellenar Ficha Técnica (Foto 2)
-  const isGolMock = vehicle.id === 'mock-vehicle-gol-2026';
-  const idStr = String(vehicle.id);
-  const indexNum = isGolMock ? '2' : idStr.substring(idStr.length - 2, idStr.length);
-  const detPlate = document.getElementById('det-vehicle-plate');
-  if (detPlate) detPlate.textContent = vehicle.plate;
-  
-  const detClientName = document.getElementById('det-client-name');
-  if (detClientName) detClientName.textContent = vehicle.client;
-  
-  const detClientPhone = document.getElementById('det-client-phone');
-  if (detClientPhone) detClientPhone.textContent = vehicle.clientPhone || '-';
-  
-  const detClientEmail = document.getElementById('det-client-email');
-  if (detClientEmail) detClientEmail.textContent = vehicle.clientEmail || '-';
-
-  const detVehicleCategoryBadge = document.getElementById('det-vehicle-category-badge');
-  if (detVehicleCategoryBadge) {
-    detVehicleCategoryBadge.innerHTML = getVehicleCategoryBadgeHtml(vehicle.category);
-  }
-  
-  // Poblar nuevos datos del vehículo en el sidebar de la izquierda
-  const detVehicleNameSidebar = document.getElementById('det-vehicle-name-sidebar');
-  if (detVehicleNameSidebar) {
-    const motorStr = vehicle.motor ? ` · Motor: ${vehicle.motor}` : '';
-    detVehicleNameSidebar.textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}`;
-  }
-  const detVehiclePlateSidebar = document.getElementById('det-vehicle-plate-sidebar');
-  if (detVehiclePlateSidebar) {
-    detVehiclePlateSidebar.textContent = vehicle.plate;
-  }
-  const detVehicleKmSidebar = document.getElementById('det-vehicle-km-sidebar');
-  if (detVehicleKmSidebar) {
-    detVehicleKmSidebar.textContent = vehicle.kilometers ? `${vehicle.kilometers.toLocaleString('es-AR')} km` : 'Sin registrar';
-  }
-
-  // Opciones de Odometer & Fuel
-  const detKm = document.getElementById('det-km');
-  if (detKm) detKm.value = vehicle.kilometers || '';
-  
-  const detFuel = document.getElementById('det-fuel');
-  if (detFuel) detFuel.value = vehicle.fuelLevel || '1/2';
-  
-  // Servicios e interruptor de detalles estéticos
-  document.getElementById('det-service-description').value = activeReceptionServices;
-  document.getElementById('det-details-toggle').checked = vehicle.hasDetails || false;
-  document.getElementById('det-details-notes').value = vehicle.detailsNotes || '';
-  toggleDetailsArea();
-  
-  // Cargar inputs del presupuesto
-  document.getElementById('calc-discount').value = vehicle.discountPercent || 0;
-  document.getElementById('calc-vat-inclusive').checked = vehicle.vatInclusive !== false;
-  document.getElementById('quote-notes').value = vehicle.quoteNotes || '';
-  document.getElementById('quote-send-email').checked = vehicle.quoteSendEmail || false;
-  
-  updateCalculatedTotals();
-  updateTabStatuses(vehicle);
-
-  // Sincronizar switch de cotización en el footer del panel
-  const quoteSwitch = document.getElementById('input-approve-quote-switch');
-  const quoteSwitchLabel = document.getElementById('label-approve-quote-switch');
-  if (quoteSwitch) {
-    quoteSwitch.checked = vehicle.quoteCompleted || false;
-    const slider = quoteSwitch.nextElementSibling;
-    if (slider) {
-      if (vehicle.quoteCompleted) {
-        slider.style.setProperty('background-color', 'var(--color-listo)', 'important');
-      } else {
-        slider.style.removeProperty('background-color');
+    activeReceptionVehicleId = vehicle.id;
+    
+    const groupQuoteActions = document.getElementById('group-quote-actions');
+    const groupInvoiceActions = document.getElementById('group-invoice-actions');
+    if (groupQuoteActions) {
+      const hasQuoteItems = (vehicle.quoteServices && vehicle.quoteServices.length > 0) || (vehicle.quoteParts && vehicle.quoteParts.length > 0);
+      const isQuoteStageOrLater = ['cotizacion', 'reparacion', 'listo'].includes(vehicle.stage);
+      const shouldShow = hasQuoteItems || isQuoteStageOrLater;
+      groupQuoteActions.style.display = shouldShow ? 'flex' : 'none';
+      if (groupInvoiceActions) {
+        groupInvoiceActions.style.display = shouldShow ? 'flex' : 'none';
       }
     }
-  }
-  if (quoteSwitchLabel) {
-    quoteSwitchLabel.textContent = vehicle.quoteCompleted ? 'Cotización aprobada' : 'Cotización pendiente';
-    quoteSwitchLabel.style.color = vehicle.quoteCompleted ? 'var(--color-listo)' : 'var(--text-primary)';
-  }
 
-  // --- Habilitación / Inhabilitación del Certificado de Entrega ---
-  const deliveryBtn = document.getElementById('btn-download-pdf-delivery');
-  const waDeliveryBtn = document.getElementById('btn-whatsapp-delivery');
-  const groupCertificate = document.getElementById('group-certificate-actions');
-  if (deliveryBtn) {
-    const hasQuoteItems = (vehicle.quoteServices && vehicle.quoteServices.length > 0) || (vehicle.quoteParts && vehicle.quoteParts.length > 0);
-    const isQuoteStageOrLater = ['cotizacion', 'reparacion', 'listo', 'entregado'].includes(vehicle.stage);
-    const shouldShow = hasQuoteItems || isQuoteStageOrLater;
-    const showCertificate = workshopConfig.expMaster && !!workshopConfig.expHideCertificate;
-    if (showCertificate) {
-      if (groupCertificate) groupCertificate.style.display = shouldShow ? 'flex' : 'none';
-      deliveryBtn.style.display = shouldShow ? 'flex' : 'none';
-      if (waDeliveryBtn) waDeliveryBtn.style.display = shouldShow ? 'flex' : 'none';
-    } else {
-      if (groupCertificate) groupCertificate.style.setProperty('display', 'none', 'important');
-      deliveryBtn.style.setProperty('display', 'none', 'important');
-      if (waDeliveryBtn) waDeliveryBtn.style.setProperty('display', 'none', 'important');
+    activeReceptionServices = typeof vehicle.services === 'string' ? vehicle.services : (vehicle.services || []).join('\n');
+    
+    // Cargar datos de cotización en arrays de trabajo
+    activeQuoteServices = [...(vehicle.quoteServices || [])];
+    activeQuoteParts = [...(vehicle.quoteParts || [])];
+
+    // Rellenar Ficha Técnica (Foto 2)
+    const isGolMock = vehicle.id === 'mock-vehicle-gol-2026';
+    const idStr = String(vehicle.id);
+    const indexNum = isGolMock ? '2' : idStr.substring(idStr.length - 2, idStr.length);
+    const detPlate = document.getElementById('det-vehicle-plate');
+    if (detPlate) detPlate.textContent = vehicle.plate;
+    
+    const detClientName = document.getElementById('det-client-name');
+    if (detClientName) detClientName.textContent = vehicle.client;
+    
+    const detClientPhone = document.getElementById('det-client-phone');
+    if (detClientPhone) detClientPhone.textContent = vehicle.clientPhone || '-';
+    
+    const detClientEmail = document.getElementById('det-client-email');
+    if (detClientEmail) detClientEmail.textContent = vehicle.clientEmail || '-';
+
+    const detVehicleCategoryBadge = document.getElementById('det-vehicle-category-badge');
+    if (detVehicleCategoryBadge) {
+      detVehicleCategoryBadge.innerHTML = getVehicleCategoryBadgeHtml(vehicle.category);
     }
     
-    if (vehicle.stage === 'listo' || vehicle.stage === 'entregado' || vehicle.delivered) {
-      deliveryBtn.disabled = false;
-      deliveryBtn.style.opacity = '1';
-      deliveryBtn.style.cursor = 'pointer';
-      deliveryBtn.style.pointerEvents = 'auto';
-      deliveryBtn.title = 'Descargar Certificado de Entrega (PDF)';
-      
-      if (waDeliveryBtn) {
-        waDeliveryBtn.disabled = false;
-        waDeliveryBtn.style.opacity = '1';
-        waDeliveryBtn.style.cursor = 'pointer';
-        waDeliveryBtn.style.pointerEvents = 'auto';
-        waDeliveryBtn.title = 'Enviar Certificado de Entrega por WhatsApp';
-      }
-    } else {
-      deliveryBtn.disabled = true;
-      deliveryBtn.style.opacity = '0.4';
-      deliveryBtn.style.cursor = 'not-allowed';
-      deliveryBtn.style.pointerEvents = 'none';
-      deliveryBtn.title = 'El vehículo debe estar en la sección "Listo" para descargar el certificado';
-      
-      if (waDeliveryBtn) {
-        waDeliveryBtn.disabled = true;
-        waDeliveryBtn.style.opacity = '0.4';
-        waDeliveryBtn.style.cursor = 'not-allowed';
-        waDeliveryBtn.style.pointerEvents = 'none';
-        waDeliveryBtn.title = 'El vehículo debe estar en la sección "Listo" para enviar el certificado por WhatsApp';
+    // Poblar nuevos datos del vehículo en el sidebar de la izquierda
+    const detVehicleNameSidebar = document.getElementById('det-vehicle-name-sidebar');
+    if (detVehicleNameSidebar) {
+      const motorStr = vehicle.motor ? ` · Motor: ${vehicle.motor}` : '';
+      detVehicleNameSidebar.textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}`;
+    }
+    const detVehiclePlateSidebar = document.getElementById('det-vehicle-plate-sidebar');
+    if (detVehiclePlateSidebar) {
+      detVehiclePlateSidebar.textContent = vehicle.plate;
+    }
+    const detVehicleKmSidebar = document.getElementById('det-vehicle-km-sidebar');
+    if (detVehicleKmSidebar) {
+      detVehicleKmSidebar.textContent = vehicle.kilometers ? `${vehicle.kilometers.toLocaleString('es-AR')} km` : 'Sin registrar';
+    }
+
+    // Opciones de Odometer & Fuel
+    const detKm = document.getElementById('det-km');
+    if (detKm) detKm.value = vehicle.kilometers || '';
+    
+    const detFuel = document.getElementById('det-fuel');
+    if (detFuel) detFuel.value = vehicle.fuelLevel || '1/2';
+    
+    // Servicios e interruptor de detalles estéticos
+    const detServiceDesc = document.getElementById('det-service-description');
+    if (detServiceDesc) detServiceDesc.value = activeReceptionServices;
+
+    const detDetailsToggle = document.getElementById('det-details-toggle');
+    if (detDetailsToggle) detDetailsToggle.checked = vehicle.hasDetails || false;
+
+    const detDetailsNotes = document.getElementById('det-details-notes');
+    if (detDetailsNotes) detDetailsNotes.value = vehicle.detailsNotes || '';
+
+    if (typeof toggleDetailsArea === 'function') toggleDetailsArea();
+    
+    // Cargar inputs del presupuesto
+    const calcDiscount = document.getElementById('calc-discount');
+    if (calcDiscount) calcDiscount.value = vehicle.discountPercent || 0;
+
+    const calcVatInclusive = document.getElementById('calc-vat-inclusive');
+    if (calcVatInclusive) calcVatInclusive.checked = vehicle.vatInclusive !== false;
+
+    const quoteNotes = document.getElementById('quote-notes');
+    if (quoteNotes) quoteNotes.value = vehicle.quoteNotes || '';
+
+    const quoteSendEmail = document.getElementById('quote-send-email');
+    if (quoteSendEmail) quoteSendEmail.checked = vehicle.quoteSendEmail || false;
+    
+    updateCalculatedTotals();
+    updateTabStatuses(vehicle);
+
+    // Sincronizar switch de cotización en el footer del panel
+    const quoteSwitch = document.getElementById('input-approve-quote-switch');
+    const quoteSwitchLabel = document.getElementById('label-approve-quote-switch');
+    if (quoteSwitch) {
+      quoteSwitch.checked = vehicle.quoteCompleted || false;
+      const slider = quoteSwitch.nextElementSibling;
+      if (slider) {
+        if (vehicle.quoteCompleted) {
+          slider.style.setProperty('background-color', 'var(--color-listo)', 'important');
+        } else {
+          slider.style.removeProperty('background-color');
+        }
       }
     }
-  }
-
-  // --- Cargar datos de la pestaña de Entrega ---
-  const delDateInput = document.getElementById('del-date');
-  if (delDateInput) {
-    if (vehicle.deliveryDate && vehicle.delivered) {
-      delDateInput.value = vehicle.deliveryDate;
-    } else {
-      // Autocompletar con fecha y hora actual en formato local
-      const now = new Date();
-      const localISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-      delDateInput.value = localISO;
+    if (quoteSwitchLabel) {
+      quoteSwitchLabel.textContent = vehicle.quoteCompleted ? 'Cotización aprobada' : 'Cotización pendiente';
+      quoteSwitchLabel.style.color = vehicle.quoteCompleted ? 'var(--color-listo)' : 'var(--text-primary)';
     }
-  }
 
-  // Quién retira el vehículo
-  const isTercero = vehicle.deliveryReceiverType === 'tercero';
-  const radioTitular = document.querySelector('input[name="del-receiver-type"][value="titular"]');
-  const radioTercero = document.querySelector('input[name="del-receiver-type"][value="tercero"]');
-  if (radioTitular && radioTercero) {
-    radioTitular.checked = !isTercero;
-    radioTercero.checked = isTercero;
-  }
-  
-  if (typeof toggleThirdPartyFields === 'function') {
-    toggleThirdPartyFields(isTercero);
-  } else {
-    const container = document.getElementById('del-third-party-container');
-    if (container) container.style.display = isTercero ? 'flex' : 'none';
-  }
+    // --- Habilitación / Inhabilitación del Certificado de Entrega ---
+    const deliveryBtn = document.getElementById('btn-download-pdf-delivery');
+    const waDeliveryBtn = document.getElementById('btn-whatsapp-delivery');
+    const groupCertificate = document.getElementById('group-certificate-actions');
+    if (deliveryBtn) {
+      const hasQuoteItems = (vehicle.quoteServices && vehicle.quoteServices.length > 0) || (vehicle.quoteParts && vehicle.quoteParts.length > 0);
+      const isQuoteStageOrLater = ['cotizacion', 'reparacion', 'listo', 'entregado'].includes(vehicle.stage);
+      const shouldShow = hasQuoteItems || isQuoteStageOrLater;
+      const showCertificate = workshopConfig.expMaster && !!workshopConfig.expHideCertificate;
+      if (showCertificate) {
+        if (groupCertificate) groupCertificate.style.display = shouldShow ? 'flex' : 'none';
+        deliveryBtn.style.display = shouldShow ? 'flex' : 'none';
+        if (waDeliveryBtn) waDeliveryBtn.style.display = shouldShow ? 'flex' : 'none';
+      } else {
+        if (groupCertificate) groupCertificate.style.setProperty('display', 'none', 'important');
+        deliveryBtn.style.setProperty('display', 'none', 'important');
+        if (waDeliveryBtn) waDeliveryBtn.style.setProperty('display', 'none', 'important');
+      }
+      
+      if (vehicle.stage === 'listo' || vehicle.stage === 'entregado' || vehicle.delivered) {
+        deliveryBtn.disabled = false;
+        deliveryBtn.style.opacity = '1';
+        deliveryBtn.style.cursor = 'pointer';
+        deliveryBtn.style.pointerEvents = 'auto';
+        deliveryBtn.title = 'Descargar Certificado de Entrega (PDF)';
+        
+        if (waDeliveryBtn) {
+          waDeliveryBtn.disabled = false;
+          waDeliveryBtn.style.opacity = '1';
+          waDeliveryBtn.style.cursor = 'pointer';
+          waDeliveryBtn.style.pointerEvents = 'auto';
+          waDeliveryBtn.title = 'Enviar Certificado de Entrega por WhatsApp';
+        }
+      } else {
+        deliveryBtn.disabled = true;
+        deliveryBtn.style.opacity = '0.4';
+        deliveryBtn.style.cursor = 'not-allowed';
+        deliveryBtn.style.pointerEvents = 'none';
+        deliveryBtn.title = 'El vehículo debe estar en la sección "Listo" para descargar el certificado';
+        
+        if (waDeliveryBtn) {
+          waDeliveryBtn.disabled = true;
+          waDeliveryBtn.style.opacity = '0.4';
+          waDeliveryBtn.style.cursor = 'not-allowed';
+          waDeliveryBtn.style.pointerEvents = 'none';
+          waDeliveryBtn.title = 'El vehículo debe estar en la sección "Listo" para enviar el certificado por WhatsApp';
+        }
+      }
+    }
 
-  const delThirdName = document.getElementById('del-third-name');
-  if (delThirdName) delThirdName.value = vehicle.deliveryThirdName || '';
+    // --- Cargar datos de la pestaña de Entrega ---
+    const delDateInput = document.getElementById('del-date');
+    if (delDateInput) {
+      if (vehicle.deliveryDate && vehicle.delivered) {
+        delDateInput.value = vehicle.deliveryDate;
+      } else {
+        // Autocompletar con fecha y hora actual en formato local
+        const now = new Date();
+        const localISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        delDateInput.value = localISO;
+      }
+    }
 
-  const delThirdDni = document.getElementById('del-third-dni');
-  if (delThirdDni) delThirdDni.value = vehicle.deliveryThirdDni || '';
+    // Quién retira el vehículo
+    const isTercero = vehicle.deliveryReceiverType === 'tercero';
+    const radioTitular = document.querySelector('input[name="del-receiver-type"][value="titular"]');
+    const radioTercero = document.querySelector('input[name="del-receiver-type"][value="tercero"]');
+    if (radioTitular && radioTercero) {
+      radioTitular.checked = !isTercero;
+      radioTercero.checked = isTercero;
+    }
+    
+    if (typeof toggleThirdPartyFields === 'function') {
+      toggleThirdPartyFields(isTercero);
+    } else {
+      const container = document.getElementById('del-third-party-container');
+      if (container) container.style.display = isTercero ? 'flex' : 'none';
+    }
 
-  const delNotes = document.getElementById('del-notes');
-  if (delNotes) delNotes.value = vehicle.deliveryNotes || '';
+    const delThirdName = document.getElementById('del-third-name');
+    if (delThirdName) delThirdName.value = vehicle.deliveryThirdName || '';
 
-  const delPaymentStatus = document.getElementById('del-payment-status');
-  if (delPaymentStatus) delPaymentStatus.value = vehicle.deliveryPaymentStatus || 'Totalmente Pagado';
+    const delThirdDni = document.getElementById('del-third-dni');
+    if (delThirdDni) delThirdDni.value = vehicle.deliveryThirdDni || '';
 
-  const delPaymentMethod = document.getElementById('del-payment-method');
-  if (delPaymentMethod) {
-    let optionsHtml = '<option value="Efectivo">Efectivo</option>';
-    cajaAccounts.forEach(acc => {
-      optionsHtml += `<option value="${acc.id}">${acc.name}</option>`;
-    });
-    delPaymentMethod.innerHTML = optionsHtml;
-    delPaymentMethod.value = vehicle.deliveryPaymentMethod || 'Efectivo';
-  }
+    const delNotes = document.getElementById('del-notes');
+    if (delNotes) delNotes.value = vehicle.deliveryNotes || '';
 
-  const delPartialAmount = document.getElementById('del-partial-amount');
-  if (delPartialAmount) delPartialAmount.value = vehicle.deliveryPartialAmount || '';
+    const delPaymentStatus = document.getElementById('del-payment-status');
+    if (delPaymentStatus) delPaymentStatus.value = vehicle.deliveryPaymentStatus || 'Totalmente Pagado';
 
-  if (typeof togglePartialPaymentField === 'function') {
-    togglePartialPaymentField(vehicle.deliveryPaymentStatus || 'Totalmente Pagado');
-  }
+    const delPaymentMethod = document.getElementById('del-payment-method');
+    if (delPaymentMethod) {
+      let optionsHtml = '<option value="Efectivo">Efectivo</option>';
+      cajaAccounts.forEach(acc => {
+        optionsHtml += `<option value="${acc.id}">${acc.name}</option>`;
+      });
+      delPaymentMethod.innerHTML = optionsHtml;
+      delPaymentMethod.value = vehicle.deliveryPaymentMethod || 'Efectivo';
+    }
 
-  // Actualizar la insignia de estado dinámica en la barra superior del modal técnico
-  const detStatusBadge = document.getElementById('det-status-badge');
-  if (detStatusBadge) {
-    detStatusBadge.className = 'status-badge';
-    if (vehicle.stage === 'recepcion') {
-      detStatusBadge.classList.add('theme-blue');
-      detStatusBadge.textContent = 'Trabajo por realizar';
-    } else if (vehicle.stage === 'cotizacion') {
-      detStatusBadge.classList.add('theme-violet');
-      detStatusBadge.textContent = 'En cotizaci\u00f3n';
+    const delPartialAmount = document.getElementById('del-partial-amount');
+    if (delPartialAmount) delPartialAmount.value = vehicle.deliveryPartialAmount || '';
+
+    if (typeof togglePartialPaymentField === 'function') {
+      togglePartialPaymentField(vehicle.deliveryPaymentStatus || 'Totalmente Pagado');
+    }
+
+    // Actualizar la insignia de estado dinámica en la barra superior del modal técnico
+    const detStatusBadge = document.getElementById('det-status-badge');
+    if (detStatusBadge) {
+      detStatusBadge.className = 'status-badge';
+      if (vehicle.stage === 'recepcion') {
+        detStatusBadge.classList.add('theme-blue');
+        detStatusBadge.textContent = 'Trabajo por realizar';
+      } else if (vehicle.stage === 'cotizacion') {
+        detStatusBadge.classList.add('theme-violet');
+        detStatusBadge.textContent = 'En cotizaci\u00f3n';
+      } else if (vehicle.stage === 'reparacion') {
+        detStatusBadge.classList.add('theme-red');
+        detStatusBadge.textContent = 'En reparaci\u00f3n';
+      } else if (vehicle.stage === 'listo') {
+        detStatusBadge.classList.add('theme-green');
+        detStatusBadge.textContent = 'Listo';
+      }
+    }
+
+    // Dynamic header based on Stage
+    const motorStr = vehicle.motor ? ` · Motor: ${vehicle.motor}` : '';
+    const nameEl = document.getElementById('det-vehicle-name');
+    const subEl = document.getElementById('det-vehicle-id-sub');
+    if (nameEl) nameEl.textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}`;
+    if (subEl) subEl.textContent = `Nº ${indexNum}`;
+    
+    // Dynamic Tab Selection based on vehicle stage
+    if (vehicle.stage === 'listo') {
+      setActiveTab('delivery');
     } else if (vehicle.stage === 'reparacion') {
-      detStatusBadge.classList.add('theme-red');
-      detStatusBadge.textContent = 'En reparaci\u00f3n';
-    } else if (vehicle.stage === 'listo') {
-      detStatusBadge.classList.add('theme-green');
-      detStatusBadge.textContent = 'Listo';
+      setActiveTab('workorder');
+    } else if (vehicle.stage === 'cotizacion') {
+      setActiveTab('quote');
+    } else {
+      setActiveTab('reception');
     }
-  }
 
-  // Dynamic header based on Stage
-  const motorStr = vehicle.motor ? ` · Motor: ${vehicle.motor}` : '';
-  const nameEl = document.getElementById('det-vehicle-name');
-  const subEl = document.getElementById('det-vehicle-id-sub');
-  if (nameEl) nameEl.textContent = `${vehicle.brand} ${vehicle.model} · ${vehicle.year}${motorStr}`;
-  if (subEl) subEl.textContent = `Nº ${indexNum}`;
-  
-  // Dynamic Tab Selection based on vehicle stage
-  if (vehicle.stage === 'listo') {
-    setActiveTab('delivery');
-  } else if (vehicle.stage === 'reparacion') {
-    setActiveTab('workorder');
-  } else if (vehicle.stage === 'cotizacion') {
-    setActiveTab('quote');
-  } else {
-    setActiveTab('reception');
-  }
+    // Apply read-only state if requested
+    if (typeof window.applyDetailedModalReadOnlyState === 'function') {
+      window.applyDetailedModalReadOnlyState();
+    }
 
-  // Apply read-only state if requested
-  if (typeof window.applyDetailedModalReadOnlyState === 'function') {
-    window.applyDetailedModalReadOnlyState();
-  }
-
-  // Open the detailed reception modal overlay
-  const overlay = document.getElementById('reception-panel-view');
-  if (overlay) {
-    overlay.style.display = 'flex';
-    // Force a reflow to trigger CSS transition
-    overlay.offsetHeight;
-    overlay.classList.add('open');
+    // Open the detailed reception modal overlay
+    const overlay = document.getElementById('reception-panel-view');
+    if (overlay) {
+      overlay.style.display = 'flex';
+      // Force a reflow to trigger CSS transition
+      overlay.offsetHeight;
+      overlay.classList.add('open');
+    }
+  } catch (err) {
+    console.error("Error en openDetailedReception:", err);
+    alert("Error al abrir Ficha Técnica: " + err.message + "\n" + err.stack);
   }
 };
 
@@ -4577,39 +4605,54 @@ window.toggleDetailsArea = function() {
 
 // Confirmar Recepción (Boton "Recepcionar Vehículo")
 window.confirmReception = function() {
-  if (!activeReceptionVehicleId) return;
+  try {
+    if (!activeReceptionVehicleId) return;
 
-  const vehicleIndex = vehicles.findIndex(v => v.id === activeReceptionVehicleId);
-  if (vehicleIndex === -1) return;
+    const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(activeReceptionVehicleId));
+    if (vehicleIndex === -1) return;
 
-  const kmVal = parseFloat(document.getElementById('det-km').value) || 0;
-  const fuelVal = document.getElementById('det-fuel').value;
-  const detailsToggle = document.getElementById('det-details-toggle').checked;
-  const detailsNotes = document.getElementById('det-details-notes').value.trim();
+    const kmEl = document.getElementById('det-km');
+    const kmVal = kmEl ? parseFloat(kmEl.value) || 0 : 0;
 
-  // Guardar datos técnicos en el estado
-  vehicles[vehicleIndex].kilometers = kmVal;
-  vehicles[vehicleIndex].fuelLevel = fuelVal;
-  vehicles[vehicleIndex].services = document.getElementById('det-service-description').value.trim();
-  vehicles[vehicleIndex].hasDetails = detailsToggle;
-  vehicles[vehicleIndex].detailsNotes = detailsToggle ? detailsNotes : '';
-  
-  // Transicionar etapa a "Cotización" (DESACTIVADO: Se mantiene en recepción para mover manualmente)
-  // vehicles[vehicleIndex].stage = 'cotizacion';
-  
-  // Asignar monto cotizado inicial para simulación ($90.000)
-  if (vehicles[vehicleIndex].value === 0) {
-    vehicles[vehicleIndex].value = 90000;
+    const fuelEl = document.getElementById('det-fuel');
+    const fuelVal = fuelEl ? fuelEl.value : '1/2';
+
+    const toggleEl = document.getElementById('det-details-toggle');
+    const detailsToggle = toggleEl ? toggleEl.checked : false;
+
+    const notesEl = document.getElementById('det-details-notes');
+    const detailsNotes = notesEl ? notesEl.value.trim() : '';
+
+    const descEl = document.getElementById('det-service-description');
+    const serviceDesc = descEl ? descEl.value.trim() : '';
+
+    // Guardar datos técnicos en el estado
+    vehicles[vehicleIndex].kilometers = kmVal;
+    vehicles[vehicleIndex].fuelLevel = fuelVal;
+    vehicles[vehicleIndex].services = serviceDesc;
+    vehicles[vehicleIndex].hasDetails = detailsToggle;
+    vehicles[vehicleIndex].detailsNotes = detailsToggle ? detailsNotes : '';
+    
+    // Transicionar etapa a "Cotización" (DESACTIVADO: Se mantiene en recepción para mover manualmente)
+    // vehicles[vehicleIndex].stage = 'cotizacion';
+    
+    // Asignar monto cotizado inicial para simulación ($90.000)
+    if (vehicles[vehicleIndex].value === 0) {
+      vehicles[vehicleIndex].value = 90000;
+    }
+
+    saveState();
+    
+    // Salir de recepción y volver al tablero
+    exitDetailedReception();
+    
+    // Notificación de éxito
+    const name = `${vehicles[vehicleIndex].brand} ${vehicles[vehicleIndex].model}`;
+    alert(`Vehículo "${name}" recepcionado con éxito.\nKilometraje: ${kmVal} km.\nNivel Combustible: ${fuelVal}.`);
+  } catch (err) {
+    console.error("Error en confirmReception:", err);
+    alert("Error al confirmar recepción: " + err.message);
   }
-
-  saveState();
-  
-  // Salir de recepción y volver al tablero
-  exitDetailedReception();
-  
-  // Notificación de éxito
-  const name = `${vehicles[vehicleIndex].brand} ${vehicles[vehicleIndex].model}`;
-  alert(`Vehículo "${name}" recepcionado con éxito.\nKilometraje: ${kmVal} km.\nNivel Combustible: ${fuelVal}.`);
 };
 
 // --- 11. OTRAS ACCIONES DE TARJETAS (ELIMINAR / ENTREGAR) ---
@@ -4956,16 +4999,28 @@ window.setActiveTab = function(tabName) {
   });
 
   // Remover clase activa de todos los botones de pestaña
-  document.getElementById('tab-reception-btn').classList.remove('active');
-  document.getElementById('tab-quote-btn').classList.remove('active');
-  document.getElementById('tab-workorder-btn').classList.remove('active');
+  const tabRecBtn = document.getElementById('tab-reception-btn');
+  if (tabRecBtn) tabRecBtn.classList.remove('active');
+
+  const tabQuoteBtn = document.getElementById('tab-quote-btn');
+  if (tabQuoteBtn) tabQuoteBtn.classList.remove('active');
+
+  const tabWorkBtn = document.getElementById('tab-workorder-btn');
+  if (tabWorkBtn) tabWorkBtn.classList.remove('active');
+
   const tabDelBtn = document.getElementById('tab-delivery-btn');
   if (tabDelBtn) tabDelBtn.classList.remove('active');
   
   // Ocultar todos los contenidos
-  document.getElementById('tab-content-reception').style.display = 'none';
-  document.getElementById('tab-content-quote').style.display = 'none';
-  document.getElementById('tab-content-workorder').style.display = 'none';
+  const tabRecCont = document.getElementById('tab-content-reception');
+  if (tabRecCont) tabRecCont.style.display = 'none';
+
+  const tabQuoteCont = document.getElementById('tab-content-quote');
+  if (tabQuoteCont) tabQuoteCont.style.display = 'none';
+
+  const tabWorkCont = document.getElementById('tab-content-workorder');
+  if (tabWorkCont) tabWorkCont.style.display = 'none';
+
   const tabDelCont = document.getElementById('tab-content-delivery');
   if (tabDelCont) tabDelCont.style.display = 'none';
   
@@ -4999,16 +5054,20 @@ window.setActiveTab = function(tabName) {
   
   // Activar la seleccionada
   if (tabName === 'reception') {
-    document.getElementById('tab-reception-btn').classList.add('active');
-    document.getElementById('tab-content-reception').style.display = 'block';
+    if (tabRecBtn) tabRecBtn.classList.add('active');
+    if (tabRecCont) tabRecCont.style.display = 'block';
   } else if (tabName === 'quote') {
-    document.getElementById('tab-quote-btn').classList.add('active');
-    document.getElementById('tab-content-quote').style.display = 'block';
+    if (tabQuoteBtn) tabQuoteBtn.classList.add('active');
+    if (tabQuoteCont) tabQuoteCont.style.display = 'block';
     
-    const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+    const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
     if (vehicle) {
-      document.getElementById('quote-editor-view').style.display = 'block';
-      document.getElementById('quote-preview-view').style.display = 'none';
+      const quoteEditor = document.getElementById('quote-editor-view');
+      if (quoteEditor) quoteEditor.style.display = 'block';
+
+      const quotePreview = document.getElementById('quote-preview-view');
+      if (quotePreview) quotePreview.style.display = 'none';
+
       renderQuoteTab();
       updateCalculatedTotals();
       
@@ -5022,8 +5081,8 @@ window.setActiveTab = function(tabName) {
       }
     }
   } else if (tabName === 'workorder') {
-    document.getElementById('tab-workorder-btn').classList.add('active');
-    document.getElementById('tab-content-workorder').style.display = 'block';
+    if (tabWorkBtn) tabWorkBtn.classList.add('active');
+    if (tabWorkCont) tabWorkCont.style.display = 'block';
     renderOTTab();
   } else if (tabName === 'delivery') {
     if (tabDelBtn) tabDelBtn.classList.add('active');
@@ -5393,21 +5452,28 @@ window.updateSidebarOdometer = function(val) {
 };
 
 window.updateTabStatuses = function(vehicle) {
+  if (!vehicle) return;
   const badgeRec = document.getElementById('tab-badge-reception');
   const badgeQuote = document.getElementById('tab-badge-quote');
   const badgeWork = document.getElementById('tab-badge-workorder');
   const badgeDel = document.getElementById('tab-badge-delivery');
 
   // Clear any existing inline styles to let classes apply perfectly
-  badgeRec.style.backgroundColor = '';
-  badgeRec.style.color = '';
-  badgeRec.style.borderColor = '';
-  badgeQuote.style.backgroundColor = '';
-  badgeQuote.style.color = '';
-  badgeQuote.style.borderColor = '';
-  badgeWork.style.backgroundColor = '';
-  badgeWork.style.color = '';
-  badgeWork.style.borderColor = '';
+  if (badgeRec) {
+    badgeRec.style.backgroundColor = '';
+    badgeRec.style.color = '';
+    badgeRec.style.borderColor = '';
+  }
+  if (badgeQuote) {
+    badgeQuote.style.backgroundColor = '';
+    badgeQuote.style.color = '';
+    badgeQuote.style.borderColor = '';
+  }
+  if (badgeWork) {
+    badgeWork.style.backgroundColor = '';
+    badgeWork.style.color = '';
+    badgeWork.style.borderColor = '';
+  }
   if (badgeDel) {
     badgeDel.style.backgroundColor = '';
     badgeDel.style.color = '';
@@ -5415,31 +5481,37 @@ window.updateTabStatuses = function(vehicle) {
   }
 
   // Recepción
-  const hasServices = typeof vehicle.services === 'string' ? vehicle.services.trim().length > 0 : (vehicle.services || []).length > 0;
-  if (vehicle.kilometers > 0 || hasServices) {
-    badgeRec.textContent = 'Completado';
-    badgeRec.className = 'stage-pending-badge badge-green';
-  } else {
-    badgeRec.textContent = 'Pendiente';
-    badgeRec.className = 'stage-pending-badge badge-gold';
+  if (badgeRec) {
+    const hasServices = typeof vehicle.services === 'string' ? vehicle.services.trim().length > 0 : (vehicle.services || []).length > 0;
+    if (vehicle.kilometers > 0 || hasServices) {
+      badgeRec.textContent = 'Completado';
+      badgeRec.className = 'stage-pending-badge badge-green';
+    } else {
+      badgeRec.textContent = 'Pendiente';
+      badgeRec.className = 'stage-pending-badge badge-gold';
+    }
   }
   
   // Cotización
-  if (vehicle.quoteCompleted) {
-    badgeQuote.textContent = 'Completado';
-    badgeQuote.className = 'stage-pending-badge badge-green';
-  } else {
-    badgeQuote.textContent = 'Pendiente';
-    badgeQuote.className = 'stage-pending-badge badge-gold';
+  if (badgeQuote) {
+    if (vehicle.quoteCompleted) {
+      badgeQuote.textContent = 'Completado';
+      badgeQuote.className = 'stage-pending-badge badge-green';
+    } else {
+      badgeQuote.textContent = 'Pendiente';
+      badgeQuote.className = 'stage-pending-badge badge-gold';
+    }
   }
   
   // Orden de Trabajo
-  if (vehicle.stage === 'reparacion' || vehicle.stage === 'listo' || vehicle.delivered) {
-    badgeWork.textContent = 'Completado';
-    badgeWork.className = 'stage-pending-badge badge-green';
-  } else {
-    badgeWork.textContent = 'Pendiente';
-    badgeWork.className = 'stage-pending-badge badge-gold';
+  if (badgeWork) {
+    if (vehicle.stage === 'reparacion' || vehicle.stage === 'listo' || vehicle.delivered) {
+      badgeWork.textContent = 'Completado';
+      badgeWork.className = 'stage-pending-badge badge-green';
+    } else {
+      badgeWork.textContent = 'Pendiente';
+      badgeWork.className = 'stage-pending-badge badge-gold';
+    }
   }
 
   // Entrega
@@ -5947,16 +6019,20 @@ window.updateCalculatedTotals = function() {
   const partsSum = activeQuoteParts.reduce((s, item) => s + item.value, 0);
   
   const subtotal = servSum + partsSum;
-  document.getElementById('calc-subtotal').textContent = formatCurrency(subtotal);
+  const subtotalEl = document.getElementById('calc-subtotal');
+  if (subtotalEl) subtotalEl.textContent = formatCurrency(subtotal);
   
-  const discPercent = parseFloat(document.getElementById('calc-discount').value) || 0;
+  const discEl = document.getElementById('calc-discount');
+  const discPercent = discEl ? parseFloat(discEl.value) || 0 : 0;
   const discountVal = subtotal * (discPercent / 100);
   
   const net = subtotal - discountVal;
-  const vatInclusive = document.getElementById('calc-vat-inclusive').checked;
+  const vatEl = document.getElementById('calc-vat-inclusive');
+  const vatInclusive = vatEl ? vatEl.checked : true;
   
   const total = vatInclusive ? net : net * 1.19;
-  document.getElementById('calc-total').textContent = formatCurrency(Math.round(total));
+  const totalEl = document.getElementById('calc-total');
+  if (totalEl) totalEl.textContent = formatCurrency(Math.round(total));
 
   // Actualizar visibilidad reactiva del botón de descarga de cotización y factura
   const groupQuoteActionsReact = document.getElementById('group-quote-actions');
@@ -5967,7 +6043,7 @@ window.updateCalculatedTotals = function() {
       groupQuoteActionsReact.style.display = 'flex';
       if (groupInvoiceActionsReact) groupInvoiceActionsReact.style.display = 'flex';
     } else {
-      const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+      const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
       const isQuoteStageOrLater = vehicle && ['cotizacion', 'reparacion', 'listo'].includes(vehicle.stage);
       if (!isQuoteStageOrLater) {
         groupQuoteActionsReact.style.display = 'none';
