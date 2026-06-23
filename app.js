@@ -12663,26 +12663,29 @@ window.renderMobileVehicleList = function() {
 //   MÓDULO DE CAJA (LÓGICA Y RENDERIZADO)
 // ========================================================================
 
-window.saveCajaState = function() {
+function saveCajaState() {
   localStorage.setItem('taller_caja_accounts', JSON.stringify(cajaAccounts));
   localStorage.setItem('taller_caja_operations', JSON.stringify(cajaOperations));
   if (supabaseClient) {
     syncWithSupabase('taller_config', { id: 'caja_accounts', name: JSON.stringify(cajaAccounts) });
     syncWithSupabase('taller_config', { id: 'caja_operations', name: JSON.stringify(cajaOperations) });
   }
-};
+}
+window.saveCajaState = saveCajaState;
 
 // Modales Cuentas
-window.openCreateAccountModal = function() {
+function openCreateAccountModal() {
   document.getElementById('caja-new-account-name').value = '';
   document.getElementById('caja-create-account-modal').style.display = 'flex';
-};
+}
+window.openCreateAccountModal = openCreateAccountModal;
 
-window.closeCreateAccountModal = function() {
+function closeCreateAccountModal() {
   document.getElementById('caja-create-account-modal').style.display = 'none';
-};
+}
+window.closeCreateAccountModal = closeCreateAccountModal;
 
-window.handleCreateAccountSubmit = function(e) {
+function handleCreateAccountSubmit(e) {
   e.preventDefault();
   const name = document.getElementById('caja-new-account-name').value.trim();
   if (!name) return;
@@ -12701,10 +12704,11 @@ window.handleCreateAccountSubmit = function(e) {
   saveCajaState();
   closeCreateAccountModal();
   renderCajaView();
-};
+}
+window.handleCreateAccountSubmit = handleCreateAccountSubmit;
 
 // Modales Operaciones
-window.openCajaModal = function(type) {
+function openCajaModal(type) {
   document.getElementById('caja-operation-type').value = type;
   document.getElementById('caja-op-concept').value = '';
   document.getElementById('caja-op-amount').value = '';
@@ -12746,30 +12750,34 @@ window.openCajaModal = function(type) {
   
   document.getElementById('caja-operation-modal').style.display = 'flex';
   if (typeof initLucide === 'function') initLucide();
-};
+}
+window.openCajaModal = openCajaModal;
 
-window.closeCajaModal = function() {
+function closeCajaModal() {
   document.getElementById('caja-operation-modal').style.display = 'none';
-};
+}
+window.closeCajaModal = closeCajaModal;
 
-window.handleCajaOpMethodChange = function() {
+function handleCajaOpMethodChange() {
   const method = document.getElementById('caja-op-method').value;
   const container = document.getElementById('caja-op-account-selector-container');
   if (container) {
     container.style.display = (method === 'banco') ? 'flex' : 'none';
   }
-};
+}
+window.handleCajaOpMethodChange = handleCajaOpMethodChange;
 
-window.handleCajaOpPaymentTypeChange = function() {
+function handleCajaOpPaymentTypeChange() {
   const pType = document.getElementById('caja-op-payment-type').value;
   const type = document.getElementById('caja-operation-type').value;
   const container = document.getElementById('caja-op-installments-container');
   if (container) {
     container.style.display = (type === 'ingreso' && pType === 'cuotas') ? 'flex' : 'none';
   }
-};
+}
+window.handleCajaOpPaymentTypeChange = handleCajaOpPaymentTypeChange;
 
-window.handleCajaOperationSubmit = function(e) {
+function handleCajaOperationSubmit(e) {
   e.preventDefault();
   const type = document.getElementById('caja-operation-type').value;
   const concept = document.getElementById('caja-op-concept').value.trim();
@@ -12818,17 +12826,19 @@ window.handleCajaOperationSubmit = function(e) {
   saveCajaState();
   closeCajaModal();
   renderCajaView();
-};
+}
+window.handleCajaOperationSubmit = handleCajaOperationSubmit;
 
-window.deleteCajaOperation = function(opId) {
+function deleteCajaOperation(opId) {
   if (confirm('¿Está seguro de que desea eliminar este registro de caja de forma permanente?')) {
     cajaOperations = cajaOperations.filter(op => op.id !== opId);
     saveCajaState();
     renderCajaView();
   }
-};
+}
+window.deleteCajaOperation = deleteCajaOperation;
 
-window.goToCajaWithAutoFill = function(vehicle) {
+function goToCajaWithAutoFill(vehicle) {
   // Redireccionar a Caja
   switchView('caja');
 
@@ -12859,14 +12869,16 @@ window.goToCajaWithAutoFill = function(vehicle) {
     }
     handleCajaOpMethodChange();
   }
-};
+}
+window.goToCajaWithAutoFill = goToCajaWithAutoFill;
 
 // Renderizado Caja
-window.formatCajaCurrency = function(val) {
+function formatCajaCurrency(val) {
   return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(Math.round(val));
-};
+}
+window.formatCajaCurrency = formatCajaCurrency;
 
-window.getAccountBalance = function(accId) {
+function getAccountBalance(accId) {
   if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
   if (!Array.isArray(cajaOperations)) cajaOperations = [];
   if (accId === 'efectivo') {
@@ -12882,9 +12894,10 @@ window.getAccountBalance = function(accId) {
     const accTransfersOut = cajaOperations.filter(op => op.type === 'transferencia' && op.fromAccountId === accId).reduce((s, op) => s + op.amount, 0);
     return accIn - accOut + accTransfersIn - accTransfersOut;
   }
-};
+}
+window.getAccountBalance = getAccountBalance;
 
-window.editCajaAccount = function(accId, oldName) {
+function editCajaAccount(accId, oldName) {
   const newName = prompt('Ingrese el nuevo nombre para la cuenta bancaria:', oldName);
   if (newName === null) return;
   const trimmedName = newName.trim();
@@ -12901,9 +12914,10 @@ window.editCajaAccount = function(accId, oldName) {
     saveCajaState();
     renderCajaView();
   }
-};
+}
+window.editCajaAccount = editCajaAccount;
 
-window.deleteCajaAccount = function(accId) {
+function deleteCajaAccount(accId) {
   const linkedOps = cajaOperations.filter(op => 
     (op.method === 'banco' && op.accountId === accId) || 
     (op.type === 'transferencia' && (op.fromAccountId === accId || op.toAccountId === accId))
@@ -12922,9 +12936,10 @@ window.deleteCajaAccount = function(accId) {
   cajaAccounts = cajaAccounts.filter(acc => acc.id !== accId);
   saveCajaState();
   renderCajaView();
-};
+}
+window.deleteCajaAccount = deleteCajaAccount;
 
-window.openCajaTransferModal = function() {
+function openCajaTransferModal() {
   document.getElementById('caja-transfer-concept').value = '';
   document.getElementById('caja-transfer-amount').value = '';
 
@@ -12949,13 +12964,15 @@ window.openCajaTransferModal = function() {
 
   document.getElementById('caja-transfer-modal').style.display = 'flex';
   if (typeof initLucide === 'function') initLucide();
-};
+}
+window.openCajaTransferModal = openCajaTransferModal;
 
-window.closeCajaTransferModal = function() {
+function closeCajaTransferModal() {
   document.getElementById('caja-transfer-modal').style.display = 'none';
-};
+}
+window.closeCajaTransferModal = closeCajaTransferModal;
 
-window.handleCajaTransferSubmit = function(e) {
+function handleCajaTransferSubmit(e) {
   e.preventDefault();
   const concept = document.getElementById('caja-transfer-concept').value.trim();
   const amount = parseFloat(document.getElementById('caja-transfer-amount').value) || 0;
@@ -12992,9 +13009,10 @@ window.handleCajaTransferSubmit = function(e) {
   saveCajaState();
   closeCajaTransferModal();
   renderCajaView();
-};
+}
+window.handleCajaTransferSubmit = handleCajaTransferSubmit;
 
-window.clearCajaFilters = function() {
+function clearCajaFilters() {
   const conceptInput = document.getElementById('caja-filter-concept');
   const typeSelect = document.getElementById('caja-filter-type');
   const accSelect = document.getElementById('caja-filter-account');
@@ -13004,10 +13022,11 @@ window.clearCajaFilters = function() {
   if (accSelect) accSelect.value = 'todas';
 
   renderCajaView();
-};
+}
+window.clearCajaFilters = clearCajaFilters;
 
 // Renderizado Caja
-window.renderCajaView = function() {
+function renderCajaView() {
   if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
   if (!Array.isArray(cajaOperations)) cajaOperations = [];
   // 1. Calcular Balances
@@ -13194,6 +13213,7 @@ window.renderCajaView = function() {
   }
 
   if (typeof initLucide === 'function') initLucide();
-};
+}
+window.renderCajaView = renderCajaView;
 
 
