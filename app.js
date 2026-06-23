@@ -5970,9 +5970,8 @@ window.updateCalculatedTotals = function() {
       const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
       const isQuoteStageOrLater = vehicle && ['cotizacion', 'reparacion', 'listo'].includes(vehicle.stage);
       if (!isQuoteStageOrLater) {
-        downloadBtn.style.display = 'none';
-        if (waQuoteBtn) waQuoteBtn.style.display = 'none';
-        if (invoiceContainer) invoiceContainer.style.display = 'none';
+        groupQuoteActionsReact.style.display = 'none';
+        if (groupInvoiceActionsReact) groupInvoiceActionsReact.style.display = 'none';
       }
     }
   }
