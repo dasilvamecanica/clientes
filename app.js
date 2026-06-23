@@ -342,8 +342,12 @@ async function loadStateFromSupabase() {
       } else {
         cajaOperations = JSON.parse(localStorage.getItem('taller_caja_operations') || '[]');
       }
+      if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
+      if (!Array.isArray(cajaOperations)) cajaOperations = [];
     } catch (e) {
       console.error("Error loading Caja from Supabase:", e);
+      cajaAccounts = [];
+      cajaOperations = [];
     }
 
     const { data: clientData, error: clientError } = await supabaseClient.from('taller_clients').select('*');
@@ -1765,6 +1769,8 @@ function loadState() {
   try {
     cajaAccounts = JSON.parse(localStorage.getItem('taller_caja_accounts') || '[]');
     cajaOperations = JSON.parse(localStorage.getItem('taller_caja_operations') || '[]');
+    if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
+    if (!Array.isArray(cajaOperations)) cajaOperations = [];
   } catch (e) {
     cajaAccounts = [];
     cajaOperations = [];
@@ -12786,6 +12792,8 @@ window.formatCajaCurrency = function(val) {
 };
 
 window.getAccountBalance = function(accId) {
+  if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
+  if (!Array.isArray(cajaOperations)) cajaOperations = [];
   if (accId === 'efectivo') {
     const efectivoIn = cajaOperations.filter(op => op.method === 'efectivo' && op.type === 'ingreso').reduce((s, op) => s + op.amount, 0);
     const efectivoOut = cajaOperations.filter(op => op.method === 'efectivo' && op.type === 'retiro').reduce((s, op) => s + op.amount, 0);
@@ -12925,6 +12933,8 @@ window.clearCajaFilters = function() {
 
 // Renderizado Caja
 window.renderCajaView = function() {
+  if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
+  if (!Array.isArray(cajaOperations)) cajaOperations = [];
   // 1. Calcular Balances
   const efectivoBalance = getAccountBalance('efectivo');
 
