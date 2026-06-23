@@ -4304,3 +4304,35 @@ aside.sidebar.collapsed .sidebar-user-container {
     min-width: max-content !important;
   }
 }
+
+/* Responsive OT Columns */
+.ot-columns-container {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+}
+.ot-col-left {
+  width: 33%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ot-col-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .ot-columns-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .ot-col-left {
+    width: 100% !important;
+  }
+  .ot-col-right {
+    width: 100% !important;
+  }
+}

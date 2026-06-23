@@ -2625,18 +2625,20 @@ window.filterQuoteItemSuggestions = function(inputEl, type) {
   const dropdown = inputEl.nextElementSibling;
   if (!dropdown) return;
 
-  const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+  const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
   const cat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
 
   let items = [];
   if (type === 'service') {
     items = servicesCatalog.filter(s => s.name.toLowerCase().includes(query)).map(s => {
-      const price = getServicePrice(s, cat);
-      const catLabel = s.category ? `[${s.category}] ` : '';
+      const priceA = s.priceA || s.price || 0;
+      const priceB = s.priceB || s.price || 0;
+      const priceC = s.priceC || s.price || 0;
       return {
         name: s.name,
-        displayName: `${catLabel}${s.name}`,
-        price: price
+        priceA: priceA,
+        priceB: priceB,
+        priceC: priceC
       };
     });
   } else {
@@ -2660,25 +2662,43 @@ window.filterQuoteItemSuggestions = function(inputEl, type) {
   }
 
   dropdown.innerHTML = items.map(item => {
-    return `
-      <div class="quote-dropdown-item" 
-           style="padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color-light); transition: background 0.15s; font-size: 13.5px;"
-           onmouseover="this.style.background='var(--card-bg-hover)'"
-           onmouseout="this.style.background='transparent'"
-           onmousedown="selectQuoteItemSuggestion('${type}', \`${item.name}\`, ${item.price}, this)">
-        <span style="font-weight: 600; color: var(--text-primary); text-align: left; flex: 1; padding-right: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.displayName}">
-          ${item.displayName}
-        </span>
-        <span style="font-weight: 800; color: var(--color-accent); font-family: var(--font-mono); font-size: 13px; flex-shrink: 0;">
-          ${formatCurrency(item.price)}
-        </span>
-      </div>
-    `;
+    if (type === 'service') {
+      return `
+        <div class="quote-dropdown-item" 
+             style="padding: 8px 14px; border-bottom: 1px solid var(--border-color-light); display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13.5px; transition: background 0.15s;"
+             onmouseover="this.style.background='var(--card-bg-hover)'"
+             onmouseout="this.style.background='transparent'">
+          <span style="font-weight: 600; color: var(--text-primary); text-align: left; flex: 1; padding-right: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;" title="${item.name}" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.priceB}, this, 'B')">
+            ${item.name}
+          </span>
+          <div style="display: flex; gap: 4px; flex-shrink: 0;" onmousedown="event.stopPropagation()">
+            <button type="button" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.priceA}, this, 'A')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid #25d366; background: transparent; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">A: $${item.priceA.toLocaleString('es-AR')}</button>
+            <button type="button" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.priceB}, this, 'B')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid #25d366; background: transparent; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">B: $${item.priceB.toLocaleString('es-AR')}</button>
+            <button type="button" onmousedown="selectQuoteItemSuggestion('service', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.priceC}, this, 'C')" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid #25d366; background: transparent; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.08)'" onmouseout="this.style.backgroundColor='transparent'">C: $${item.priceC.toLocaleString('es-AR')}</button>
+          </div>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="quote-dropdown-item" 
+             style="padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color-light); transition: background 0.15s; font-size: 13.5px;"
+             onmouseover="this.style.background='var(--card-bg-hover)'"
+             onmouseout="this.style.background='transparent'"
+             onmousedown="selectQuoteItemSuggestion('${type}', \`${item.name.replace(/`/g, "\\`").replace(/'/g, "\\'")}\`, ${item.price}, this)">
+          <span style="font-weight: 600; color: var(--text-primary); text-align: left; flex: 1; padding-right: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.displayName}">
+            ${item.displayName}
+          </span>
+          <span style="font-weight: 800; color: var(--color-accent); font-family: var(--font-mono); font-size: 13px; flex-shrink: 0;">
+            ${formatCurrency(item.price)}
+          </span>
+        </div>
+      `;
+    }
   }).join('');
   dropdown.style.display = 'block';
 };
 
-window.selectQuoteItemSuggestion = function(type, name, price, el) {
+window.selectQuoteItemSuggestion = function(type, name, price, el, category = null) {
   const container = el.closest('.inline-edit-item');
   if (!container) return;
   const nameInput = container.querySelector('#inline-item-name');
@@ -2688,8 +2708,95 @@ window.selectQuoteItemSuggestion = function(type, name, price, el) {
     valueInput.value = price;
     valueInput.focus();
   }
+  if (type === 'service' && category) {
+    const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
+    if (vehicle) {
+      vehicle.category = category;
+      saveState();
+      const quoteCategory = document.getElementById('quote-category');
+      if (quoteCategory) quoteCategory.value = category;
+    }
+  }
   const dropdown = container.querySelector('.quote-item-dropdown');
   if (dropdown) dropdown.style.display = 'none';
+  
+  if (type === 'service' && nameInput) {
+    updateInlineServiceTieredPrices(nameInput);
+  }
+};
+
+window.updateInlineServiceTieredPrices = function(inputEl) {
+  const container = inputEl.closest('.inline-edit-item');
+  if (!container) return;
+  const tieredContainer = container.querySelector('#inline-service-tiered-prices');
+  if (!tieredContainer) return;
+
+  const name = inputEl.value.trim();
+  if (!name) {
+    tieredContainer.innerHTML = '';
+    return;
+  }
+
+  // Buscar coincidencia en servicesCatalog
+  const catalogItem = servicesCatalog.find(s => s.name.toLowerCase() === name.toLowerCase());
+
+  const renderTieredButtons = (item) => {
+    const priceA = item.priceA || item.price || 0;
+    const priceB = item.priceB || item.price || 0;
+    const priceC = item.priceC || item.price || 0;
+
+    const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
+    const currentCat = vehicle ? (vehicle.category || 'B').toUpperCase() : 'B';
+
+    tieredContainer.innerHTML = `
+      <div style="display: flex; gap: 4px; align-items: center; margin-right: 4px;">
+        <button type="button" onmousedown="event.preventDefault(); selectTieredPrice('A', ${priceA}, this)" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid ${currentCat === 'A' ? 'var(--color-accent)' : '#25d366'}; background: ${currentCat === 'A' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.25)'" onmouseout="this.style.backgroundColor='${currentCat === 'A' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}'" title="Tarifa A (Pequeño)">A: $${priceA.toLocaleString('es-AR')}</button>
+        <button type="button" onmousedown="event.preventDefault(); selectTieredPrice('B', ${priceB}, this)" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid ${currentCat === 'B' ? 'var(--color-accent)' : '#25d366'}; background: ${currentCat === 'B' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.25)'" onmouseout="this.style.backgroundColor='${currentCat === 'B' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}'" title="Tarifa B (Mediano)">B: $${priceB.toLocaleString('es-AR')}</button>
+        <button type="button" onmousedown="event.preventDefault(); selectTieredPrice('C', ${priceC}, this)" style="font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm); border: 1.5px solid ${currentCat === 'C' ? 'var(--color-accent)' : '#25d366'}; background: ${currentCat === 'C' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}; color: #25d366; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 211, 102, 0.25)'" onmouseout="this.style.backgroundColor='${currentCat === 'C' ? 'rgba(37, 211, 102, 0.15)' : 'transparent'}'" title="Tarifa C (Grande)">C: $${priceC.toLocaleString('es-AR')}</button>
+      </div>
+    `;
+  };
+
+  if (catalogItem) {
+    renderTieredButtons(catalogItem);
+  } else {
+    // Si no coincide exactamente, buscar una coincidencia parcial si el usuario ha escrito >= 3 letras
+    const partialMatch = servicesCatalog.find(s => s.name.toLowerCase().includes(name.toLowerCase()));
+    if (partialMatch && name.length >= 3) {
+      renderTieredButtons(partialMatch);
+    } else {
+      tieredContainer.innerHTML = '';
+    }
+  }
+};
+
+window.selectTieredPrice = function(category, price, btn) {
+  const container = btn.closest('.inline-edit-item');
+  if (!container) return;
+  const valueInput = container.querySelector('#inline-item-value');
+  if (valueInput) {
+    valueInput.value = price;
+    valueInput.focus();
+  }
+
+  // Actualizar la categoría del vehículo en el modelo y guardarla
+  if (activeReceptionVehicleId) {
+    const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
+    if (vehicle) {
+      vehicle.category = category;
+      saveState();
+      const quoteCategory = document.getElementById('quote-category');
+      if (quoteCategory) quoteCategory.value = category;
+    }
+  }
+
+  // Resaltar visualmente el botón seleccionado
+  const buttons = container.querySelectorAll('#inline-service-tiered-prices button');
+  buttons.forEach(b => {
+    const isThis = b === btn;
+    b.style.background = isThis ? 'rgba(37, 211, 102, 0.15)' : 'transparent';
+    b.style.borderColor = isThis ? 'var(--color-accent)' : '#25d366';
+  });
 };
 
 window.delayCloseQuoteItemSuggestions = function(inputEl) {
@@ -5597,9 +5704,10 @@ window.addInlineQuoteItem = function(type) {
   
   row.innerHTML = `
     <div style="position: relative; flex: 1; display: flex; flex-direction: column;">
-      <input type="text" id="inline-item-name" class="form-input" autocomplete="off" placeholder="${placeholderName}" style="width: 100%; padding: 6px 10px; font-size: 13px; font-weight: 600; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); border-radius: var(--radius-sm);" oninput="filterQuoteItemSuggestions(this, '${type}')" onfocus="filterQuoteItemSuggestions(this, '${type}')" onblur="delayCloseQuoteItemSuggestions(this)" onchange="handleInlineNameChange(this, '${type}')" onkeydown="handleInlineKeydown(event, '${type}', this)">
+      <input type="text" id="inline-item-name" class="form-input" autocomplete="off" placeholder="${placeholderName}" style="width: 100%; padding: 6px 10px; font-size: 13px; font-weight: 600; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); border-radius: var(--radius-sm);" oninput="filterQuoteItemSuggestions(this, '${type}'); if('${type}' === 'service') updateInlineServiceTieredPrices(this);" onfocus="filterQuoteItemSuggestions(this, '${type}'); if('${type}' === 'service') updateInlineServiceTieredPrices(this);" onblur="delayCloseQuoteItemSuggestions(this)" onchange="handleInlineNameChange(this, '${type}')" onkeydown="handleInlineKeydown(event, '${type}', this)">
       <div class="quote-item-dropdown" id="quote-item-dropdown-${type}" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); max-height: 200px; overflow-y: auto; z-index: 9999; box-shadow: var(--shadow-lg);"></div>
     </div>
+    ${type === 'service' ? `<div id="inline-service-tiered-prices" style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;"></div>` : ''}
     <input type="number" id="inline-item-value" class="form-input" placeholder="Costo" style="width: 90px; padding: 6px 10px; font-size: 13px; font-weight: 700; text-align: right; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); border-radius: var(--radius-sm);" onkeydown="handleInlineKeydown(event, '${type}', this)">
     ${type === 'part' && localStorage.getItem('taller_meli_search_enabled') !== 'false' ? `
     <button class="meli-search-btn" type="button" onmousedown="const r = this.closest('.inline-edit-item'); if (r) r.dataset.searchingMeli = 'true';" onclick="searchInMercadoLibreFromInline()" style="background-color: #FFE600 !important; color: #2D3277 !important; border: 1px solid #d4c000 !important; border-radius: var(--radius-sm) !important; padding: 6px 10px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; cursor: pointer !important; height: 32px !important; font-weight: 700 !important; font-size: 11px !important; transition: all 0.2s ease !important; box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;" title="Buscar en Mercado Libre">
@@ -5642,6 +5750,7 @@ window.addInlineQuoteItem = function(type) {
       if (activeEl === nameInput || activeEl === valueInput) return;
       if (activeEl === cancelBtn || activeEl === saveBtn) return;
       if (activeEl && activeEl.closest('.meli-search-btn')) return;
+      if (activeEl && activeEl.closest('#inline-service-tiered-prices')) return;
       
       const name = nameInput.value.trim();
       if (name) {
