@@ -1957,7 +1957,7 @@
                   <!-- Badge de Estado Dinámico -->
                   <span class="status-badge theme-red" id="det-status-badge" style="font-size: 11px; width: fit-content; margin: 0;">En reparaci&oacute;n</span>
                   <!-- Badge de Categoría de Tarifa -->
-                  <span id="det-vehicle-category-badge" style="margin: 0;"></span>
+                  <span id="det-vehicle-category-badge" style="display: none !important; margin: 0;"></span>
                 </div>
                 <!-- Subtítulo oculto para compatibilidad con JS -->
                 <span class="reception-vehicle-sub" id="det-vehicle-id-sub" style="display: none !important;">...</span>
@@ -2058,6 +2058,21 @@
                     <div class="input-icon-group" style="width: 100%;">
                       <i data-lucide="gauge"></i>
                       <input type="number" class="form-input" id="det-km" placeholder="Ej: 45000" min="0" oninput="updateSidebarOdometer(this.value)" style="width: 100%;">
+                    </div>
+                  </div>
+
+                  <!-- Nivel Combustible (Ancho Completo) -->
+                  <div class="form-group" style="width: 100%; margin-bottom: 14px;">
+                    <label class="form-label">Nivel Combustible</label>
+                    <div class="input-icon-group" style="width: 100%;">
+                      <i data-lucide="droplet"></i>
+                      <select class="form-input" id="det-fuel" style="width: 100%; background-color: var(--card-bg);">
+                        <option value="Reserva">Reserva (Muy bajo)</option>
+                        <option value="1/4">1/4 de Tanque</option>
+                        <option value="1/2" selected>1/2 de Tanque (Medio)</option>
+                        <option value="3/4">3/4 de Tanque</option>
+                        <option value="Lleno">Tanque Lleno</option>
+                      </select>
                     </div>
                   </div>
 
