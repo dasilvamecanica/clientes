@@ -12781,30 +12781,188 @@ window.goToCajaWithAutoFill = function(vehicle) {
 };
 
 // Renderizado Caja
+window.formatCajaCurrency = function(val) {
+  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(Math.round(val));
+};
+
+window.getAccountBalance = function(accId) {
+  if (accId === 'efectivo') {
+    const efectivoIn = cajaOperations.filter(op => op.method === 'efectivo' && op.type === 'ingreso').reduce((s, op) => s + op.amount, 0);
+    const efectivoOut = cajaOperations.filter(op => op.method === 'efectivo' && op.type === 'retiro').reduce((s, op) => s + op.amount, 0);
+    const efectivoTransfersIn = cajaOperations.filter(op => op.type === 'transferencia' && op.toAccountId === 'efectivo').reduce((s, op) => s + op.amount, 0);
+    const efectivoTransfersOut = cajaOperations.filter(op => op.type === 'transferencia' && op.fromAccountId === 'efectivo').reduce((s, op) => s + op.amount, 0);
+    return efectivoIn - efectivoOut + efectivoTransfersIn - efectivoTransfersOut;
+  } else {
+    const accIn = cajaOperations.filter(op => op.method === 'banco' && op.accountId === accId && op.type === 'ingreso').reduce((s, op) => s + op.amount, 0);
+    const accOut = cajaOperations.filter(op => op.method === 'banco' && op.accountId === accId && op.type === 'retiro').reduce((s, op) => s + op.amount, 0);
+    const accTransfersIn = cajaOperations.filter(op => op.type === 'transferencia' && op.toAccountId === accId).reduce((s, op) => s + op.amount, 0);
+    const accTransfersOut = cajaOperations.filter(op => op.type === 'transferencia' && op.fromAccountId === accId).reduce((s, op) => s + op.amount, 0);
+    return accIn - accOut + accTransfersIn - accTransfersOut;
+  }
+};
+
+window.editCajaAccount = function(accId, oldName) {
+  const newName = prompt('Ingrese el nuevo nombre para la cuenta bancaria:', oldName);
+  if (newName === null) return;
+  const trimmedName = newName.trim();
+  if (!trimmedName) return;
+
+  if (cajaAccounts.some(acc => acc.id !== accId && acc.name.toLowerCase() === trimmedName.toLowerCase())) {
+    alert('Ya existe otra cuenta bancaria con ese nombre.');
+    return;
+  }
+
+  const accIndex = cajaAccounts.findIndex(acc => acc.id === accId);
+  if (accIndex !== -1) {
+    cajaAccounts[accIndex].name = trimmedName;
+    saveCajaState();
+    renderCajaView();
+  }
+};
+
+window.deleteCajaAccount = function(accId) {
+  const linkedOps = cajaOperations.filter(op => 
+    (op.method === 'banco' && op.accountId === accId) || 
+    (op.type === 'transferencia' && (op.fromAccountId === accId || op.toAccountId === accId))
+  );
+
+  if (linkedOps.length > 0) {
+    if (!confirm(`La cuenta seleccionada tiene ${linkedOps.length} transacciones asociadas. Si la elimina, el origen/destino de estas transacciones podría no mostrarse correctamente. ¿Está seguro de que desea eliminar la cuenta de todas formas?`)) {
+      return;
+    }
+  } else {
+    if (!confirm('¿Está seguro de que desea eliminar esta cuenta bancaria?')) {
+      return;
+    }
+  }
+
+  cajaAccounts = cajaAccounts.filter(acc => acc.id !== accId);
+  saveCajaState();
+  renderCajaView();
+};
+
+window.openCajaTransferModal = function() {
+  document.getElementById('caja-transfer-concept').value = '';
+  document.getElementById('caja-transfer-amount').value = '';
+
+  const fromSelect = document.getElementById('caja-transfer-from');
+  const toSelect = document.getElementById('caja-transfer-to');
+
+  if (fromSelect && toSelect) {
+    const optionsHtml = `
+      <option value="efectivo">Efectivo (Caja del taller)</option>
+      ${cajaAccounts.map(acc => `<option value="${acc.id}">${acc.name}</option>`).join('')}
+    `;
+    fromSelect.innerHTML = optionsHtml;
+    toSelect.innerHTML = optionsHtml;
+
+    fromSelect.value = 'efectivo';
+    if (cajaAccounts.length > 0) {
+      toSelect.value = cajaAccounts[0].id;
+    } else {
+      toSelect.value = 'efectivo';
+    }
+  }
+
+  document.getElementById('caja-transfer-modal').style.display = 'flex';
+  if (typeof initLucide === 'function') initLucide();
+};
+
+window.closeCajaTransferModal = function() {
+  document.getElementById('caja-transfer-modal').style.display = 'none';
+};
+
+window.handleCajaTransferSubmit = function(e) {
+  e.preventDefault();
+  const concept = document.getElementById('caja-transfer-concept').value.trim();
+  const amount = parseFloat(document.getElementById('caja-transfer-amount').value) || 0;
+  const fromAccountId = document.getElementById('caja-transfer-from').value;
+  const toAccountId = document.getElementById('caja-transfer-to').value;
+
+  if (amount <= 0) {
+    alert('El monto debe ser mayor a cero.');
+    return;
+  }
+
+  if (fromAccountId === toAccountId) {
+    alert('La cuenta de origen y de destino deben ser diferentes.');
+    return;
+  }
+
+  const currentBalance = getAccountBalance(fromAccountId);
+  if (amount > currentBalance) {
+    alert(`Fondos insuficientes en la cuenta de origen. Saldo disponible: ${formatCajaCurrency(currentBalance)}`);
+    return;
+  }
+
+  const newOp = {
+    id: 'op_' + Date.now(),
+    type: 'transferencia',
+    concept: concept,
+    amount: amount,
+    fromAccountId: fromAccountId,
+    toAccountId: toAccountId,
+    date: new Date().toISOString()
+  };
+
+  cajaOperations.push(newOp);
+  saveCajaState();
+  closeCajaTransferModal();
+  renderCajaView();
+};
+
+window.clearCajaFilters = function() {
+  const conceptInput = document.getElementById('caja-filter-concept');
+  const typeSelect = document.getElementById('caja-filter-type');
+  const accSelect = document.getElementById('caja-filter-account');
+
+  if (conceptInput) conceptInput.value = '';
+  if (typeSelect) typeSelect.value = 'todos';
+  if (accSelect) accSelect.value = 'todas';
+
+  renderCajaView();
+};
+
+// Renderizado Caja
 window.renderCajaView = function() {
   // 1. Calcular Balances
-  const efectivoIn = cajaOperations.filter(op => op.method === 'efectivo' && op.type === 'ingreso').reduce((s, op) => s + op.amount, 0);
-  const efectivoOut = cajaOperations.filter(op => op.method === 'efectivo' && op.type === 'retiro').reduce((s, op) => s + op.amount, 0);
-  const efectivoBalance = efectivoIn - efectivoOut;
+  const efectivoBalance = getAccountBalance('efectivo');
 
   const bancoIn = cajaOperations.filter(op => op.method === 'banco' && op.type === 'ingreso').reduce((s, op) => s + op.amount, 0);
   const bancoOut = cajaOperations.filter(op => op.method === 'banco' && op.type === 'retiro').reduce((s, op) => s + op.amount, 0);
-  const bancoBalance = bancoIn - bancoOut;
+  const bancoTransfersIn = cajaOperations.filter(op => op.type === 'transferencia' && op.toAccountId !== 'efectivo').reduce((s, op) => s + op.amount, 0);
+  const bancoTransfersOut = cajaOperations.filter(op => op.type === 'transferencia' && op.fromAccountId !== 'efectivo').reduce((s, op) => s + op.amount, 0);
+  const bancoBalance = bancoIn - bancoOut + bancoTransfersIn - bancoTransfersOut;
 
   const totalBalance = efectivoBalance + bancoBalance;
 
   // Actualizar elementos DOM
-  const formatCurrency = (val) => {
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(Math.round(val));
-  };
-
   const efEl = document.getElementById('caja-balance-efectivo');
   const bcEl = document.getElementById('caja-balance-bancos');
   const totEl = document.getElementById('caja-balance-total');
 
-  if (efEl) efEl.textContent = formatCurrency(efectivoBalance);
-  if (bcEl) bcEl.textContent = formatCurrency(bancoBalance);
-  if (totEl) totEl.textContent = formatCurrency(totalBalance);
+  if (efEl) efEl.textContent = formatCajaCurrency(efectivoBalance);
+  if (bcEl) bcEl.textContent = formatCajaCurrency(bancoBalance);
+  if (totEl) totEl.textContent = formatCajaCurrency(totalBalance);
+
+  // Poblar el selector de cuentas del filtro de historial
+  const filterAccountSelect = document.getElementById('caja-filter-account');
+  if (filterAccountSelect) {
+    const prevVal = filterAccountSelect.value;
+    let optionsHtml = `
+      <option value="todas">Todas las cuentas</option>
+      <option value="efectivo">Efectivo</option>
+    `;
+    cajaAccounts.forEach(acc => {
+      optionsHtml += `<option value="${acc.id}">${acc.name}</option>`;
+    });
+    filterAccountSelect.innerHTML = optionsHtml;
+    if (prevVal && [...filterAccountSelect.options].some(opt => opt.value === prevVal)) {
+      filterAccountSelect.value = prevVal;
+    } else {
+      filterAccountSelect.value = 'todas';
+    }
+  }
 
   // 2. Renderizar Cuentas Bancarias con sus balances individuales
   const accountsContainer = document.getElementById('caja-cuentas-list-container');
@@ -12813,14 +12971,20 @@ window.renderCajaView = function() {
       accountsContainer.innerHTML = `<span style="font-size: 13px; color: var(--text-muted); font-style: italic;">No hay cuentas bancarias creadas.</span>`;
     } else {
       accountsContainer.innerHTML = cajaAccounts.map(acc => {
-        const accIn = cajaOperations.filter(op => op.method === 'banco' && op.accountId === acc.id && op.type === 'ingreso').reduce((s, op) => s + op.amount, 0);
-        const accOut = cajaOperations.filter(op => op.method === 'banco' && op.accountId === acc.id && op.type === 'retiro').reduce((s, op) => s + op.amount, 0);
-        const accBalance = accIn - accOut;
+        const accBalance = getAccountBalance(acc.id);
 
         return `
-          <div class="account-card" style="background: var(--card-bg-hover); border: 1.5px solid var(--border-color); padding: 14px 20px; border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 6px; min-width: 160px; box-shadow: var(--shadow-sm);">
-            <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${acc.name}</span>
-            <strong style="font-size: 18px; color: var(--text-primary); font-family: var(--font-display); font-weight: 800;">${formatCurrency(accBalance)}</strong>
+          <div class="account-card" style="background: var(--card-bg-hover); border: 1.5px solid var(--border-color); padding: 14px 20px; border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 6px; min-width: 180px; box-shadow: var(--shadow-sm); position: relative;">
+            <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 6px;">
+              <button onclick="editCajaAccount('${acc.id}', '${acc.name}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Editar nombre" onmouseover="this.style.color='var(--color-accent)'; this.style.backgroundColor='rgba(var(--color-accent-rgb), 0.1)';" onmouseout="this.style.color='var(--text-muted)'; this.style.backgroundColor='transparent';">
+                <i data-lucide="edit-3" style="width: 13px; height: 13px;"></i>
+              </button>
+              <button onclick="deleteCajaAccount('${acc.id}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Eliminar cuenta" onmouseover="this.style.color='var(--color-reparacion)'; this.style.backgroundColor='rgba(239,68,68,0.1)';" onmouseout="this.style.color='var(--text-muted)'; this.style.backgroundColor='transparent';">
+                <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+              </button>
+            </div>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 40px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${acc.name}">${acc.name}</span>
+            <strong style="font-size: 18px; color: var(--text-primary); font-family: var(--font-display); font-weight: 800;">${formatCajaCurrency(accBalance)}</strong>
           </div>
         `;
       }).join('');
@@ -12830,29 +12994,88 @@ window.renderCajaView = function() {
   // 3. Renderizar Transacciones Históricas
   const tableBody = document.getElementById('caja-transactions-table-body');
   if (tableBody) {
-    if (cajaOperations.length === 0) {
+    const searchVal = document.getElementById('caja-filter-concept')?.value.toLowerCase().trim() || '';
+    const typeVal = document.getElementById('caja-filter-type')?.value || 'todos';
+    const accVal = document.getElementById('caja-filter-account')?.value || 'todas';
+
+    let filteredOps = [...cajaOperations];
+
+    // 1. Filtrar por Concepto
+    if (searchVal) {
+      filteredOps = filteredOps.filter(op => op.concept && op.concept.toLowerCase().includes(searchVal));
+    }
+
+    // 2. Filtrar por Tipo
+    if (typeVal !== 'todos') {
+      filteredOps = filteredOps.filter(op => op.type === typeVal);
+    }
+
+    // 3. Filtrar por Cuenta
+    if (accVal !== 'todas') {
+      if (accVal === 'efectivo') {
+        filteredOps = filteredOps.filter(op => 
+          (op.method === 'efectivo' && op.type !== 'transferencia') || 
+          (op.type === 'transferencia' && (op.fromAccountId === 'efectivo' || op.toAccountId === 'efectivo'))
+        );
+      } else {
+        filteredOps = filteredOps.filter(op => 
+          (op.method === 'banco' && op.accountId === accVal && op.type !== 'transferencia') || 
+          (op.type === 'transferencia' && (op.fromAccountId === accVal || op.toAccountId === accVal))
+        );
+      }
+    }
+
+    if (filteredOps.length === 0) {
       tableBody.innerHTML = `
         <tr>
           <td colspan="8" style="padding: 30px; text-align: center; color: var(--text-muted); font-style: italic;">
-            No se han registrado operaciones de caja.
+            No se encontraron operaciones de caja.
           </td>
         </tr>
       `;
     } else {
-      // Ordenar transacciones de más reciente a más antigua
-      const sortedOps = [...cajaOperations].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const sortedOps = filteredOps.sort((a, b) => new Date(b.date) - new Date(a.date));
       tableBody.innerHTML = sortedOps.map(op => {
         const opDate = new Date(op.date);
         const dateStr = opDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + opDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
-        const typeBadge = op.type === 'ingreso' 
-          ? `<span style="background-color: rgba(16,185,129,0.12); color: var(--color-listo); padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16,185,129,0.25);">Ingreso</span>`
-          : `<span style="background-color: rgba(239,68,68,0.12); color: var(--color-reparacion); padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; border: 1px solid rgba(239,68,68,0.25);">Retiro</span>`;
-
+        let typeBadge = '';
         let destStr = 'Efectivo';
-        if (op.method === 'banco') {
-          const acc = cajaAccounts.find(a => a.id === op.accountId);
-          destStr = `Banco (${acc ? acc.name : 'Desconocida'})`;
+        let amountColor = 'var(--text-primary)';
+        let amountPrefix = '';
+
+        if (op.type === 'ingreso') {
+          typeBadge = `<span style="background-color: rgba(16,185,129,0.12); color: var(--color-listo); padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16,185,129,0.25);">Ingreso</span>`;
+          amountColor = 'var(--color-listo)';
+          amountPrefix = '+';
+          if (op.method === 'banco') {
+            const acc = cajaAccounts.find(a => a.id === op.accountId);
+            destStr = `Banco (${acc ? acc.name : 'Desconocida'})`;
+          }
+        } else if (op.type === 'retiro') {
+          typeBadge = `<span style="background-color: rgba(239,68,68,0.12); color: var(--color-reparacion); padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; border: 1px solid rgba(239,68,68,0.25);">Retiro</span>`;
+          amountColor = 'var(--color-reparacion)';
+          amountPrefix = '-';
+          if (op.method === 'banco') {
+            const acc = cajaAccounts.find(a => a.id === op.accountId);
+            destStr = `Banco (${acc ? acc.name : 'Desconocida'})`;
+          }
+        } else if (op.type === 'transferencia') {
+          typeBadge = `<span style="background-color: rgba(59,130,246,0.12); color: var(--color-recepcion); padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; border: 1px solid rgba(59,130,246,0.25);">Transferencia</span>`;
+          amountColor = 'var(--color-recepcion)';
+          amountPrefix = '⇄';
+
+          let fromStr = 'Efectivo';
+          if (op.fromAccountId !== 'efectivo') {
+            const acc = cajaAccounts.find(a => a.id === op.fromAccountId);
+            fromStr = acc ? acc.name : 'Cuenta Eliminada';
+          }
+          let toStr = 'Efectivo';
+          if (op.toAccountId !== 'efectivo') {
+            const acc = cajaAccounts.find(a => a.id === op.toAccountId);
+            toStr = acc ? acc.name : 'Cuenta Eliminada';
+          }
+          destStr = `${fromStr} <i data-lucide="arrow-right" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin: 0 4px; color: var(--text-muted);"></i> ${toStr}`;
         }
 
         const paymentTypeStr = op.type === 'ingreso'
@@ -12860,11 +13083,8 @@ window.renderCajaView = function() {
           : '—';
 
         const installmentStr = op.type === 'ingreso' && op.paymentType === 'cuotas'
-          ? `<strong>${op.installments}</strong> cuotas de <strong>${formatCurrency(op.installmentAmount)}</strong>`
+          ? `<strong>${op.installments}</strong> cuotas de <strong>${formatCajaCurrency(op.installmentAmount)}</strong>`
           : '—';
-
-        const amountColor = op.type === 'ingreso' ? 'var(--color-listo)' : 'var(--color-reparacion)';
-        const amountPrefix = op.type === 'ingreso' ? '+' : '-';
 
         return `
           <tr style="border-bottom: 1px solid var(--border-color); font-size: 13px;">
@@ -12875,7 +13095,7 @@ window.renderCajaView = function() {
             <td style="padding: 12px 14px; color: var(--text-secondary);">${paymentTypeStr}</td>
             <td style="padding: 12px 14px; color: var(--text-secondary);">${installmentStr}</td>
             <td style="padding: 12px 14px; font-family: var(--font-display); font-weight: 800; text-align: right; color: ${amountColor};">
-              ${amountPrefix} ${formatCurrency(op.amount)}
+              ${amountPrefix} ${formatCajaCurrency(op.amount)}
             </td>
             <td style="padding: 12px 14px; text-align: center;">
               <button onclick="deleteCajaOperation('${op.id}')" style="background: none; border: none; color: var(--color-reparacion); cursor: pointer; padding: 4px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; transition: background-color 0.2s;" title="Eliminar registro" onmouseover="this.style.backgroundColor='rgba(239,68,68,0.1)';" onmouseout="this.style.backgroundColor='transparent';">

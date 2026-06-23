@@ -1241,6 +1241,9 @@
           <button class="btn-primary" onclick="openCajaModal('retiro')" style="background-color: var(--color-reparacion); color: white; display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(239,68,68,0.2);">
             <i data-lucide="minus-circle" style="width: 16px;"></i> Retirar Dinero
           </button>
+          <button class="btn-primary" onclick="openCajaTransferModal()" style="background-color: var(--color-recepcion); color: white; display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(59,130,246,0.2);">
+            <i data-lucide="arrow-left-right" style="width: 16px;"></i> Transferir Dinero
+          </button>
           <button class="btn-secondary" onclick="openCreateAccountModal()" style="border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: var(--card-bg); color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
             <i data-lucide="credit-card" style="width: 16px;"></i> Crear Nueva Cuenta
           </button>
@@ -1277,6 +1280,42 @@
       <!-- Historial de Operaciones -->
       <section style="background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-grow: 1; flex-direction: column; gap: 16px; overflow: hidden;">
         <h3 style="font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin: 0;">Historial de Transacciones</h3>
+        
+        <!-- Filtros de Historial -->
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; background-color: var(--card-bg-hover); padding: 12px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color);">
+          <!-- Buscador por Concepto -->
+          <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px;">
+            <label style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">Buscar por Concepto</label>
+            <div style="position: relative;">
+              <input type="text" id="caja-filter-concept" oninput="renderCajaView()" placeholder="Ej: Pago, Alquiler, Repuestos..." style="width: 100%; padding: 8px 12px 8px 32px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; box-sizing: border-box;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
+              <i data-lucide="search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; color: var(--text-muted);"></i>
+            </div>
+          </div>
+          <!-- Tipo de Operación -->
+          <div style="display: flex; flex-direction: column; gap: 4px; min-width: 150px;">
+            <label style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">Tipo de Operación</label>
+            <select id="caja-filter-type" onchange="renderCajaView()" style="width: 100%; padding: 8px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+              <option value="todos">Todos</option>
+              <option value="ingreso">Ingreso</option>
+              <option value="retiro">Retiro</option>
+              <option value="transferencia">Transferencia</option>
+            </select>
+          </div>
+          <!-- Origen / Destino de Cuenta -->
+          <div style="display: flex; flex-direction: column; gap: 4px; min-width: 180px;">
+            <label style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">Cuenta / Origen / Destino</label>
+            <select id="caja-filter-account" onchange="renderCajaView()" style="width: 100%; padding: 8px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+              <!-- Se puebla dinámicamente -->
+            </select>
+          </div>
+          <!-- Botón de Limpiar Filtros -->
+          <div style="display: flex; align-items: flex-end; height: 100%; padding-top: 18px;">
+            <button onclick="clearCajaFilters()" style="border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: var(--card-bg); color: var(--text-secondary); display: flex; align-items: center; gap: 6px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--card-bg-hover)';" onmouseout="this.style.backgroundColor='var(--card-bg)';">
+              <i data-lucide="x-circle" style="width: 15px;"></i> Limpiar Filtros
+            </button>
+          </div>
+        </div>
+
         <div class="responsive-table-wrapper" style="overflow-x: auto; width: 100%;">
           <table class="compact-catalog-table" style="width: 100%; border-collapse: collapse; min-width: 800px;">
             <thead>
@@ -4025,6 +4064,52 @@
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
           <button type="button" class="btn-secondary" onclick="closeCajaModal()" style="border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary);">Cancelar</button>
           <button type="submit" class="btn-primary" id="caja-op-submit-btn" style="background-color: var(--color-listo); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer;">Ingresar Dinero</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: TRANSFERIR DINERO (CAJA) -->
+  <div class="modal-overlay" id="caja-transfer-modal" style="display: none; z-index: 1200;">
+    <div class="modal-content" style="max-width: 480px; border-radius: var(--radius-lg); background: var(--card-bg); border: 1.5px solid var(--border-color); overflow: hidden; display: flex; flex-direction: column; margin: auto;">
+      <div class="modal-header" style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: var(--card-bg-hover);">
+        <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="arrow-left-right" style="color: var(--color-recepcion); width: 18px; height: 18px;"></i> Transferir Dinero
+        </h2>
+        <button class="close-modal-btn" onclick="closeCajaTransferModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center;">
+          <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+        </button>
+      </div>
+      <form id="caja-transfer-form" onsubmit="handleCajaTransferSubmit(event)" style="display: flex; flex-direction: column; gap: 16px; padding: 24px;">
+        <!-- Concepto -->
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Concepto / Detalle *</label>
+          <input type="text" id="caja-transfer-concept" required placeholder="Concepto de la transferencia" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
+        </div>
+        <!-- Monto -->
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Monto *</label>
+          <input type="number" id="caja-transfer-amount" required min="0.01" step="0.01" placeholder="0.00" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
+        </div>
+        <!-- Origen y Destino -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Cuenta de Origen *</label>
+            <select id="caja-transfer-from" required style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+              <!-- Dinámico -->
+            </select>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Cuenta de Destino *</label>
+            <select id="caja-transfer-to" required style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+              <!-- Dinámico -->
+            </select>
+          </div>
+        </div>
+        <!-- Botones -->
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+          <button type="button" class="btn-secondary" onclick="closeCajaTransferModal()" style="border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary);">Cancelar</button>
+          <button type="submit" class="btn-primary" style="background-color: var(--color-recepcion); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(59,130,246,0.2);">Confirmar Transferencia</button>
         </div>
       </form>
     </div>
