@@ -455,7 +455,7 @@ async function loadStateFromSupabase() {
         }
 
         return {
-          id: item.id,
+          id: String(item.id),
           plate: item.plate,
           brand: item.brand,
           model: item.model,
@@ -1627,7 +1627,12 @@ function loadState() {
     const savedVehicles = localStorage.getItem('taller_vehicles');
     const parsed = savedVehicles ? JSON.parse(savedVehicles) : null;
     if (Array.isArray(parsed)) {
-      vehicles = parsed;
+      vehicles = parsed.map(v => {
+        if (v && v.id !== undefined && v.id !== null) {
+          v.id = String(v.id);
+        }
+        return v;
+      });
     } else {
       throw new Error('empty');
     }
@@ -3080,7 +3085,8 @@ function renderKanban() {
     if (searchVal) {
       stageVehicles = stageVehicles.filter(v => {
         const isGolMock = v.id === 'mock-vehicle-gol-2026';
-        const indexNum = isGolMock ? '2' : (v.id && v.id.length >= 2 ? v.id.substring(v.id.length - 2) : '01');
+        const idStr = String(v.id || '');
+        const indexNum = isGolMock ? '2' : (idStr.length >= 2 ? idStr.substring(idStr.length - 2) : '01');
         const client = v.client ? v.client.toLowerCase() : '';
         const phone = v.clientPhone ? v.clientPhone.toLowerCase() : '';
         const plate = v.plate ? v.plate.toLowerCase() : '';
@@ -3122,7 +3128,8 @@ function renderKanban() {
     // Renderizar tarjetas
     listContainer.innerHTML = stageVehicles.map(vehicle => {
       const isGolMock = vehicle.id === 'mock-vehicle-gol-2026';
-      const indexNum = isGolMock ? '2' : vehicle.id.substring(vehicle.id.length - 2, vehicle.id.length);
+      const idStr = String(vehicle.id);
+      const indexNum = isGolMock ? '2' : idStr.substring(idStr.length - 2, idStr.length);
       return `
         <div class="vehicle-card" id="card-${vehicle.id}" draggable="true" ondragstart="handleDragStart(event, '${vehicle.id}')" ondragend="handleDragEnd(event, '${vehicle.id}')">
           <div class="card-top">
@@ -4069,7 +4076,8 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
 
   // Rellenar Ficha Técnica (Foto 2)
   const isGolMock = vehicle.id === 'mock-vehicle-gol-2026';
-  const indexNum = isGolMock ? '2' : vehicle.id.substring(vehicle.id.length - 2, vehicle.id.length);
+  const idStr = String(vehicle.id);
+  const indexNum = isGolMock ? '2' : idStr.substring(idStr.length - 2, idStr.length);
   const detPlate = document.getElementById('det-vehicle-plate');
   if (detPlate) detPlate.textContent = vehicle.plate;
   
@@ -4645,7 +4653,11 @@ window.openQuoteModal = function(vehicleId) {
       </div>
       <div style="text-align: right;">
         <span style="color: var(--text-muted); font-size: 10px; font-weight: 700; text-transform: uppercase;">Detalles Cotización</span>
-        <strong>Ingreso #${vehicle.id.substring(vehicle.id.length - 4, vehicle.id.length) === '2026' ? '1' : vehicle.id.substring(vehicle.id.length - 4, vehicle.id.length)}</strong>
+        <strong>Ingreso #${(() => {
+          const idStr = String(vehicle.id);
+          const suffix = idStr.substring(idStr.length - 4);
+          return suffix === '2026' ? '1' : suffix;
+        })()}</strong>
         <span>Fecha de Ingreso: ${vehicle.entryDate}</span>
         <span>Estado: <span style="font-weight: 700; text-transform: uppercase; color: ${vehicle.stage === 'recepcion' ? 'var(--color-recepcion)' : vehicle.stage === 'cotizacion' ? 'var(--color-cotizacion)' : vehicle.stage === 'reparacion' ? 'var(--color-reparacion)' : vehicle.stage === 'listo' ? 'var(--color-listo)' : 'var(--color-accent)'};">${vehicle.stage === 'recepcion' ? 'RECEPCIÓN' : vehicle.stage === 'cotizacion' ? 'COTIZACIÓN' : vehicle.stage === 'reparacion' ? 'ORDEN DE TRABAJO' : vehicle.stage === 'listo' ? 'LISTO' : vehicle.stage.toUpperCase()}</span></span>
       </div>
@@ -6756,7 +6768,8 @@ window.renderVehiclesListTable = function() {
   if (searchVal) {
     list = list.filter(v => {
       const isGolMock = v.id === 'mock-vehicle-gol-2026';
-      const indexNum = isGolMock ? '2' : (v.id && v.id.length >= 2 ? v.id.substring(v.id.length - 2) : '01');
+      const idStr = String(v.id || '');
+      const indexNum = isGolMock ? '2' : (idStr.length >= 2 ? idStr.substring(idStr.length - 2) : '01');
       const client = v.client ? v.client.toLowerCase() : '';
       const phone = v.clientPhone ? v.clientPhone.toLowerCase() : '';
       const plate = v.plate ? v.plate.toLowerCase() : '';
@@ -6809,7 +6822,8 @@ window.renderVehiclesListTable = function() {
 
   container.innerHTML = list.map(v => {
     const isGolMock = v.id === 'mock-vehicle-gol-2026';
-    const indexNum = isGolMock ? '2' : v.id.substring(v.id.length - 2, v.id.length);
+    const idStr = String(v.id);
+    const indexNum = isGolMock ? '2' : idStr.substring(idStr.length - 2, idStr.length);
 
     let badgeClass = '';
     let stateName = '';
@@ -6964,7 +6978,8 @@ window.renderCotizacionesTable = function() {
 
   tbody.innerHTML = list.map(v => {
     const isGolMock = v.id === 'mock-vehicle-gol-2026';
-    const indexNum = isGolMock ? '2' : v.id.substring(v.id.length - 2, v.id.length);
+    const idStr = String(v.id);
+    const indexNum = isGolMock ? '2' : idStr.substring(idStr.length - 2, idStr.length);
 
     const isApproved = (v.stage === 'reparacion' || v.stage === 'listo');
     const stateText = isApproved ? 'Aprobada' : 'Pendiente';
@@ -7537,7 +7552,7 @@ window.handleCitaFormSubmit = function(event) {
     }
   } else {
     // Create new cita
-    const newId = vehicles.length > 0 ? Math.max(...vehicles.map(v => v.id)) + 1 : 1;
+    const newId = 'c-' + Date.now();
     const newCita = {
       id: newId,
       stage: 'cita',
@@ -7819,7 +7834,8 @@ window.renderOrdenesTrabajoView = function() {
   if (searchVal) {
     list = list.filter(v => {
       const isGolMock = v.id === 'mock-vehicle-gol-2026';
-      const indexNum = isGolMock ? '1' : (v.id && v.id.length >= 2 ? v.id.substring(v.id.length - 2) : '01');
+      const idStr = String(v.id || '');
+      const indexNum = isGolMock ? '1' : (idStr.length >= 2 ? idStr.substring(idStr.length - 2) : '01');
       const desc = v.otTasks ? v.otTasks.filter(t => t && t.name).map(t => t.name.toLowerCase()).join(', ') : '';
       const client = v.client ? v.client.toLowerCase() : '';
       const phone = v.clientPhone ? v.clientPhone.toLowerCase() : '';
@@ -9275,7 +9291,8 @@ window.viewOTDetails = function(vehicleId) {
 
   // 1. Cabecera e Identificación
   const isGolMock = v.id === 'mock-vehicle-gol-2026';
-  const indexNum = isGolMock ? '1' : v.id.substring(v.id.length - 2, v.id.length);
+  const idStr = String(v.id);
+  const indexNum = isGolMock ? '1' : idStr.substring(idStr.length - 2, idStr.length);
   document.getElementById('otd-title').textContent = `Orden de Trabajo #${indexNum}`;
 
   // 2. Estado de la OT (Badge Colorido)
@@ -9672,7 +9689,10 @@ window.viewVehicleDetails = function(vehicleId) {
 
         return `
           <tr class="clickable-row" onclick="closeModal('vehicle-details-modal'); viewOTDetails('${veh.id}');" title="Ver detalles de esta OT">
-            <td style="padding: 8px 12px; font-family: var(--font-mono); font-weight: 700; font-size: 12px; color: var(--text-primary);">${veh.id.startsWith('mock') ? 'OT-MOCK' : 'OT-' + veh.id.substring(veh.id.length - 6).toUpperCase()}</td>
+            <td style="padding: 8px 12px; font-family: var(--font-mono); font-weight: 700; font-size: 12px; color: var(--text-primary);">${(() => {
+              const idStr = String(veh.id);
+              return idStr.startsWith('mock') ? 'OT-MOCK' : 'OT-' + idStr.substring(idStr.length - 6).toUpperCase();
+            })()}</td>
             <td style="padding: 8px 12px; font-size: 12px; color: var(--text-secondary);">${formattedEntry}</td>
             <td style="padding: 8px 12px; font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;" title="${veh.otJobDescription || '—'}">${veh.otJobDescription || '—'}</td>
             <td style="padding: 8px 12px; font-family: var(--font-mono); font-weight: 700; font-size: 12px; color: var(--text-primary); text-align: right;">${formatCurrency(veh.value || 0)}</td>
@@ -10155,7 +10175,8 @@ window.handlePaletteSearch = function() {
   // Filtrar vehículos, clientes y catálogos
   const matchedVehicles = vehicles.filter(v => {
     const isGol = v.id === 'mock-vehicle-gol-2026';
-    const indexNum = isGol ? '2' : (v.id && v.id.length >= 2 ? v.id.substring(v.id.length - 2) : '01');
+    const idStr = String(v.id || '');
+    const indexNum = isGol ? '2' : (idStr.length >= 2 ? idStr.substring(idStr.length - 2) : '01');
     return (v.plate && v.plate.toLowerCase().includes(query)) ||
            (v.brand && v.brand.toLowerCase().includes(query)) ||
            (v.model && v.model.toLowerCase().includes(query)) ||
@@ -10199,7 +10220,8 @@ window.handlePaletteSearch = function() {
     html += `<div class="palette-group-title">Vehículos / Ingresos</div>`;
     matchedVehicles.forEach(v => {
       const isGol = v.id === 'mock-vehicle-gol-2026';
-      const indexNum = isGol ? '2' : (v.id && v.id.length >= 2 ? v.id.substring(v.id.length - 2) : '01');
+      const idStr = String(v.id || '');
+      const indexNum = isGol ? '2' : (idStr.length >= 2 ? idStr.substring(idStr.length - 2) : '01');
       
       let stageText = 'Recepción';
       let badgeClass = 'badge-blue';
@@ -12351,7 +12373,8 @@ window.renderMobileVehicleList = function() {
     }
 
     const isGolMock = v.id === 'mock-vehicle-gol-2026';
-    const indexNum = isGolMock ? '2' : (v.id && v.id.length >= 2 ? v.id.substring(v.id.length - 2) : '01');
+    const idStr = String(v.id || '');
+    const indexNum = isGolMock ? '2' : (idStr.length >= 2 ? idStr.substring(idStr.length - 2) : '01');
     const stageColors = {
       recepcion: 'var(--color-recepcion)',
       cotizacion: 'var(--color-cotizacion)',
