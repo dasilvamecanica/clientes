@@ -1325,7 +1325,6 @@
                 <th style="padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted);">Concepto</th>
                 <th style="padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted);">Destino/Origen</th>
                 <th style="padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted);">Tipo Pago</th>
-                <th style="padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted);">Detalles Cuotas</th>
                 <th style="padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-align: right;">Monto</th>
                 <th style="padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-align: center;">Acción</th>
               </tr>
@@ -2091,8 +2090,8 @@
               <!-- PESTAÑA A: RECEPCIÓn -->
               <div class="tab-content-wrapper" id="tab-content-reception">
                 <section class="reception-form-card">
-                  <!-- Kilometraje (Ancho Completo) -->
-                  <div class="form-group" style="width: 100%; margin-bottom: 14px;">
+                  <!-- Kilometraje (1/4 de ancho) -->
+                  <div class="form-group" style="width: 25%; margin-bottom: 14px;">
                     <label class="form-label">Kilometraje</label>
                     <div class="input-icon-group" style="width: 100%;">
                       <i data-lucide="gauge"></i>
@@ -2100,25 +2099,21 @@
                     </div>
                   </div>
 
-                  <!-- Nivel Combustible (Ancho Completo) -->
-                  <div class="form-group" style="width: 100%; margin-bottom: 14px;">
-                    <label class="form-label">Nivel Combustible</label>
-                    <div class="input-icon-group" style="width: 100%;">
-                      <i data-lucide="droplet"></i>
-                      <select class="form-input" id="det-fuel" style="width: 100%; background-color: var(--card-bg);">
-                        <option value="Reserva">Reserva (Muy bajo)</option>
-                        <option value="1/4">1/4 de Tanque</option>
-                        <option value="1/2" selected>1/2 de Tanque (Medio)</option>
-                        <option value="3/4">3/4 de Tanque</option>
-                        <option value="Lleno">Tanque Lleno</option>
-                      </select>
-                    </div>
-                  </div>
+
+                  <!-- Nivel Combustible (oculto del panel, disponible en sistema) -->
+                  <select id="det-fuel" style="display:none;">
+                    <option value="Reserva">Reserva (Muy bajo)</option>
+                    <option value="1/4">1/4 de Tanque</option>
+                    <option value="1/2" selected>1/2 de Tanque (Medio)</option>
+                    <option value="3/4">3/4 de Tanque</option>
+                    <option value="Lleno">Tanque Lleno</option>
+                  </select>
+
 
                   <!-- Descripción (Explicación del cliente y problemas del auto) -->
                   <div class="form-group">
                     <label class="form-label">Descripción</label>
-                    <textarea class="form-input" id="det-service-description" rows="5" placeholder="Explicación del cliente y problemas del auto" style="resize: vertical; min-height: 120px; font-size: 14px; line-height: 1.5;"></textarea>
+                    <textarea class="form-input" id="det-service-description" rows="10" placeholder="Explicación del cliente y problemas del auto" style="resize: vertical; min-height: 240px; font-size: 14px; line-height: 1.5;"></textarea>
                   </div>
 
                   <!-- Contenedor Experimental de Daños y Detalles Físicos -->
@@ -2163,7 +2158,7 @@
                     <span id="quote-parts-sum">$0</span>
                   </div>
 
-                  <section class="reception-form-card" style="gap: 16px; padding: 0px; border: none !important; background: transparent !important; box-shadow: none !important;">
+                  <section class="reception-form-card" style="flex-grow: 1; gap: 16px; padding: 0px; border: none !important; background: transparent !important; box-shadow: none !important;">
                     <!-- Bloque Servicios -->
                     <div class="form-group" style="margin-bottom: 0;">
                       <div class="added-services-list" id="quote-services-list" onclick="handleListContainerClick(event, 'service')" style="display: flex; flex-direction: column; gap: 2px;">
@@ -2178,9 +2173,13 @@
                       </div>
                     </div>
 
+                    <!-- Elementos ocultos para preservar compatibilidad de estado de app.js -->
+                    <input type="hidden" id="quote-notes" value="">
+                    <input type="hidden" id="quote-send-email" value="">
+
                     <!-- Panel de Footer: Grilla Resumen Financiero y Entrega -->
                     <div class="quote-editor-footer-grid">
-                      
+
                       <!-- Columna 1: Fecha y hora de entrega comprometida -->
                       <div style="display: flex; flex-direction: column; gap: 8px;">
                         <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">
@@ -2215,7 +2214,6 @@
                             <span style="position: absolute; right: 8px; font-size: 11px; font-weight: 700; color: var(--text-muted); pointer-events: none;">%</span>
                           </div>
                         </div>
-                        
                         <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
                           <label class="checkbox-container" style="font-weight: 500; color: var(--text-secondary); font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; margin: 0;">
                             <input type="checkbox" id="calc-vat-inclusive" checked onchange="updateCalculatedTotals()">
@@ -2239,10 +2237,6 @@
                       </div>
 
                     </div>
-
-                    <!-- Elementos ocultos para preservar compatibilidad de estado de app.js -->
-                    <input type="hidden" id="quote-notes" value="">
-                    <input type="hidden" id="quote-send-email" value="">
 
                     <!-- Barra de Acciones Sincronizada Oculta -->
                     <div class="ficha-actions-bar" style="display: none !important;">
@@ -2524,12 +2518,12 @@
 
             <!-- Patente (con buscador integrado) -->
             <div class="form-group" style="margin-bottom: 0; position: relative;">
-              <label class="form-label" for="form-plate">Patente*</label>
+              <label class="form-label" for="form-plate">Patente <span style="font-size: 11px; font-weight: normal; color: var(--text-muted); font-style: italic;">(Opcional)</span></label>
               <input type="text" class="form-input" id="form-plate"
                 placeholder="Ej. AB 123 CD o ABC 123"
                 style="font-family: var(--font-mono); font-weight: 700; letter-spacing: 1px;"
                 autocomplete="off"
-                oninput="handlePlateInput(this)"
+                oninput="handlePlateInput(this); autocompletarAnioPorPatente(this.value)"
                 onfocus="openVehicleDropdown()"
                 onblur="handlePlateBlur(this)">
               <div id="vehicle-dropdown" style="
@@ -2556,14 +2550,14 @@
 
             <!-- Marca -->
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" for="form-brand">Marca <span style="font-size: 11px; font-weight: normal; color: var(--text-muted); font-style: italic;">(Opcional)</span></label>
-              <input type="text" class="form-input" id="form-brand" list="brands-suggestions" onfocus="populateAutocompleteDatalists()" placeholder="Ej. Volkswagen">
+              <label class="form-label" for="form-brand">Marca*</label>
+              <input type="text" class="form-input" id="form-brand" list="brands-suggestions" onfocus="populateAutocompleteDatalists()" required placeholder="Ej. Volkswagen">
             </div>
 
             <!-- Modelo -->
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" for="form-model">Modelo <span style="font-size: 11px; font-weight: normal; color: var(--text-muted); font-style: italic;">(Opcional)</span></label>
-              <input type="text" class="form-input" id="form-model" list="models-suggestions" onfocus="populateAutocompleteDatalists()" placeholder="Ej. Gol">
+              <label class="form-label" for="form-model">Modelo*</label>
+              <input type="text" class="form-input" id="form-model" list="models-suggestions" onfocus="populateAutocompleteDatalists()" required placeholder="Ej. Gol">
             </div>
 
             <!-- Color -->
@@ -2578,11 +2572,8 @@
               <input type="text" class="form-input" id="form-motor" list="engines-suggestions" onfocus="populateAutocompleteDatalists()" placeholder="Ej. 1.6 8V o 2.0 TFSI">
             </div>
 
-            <!-- Kilometraje -->
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" for="form-mileage">Kilometraje <span style="font-size: 11px; font-weight: normal; color: var(--text-muted); font-style: italic;">(Opcional)</span></label>
-              <input type="number" class="form-input" id="form-mileage" placeholder="Ej. 85000">
-            </div>
+            <!-- Kilometraje (oculto del panel, disponible en sistema) -->
+            <input type="hidden" id="form-mileage">
 
             <!-- Chasis / VIN -->
             <div class="form-group" id="form-vin-container" style="margin-bottom: 0; display: none;">
@@ -2607,7 +2598,7 @@
 
             <!-- Nombre y Apellido (con buscador integrado) -->
             <div class="form-group" style="margin-bottom: 0; position: relative;">
-              <label class="form-label" for="form-client-search">Nombre y Apellido*</label>
+              <label class="form-label" for="form-client-search">Nombre y Apellido <span style="font-size: 11px; font-weight: normal; color: var(--text-muted); font-style: italic;">(Opcional)</span></label>
               <input type="text" class="form-input" id="form-client-search"
                 placeholder="Ej. Enzo Da Silva"
                 autocomplete="off"
@@ -2637,34 +2628,16 @@
               <input type="text" class="form-input" id="form-nc-phone" placeholder="Ej. +549 11 1234-5678">
             </div>
 
-            <!-- Correo electrónico -->
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" for="form-nc-email">Correo electrónico</label>
-              <input type="email" class="form-input" id="form-nc-email" placeholder="Ej. enzo@email.com">
-            </div>
-
-            <!-- CUIT/DNI Cliente -->
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" for="form-client-cuit">CUIT / DNI Cliente</label>
-              <input type="text" class="form-input" id="form-client-cuit" placeholder="Ej. 20-98765432-1">
-            </div>
-
-            <!-- Condición de IVA Cliente -->
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" for="form-client-iva">Condición de IVA Cliente</label>
-              <select class="form-input" id="form-client-iva" style="background-color: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: var(--radius-md); padding: 8px 12px; font-size: 13px;">
-                <option value="Consumidor Final" selected>Consumidor Final</option>
-                <option value="Responsable Inscripto">Responsable Inscripto</option>
-                <option value="Monotributista">Monotributista</option>
-                <option value="Exento">Exento</option>
-              </select>
-            </div>
-
-            <!-- Dirección Fiscal Cliente -->
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" for="form-client-address">Dirección Fiscal Cliente</label>
-              <input type="text" class="form-input" id="form-client-address" placeholder="Ej. Av. de Mayo 123, CABA">
-            </div>
+            <!-- Campos ocultos del panel (disponibles en sistema) -->
+            <input type="hidden" id="form-nc-email">
+            <input type="hidden" id="form-client-cuit">
+            <select id="form-client-iva" style="display:none;">
+              <option value="Consumidor Final" selected>Consumidor Final</option>
+              <option value="Responsable Inscripto">Responsable Inscripto</option>
+              <option value="Monotributista">Monotributista</option>
+              <option value="Exento">Exento</option>
+            </select>
+            <input type="hidden" id="form-client-address">
 
           </div>
         </div>
@@ -3898,6 +3871,8 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
 
   <!-- MODAL DE BÚSQUEDA EN MERCADO LIBRE -->
@@ -3973,147 +3948,7 @@
     </div>
   </div>
 
-  <!-- MODAL: CREAR NUEVA CUENTA DE BANCO -->
-  <div class="modal-overlay" id="caja-create-account-modal" style="display: none; z-index: 1200;">
-    <div class="modal-content" style="max-width: 400px; border-radius: var(--radius-lg); background: var(--card-bg); border: 1.5px solid var(--border-color); overflow: hidden; display: flex; flex-direction: column; margin: auto;">
-      <div class="modal-header" style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: var(--card-bg-hover);">
-        <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-          <i data-lucide="credit-card" style="color: var(--color-accent); width: 18px; height: 18px;"></i> Crear Nueva Cuenta
-        </h2>
-        <button class="close-modal-btn" onclick="closeCreateAccountModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center;">
-          <i data-lucide="x" style="width: 20px; height: 20px;"></i>
-        </button>
-      </div>
-      <form id="caja-create-account-form" onsubmit="handleCreateAccountSubmit(event)" style="display: flex; flex-direction: column; gap: 16px; padding: 24px;">
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Nombre de la Cuenta *</label>
-          <input type="text" id="caja-new-account-name" required placeholder="Ej: Banco Galicia, Mercado Pago, etc." style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
-          <button type="button" class="btn-secondary" onclick="closeCreateAccountModal()" style="border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary);">Cancelar</button>
-          <button type="submit" class="btn-primary" style="background-color: var(--color-accent); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer;">Crear Cuenta</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
-  <!-- MODAL: INGRESAR / RETIRAR DINERO (CAJA) -->
-  <div class="modal-overlay" id="caja-operation-modal" style="display: none; z-index: 1200;">
-    <div class="modal-content" style="max-width: 480px; border-radius: var(--radius-lg); background: var(--card-bg); border: 1.5px solid var(--border-color); overflow: hidden; display: flex; flex-direction: column; margin: auto;">
-      <div class="modal-header" style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: var(--card-bg-hover);">
-        <h2 id="caja-operation-modal-title" style="font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-          <i data-lucide="plus-circle" style="color: var(--color-listo); width: 18px; height: 18px;"></i> Ingresar Dinero
-        </h2>
-        <button class="close-modal-btn" onclick="closeCajaModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center;">
-          <i data-lucide="x" style="width: 20px; height: 20px;"></i>
-        </button>
-      </div>
-      <form id="caja-operation-form" onsubmit="handleCajaOperationSubmit(event)" style="display: flex; flex-direction: column; gap: 16px; padding: 24px;">
-        <input type="hidden" id="caja-operation-type" value="ingreso">
-        
-        <!-- Concepto -->
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Concepto / Detalle *</label>
-          <input type="text" id="caja-op-concept" required placeholder="Concepto de la transacción" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
-        </div>
-
-        <!-- Monto -->
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Monto *</label>
-          <input type="number" id="caja-op-amount" required min="0.01" step="0.01" placeholder="0.00" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
-        </div>
-
-        <!-- Destino / Origen del dinero -->
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Destino/Origen del Dinero *</label>
-          <select id="caja-op-method" required onchange="handleCajaOpMethodChange()" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
-            <option value="efectivo">Efectivo (Caja del taller)</option>
-            <option value="banco">Cuenta de banco</option>
-          </select>
-        </div>
-
-        <!-- Selector de Cuenta Bancaria (Aparece cuando elige banco) -->
-        <div id="caja-op-account-selector-container" style="display: none; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Seleccionar Cuenta *</label>
-          <select id="caja-op-account-id" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
-            <!-- Dinámico -->
-          </select>
-        </div>
-
-        <!-- Tipo de Pago (Únicamente para ingresos) -->
-        <div id="caja-op-payment-type-container" style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Tipo de Pago *</label>
-          <select id="caja-op-payment-type" onchange="handleCajaOpPaymentTypeChange()" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
-            <option value="transferencia">Transferencia / Débito</option>
-            <option value="cuotas">Pago en Cuotas</option>
-          </select>
-        </div>
-
-        <!-- Campos de Cuotas (Aparece cuando se elige cuotas) -->
-        <div id="caja-op-installments-container" style="display: none; gap: 12px;">
-          <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Cantidad de Cuotas *</label>
-            <input type="number" id="caja-op-installments" min="1" placeholder="Ej: 3" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none;">
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Monto por Cuota ($) *</label>
-            <input type="number" id="caja-op-installment-amount" min="0.01" step="0.01" placeholder="Ej: 5000" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none;">
-          </div>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
-          <button type="button" class="btn-secondary" onclick="closeCajaModal()" style="border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary);">Cancelar</button>
-          <button type="submit" class="btn-primary" id="caja-op-submit-btn" style="background-color: var(--color-listo); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer;">Ingresar Dinero</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: TRANSFERIR DINERO (CAJA) -->
-  <div class="modal-overlay" id="caja-transfer-modal" style="display: none; z-index: 1200;">
-    <div class="modal-content" style="max-width: 480px; border-radius: var(--radius-lg); background: var(--card-bg); border: 1.5px solid var(--border-color); overflow: hidden; display: flex; flex-direction: column; margin: auto;">
-      <div class="modal-header" style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: var(--card-bg-hover);">
-        <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-          <i data-lucide="arrow-left-right" style="color: var(--color-recepcion); width: 18px; height: 18px;"></i> Transferir Dinero
-        </h2>
-        <button class="close-modal-btn" onclick="closeCajaTransferModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center;">
-          <i data-lucide="x" style="width: 20px; height: 20px;"></i>
-        </button>
-      </div>
-      <form id="caja-transfer-form" onsubmit="handleCajaTransferSubmit(event)" style="display: flex; flex-direction: column; gap: 16px; padding: 24px;">
-        <!-- Concepto -->
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Concepto / Detalle *</label>
-          <input type="text" id="caja-transfer-concept" required placeholder="Concepto de la transferencia" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
-        </div>
-        <!-- Monto -->
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Monto *</label>
-          <input type="number" id="caja-transfer-amount" required min="0.01" step="0.01" placeholder="0.00" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
-        </div>
-        <!-- Origen y Destino -->
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Cuenta de Origen *</label>
-            <select id="caja-transfer-from" required style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
-              <!-- Dinámico -->
-            </select>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary);">Cuenta de Destino *</label>
-            <select id="caja-transfer-to" required style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
-              <!-- Dinámico -->
-            </select>
-          </div>
-        </div>
-        <!-- Botones -->
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
-          <button type="button" class="btn-secondary" onclick="closeCajaTransferModal()" style="border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary);">Cancelar</button>
-          <button type="submit" class="btn-primary" style="background-color: var(--color-recepcion); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(59,130,246,0.2);">Confirmar Transferencia</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVILES -->
   <nav id="mobile-bottom-nav" class="mobile-bottom-nav hide-desktop" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background: rgba(26, 26, 26, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1.5px solid var(--border-color); z-index: 1000; justify-content: space-around; align-items: center; box-sizing: border-box; padding: 4px 10px;">
@@ -4138,7 +3973,133 @@
       <span style="font-size: 10.5px; font-weight: 700; margin-top: 3px;">Ajustes</span>
     </button>
   </nav>
-</div>
+
+  <!-- MODAL: CREAR NUEVA CUENTA BANCARIA -->
+  <div class="modal-overlay" id="caja-create-account-modal" style="z-index: 1200;">
+    <div class="modal-window" style="max-width: 400px; width: 90%; background: var(--card-bg); border-radius: var(--radius-lg); border: 1.5px solid var(--border-color); overflow: hidden;">
+      <header class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1.5px solid var(--border-color);">
+        <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="credit-card" style="color: var(--color-accent);"></i> Crear Nueva Cuenta
+        </h2>
+        <button class="close-modal-btn" onclick="closeCreateAccountModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center;">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </header>
+      <form id="caja-create-account-form" onsubmit="handleCreateAccountSubmit(event)" style="display: flex; flex-direction: column; gap: 16px; padding: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Nombre de la Cuenta Bancaria *</label>
+          <input type="text" id="caja-new-account-name" required placeholder="Ej: Banco Galicia, Mercado Pago, etc." style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+          <button type="button" class="btn-secondary" onclick="closeCreateAccountModal()" style="border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary);">Cancelar</button>
+          <button type="submit" class="btn-primary" style="background-color: var(--color-accent); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer;">Crear Cuenta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: INGRESAR / RETIRAR DINERO (CAJA) -->
+  <div class="modal-overlay" id="caja-operation-modal" style="z-index: 1200;">
+    <div class="modal-window" style="max-width: 460px; width: 90%; background: var(--card-bg); border-radius: var(--radius-lg); border: 1.5px solid var(--border-color); overflow: hidden;">
+      <header class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1.5px solid var(--border-color);">
+        <h2 id="caja-operation-modal-title" style="font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="plus-circle" style="color: var(--color-listo);"></i> Ingresar Dinero
+        </h2>
+        <button class="close-modal-btn" onclick="closeCajaModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center;">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </header>
+      <form id="caja-operation-form" onsubmit="handleCajaOperationSubmit(event)" style="display: flex; flex-direction: column; gap: 16px; padding: 24px;">
+        <input type="hidden" id="caja-operation-type" value="ingreso">
+        
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Concepto *</label>
+          <input type="text" id="caja-op-concept" required placeholder="Concepto de la transacción" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Monto (ARS) *</label>
+          <input type="number" id="caja-op-amount" required min="0.01" step="0.01" placeholder="0.00" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Destino / Origen del Dinero *</label>
+          <select id="caja-op-method" required onchange="handleCajaOpMethodChange()" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+            <option value="efectivo">Efectivo (Caja del taller)</option>
+            <option value="banco">Banco / Cuenta creada</option>
+          </select>
+        </div>
+
+        <div id="caja-op-account-selector-container" style="display: none; flex-direction: column; gap: 6px;">
+          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Seleccionar Cuenta *</label>
+          <select id="caja-op-account-id" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+            <!-- Se puebla dinámicamente -->
+          </select>
+        </div>
+
+        <div id="caja-op-payment-type-container" style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Tipo de Pago *</label>
+          <select id="caja-op-payment-type" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="debito">Débito</option>
+            <option value="cuotas">Cuotas con tarjeta</option>
+          </select>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+          <button type="button" class="btn-secondary" onclick="closeCajaModal()" style="border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary);">Cancelar</button>
+          <button type="submit" class="btn-primary" id="caja-op-submit-btn" style="background-color: var(--color-listo); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer;">Ingresar Dinero</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: TRANSFERIR DINERO (CAJA) -->
+  <div class="modal-overlay" id="caja-transfer-modal" style="z-index: 1200;">
+    <div class="modal-window" style="max-width: 440px; width: 90%; background: var(--card-bg); border-radius: var(--radius-lg); border: 1.5px solid var(--border-color); overflow: hidden;">
+      <header class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1.5px solid var(--border-color);">
+        <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="arrow-left-right" style="color: var(--color-recepcion);"></i> Transferir Dinero
+        </h2>
+        <button class="close-modal-btn" onclick="closeCajaTransferModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center;">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </header>
+      <form id="caja-transfer-form" onsubmit="handleCajaTransferSubmit(event)" style="display: flex; flex-direction: column; gap: 16px; padding: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Concepto de la Transferencia *</label>
+          <input type="text" id="caja-transfer-concept" required placeholder="Concepto de la transferencia" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Monto a Transferir (ARS) *</label>
+          <input type="number" id="caja-transfer-amount" required min="0.01" step="0.01" placeholder="0.00" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+            <label style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary);">Desde *</label>
+            <select id="caja-transfer-from" required style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+              <!-- Se puebla dinámicamente -->
+            </select>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+            <label style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary);">Hacia *</label>
+            <select id="caja-transfer-to" required style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+              <!-- Se puebla dinámicamente -->
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+          <button type="button" class="btn-secondary" onclick="closeCajaTransferModal()" style="border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary);">Cancelar</button>
+          <button type="submit" class="btn-primary" style="background-color: var(--color-accent); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer;">Transferir</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div></div>
 
   <!-- Carga de Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -4147,7 +4108,7 @@
   <!-- Cliente de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=6.6"></script>
+  <script src="app.js?v=11.1"></script>
 </body>
 </html>
 <!-- Build trigger commit -->

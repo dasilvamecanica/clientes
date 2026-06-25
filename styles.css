@@ -2099,7 +2099,7 @@ button {
 .quote-editor-footer-grid {
   border-top: 1px solid var(--border-color);
   padding-top: 20px;
-  margin-top: 16px;
+  margin-top: auto;
   display: grid;
   grid-template-columns: 1.2fr 1fr 1fr;
   gap: 24px;

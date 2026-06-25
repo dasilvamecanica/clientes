@@ -9,6 +9,8 @@
 // --- 1. CONFIGURACIÓN E INICIALIZACIÓN DEL ESTADO ---
 
 let vehicles = [];
+let cajaAccounts = [];
+let cajaOperations = [];
 let clients = [];
 let servicesCatalog = [];
 let partsCatalog = [];
@@ -23,9 +25,7 @@ let activeReceptionServices = []; // Lista temporal de servicios para Ficha Foto
 let isRecordingVoice = false;
 let mobileStageFilter = 'all';
 
-// Caja globals
-let cajaAccounts = [];
-let cajaOperations = [];
+
 
 // Registro global de Marcas, Modelos y Motores utilizados en el taller
 let vehicleRegistry = {
@@ -328,27 +328,11 @@ async function loadStateFromSupabase() {
       }
     }
 
-    // Cargar datos de Caja
-    try {
-      const { data: accountsData, error: accountsError } = await supabaseClient.from('taller_config').select('*').eq('id', 'caja_accounts');
-      if (!accountsError && accountsData && accountsData.length > 0) {
-        cajaAccounts = JSON.parse(accountsData[0].name || '[]');
-      } else {
-        cajaAccounts = JSON.parse(localStorage.getItem('taller_caja_accounts') || '[]');
-      }
-      const { data: operationsData, error: operationsError } = await supabaseClient.from('taller_config').select('*').eq('id', 'caja_operations');
-      if (!operationsError && operationsData && operationsData.length > 0) {
-        cajaOperations = JSON.parse(operationsData[0].name || '[]');
-      } else {
-        cajaOperations = JSON.parse(localStorage.getItem('taller_caja_operations') || '[]');
-      }
-      if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
-      if (!Array.isArray(cajaOperations)) cajaOperations = [];
-    } catch (e) {
-      console.error("Error loading Caja from Supabase:", e);
-      cajaAccounts = [];
-      cajaOperations = [];
-    }
+    // Cargar datos de Caja localmente
+    cajaAccounts = JSON.parse(localStorage.getItem('taller_caja_accounts') || '[]');
+    cajaOperations = JSON.parse(localStorage.getItem('taller_caja_operations') || '[]');
+    if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
+    if (!Array.isArray(cajaOperations)) cajaOperations = [];
 
     const { data: clientData, error: clientError } = await supabaseClient.from('taller_clients').select('*');
     if (!clientError && clientData) {
@@ -1246,8 +1230,7 @@ window.archiveVehicle = function() {
     exitDetailedReception();
     renderApp();
 
-    // Redirigir a Caja autocompletada
-    goToCajaWithAutoFill(vehicle);
+
 
     // Toast de éxito de archivado
     const toast = document.createElement('div');
@@ -1265,7 +1248,7 @@ window.archiveVehicle = function() {
   }
 };
 
-window.downloadDeliveryPDF = function(vehicleId, returnBlob = false) {
+window.downloadDeliveryPDF = async function(vehicleId, returnBlob = false) {
   if (typeof loadWorkshopConfig === 'function') {
     loadWorkshopConfig();
   }
@@ -1280,8 +1263,8 @@ window.downloadDeliveryPDF = function(vehicleId, returnBlob = false) {
     return;
   }
 
-  const logoWide = localStorage.getItem('taller_logo_wide');
-  const logoSquare = localStorage.getItem('taller_logo_square');
+  const logoWide   = await procesarLogoParaPDF(localStorage.getItem('taller_logo_wide'),   120, 38);
+  const logoSquare = await procesarLogoParaPDF(localStorage.getItem('taller_logo_square'), 32, 32);
 
   // Formatear fecha y hora de entrega
   let rawDate = vehicle.deliveryDate;
@@ -1339,11 +1322,11 @@ window.downloadDeliveryPDF = function(vehicleId, returnBlob = false) {
   // Preparar Logo HTML
   let logoHtml = '';
   if (logoWide) {
-    logoHtml = `<img src="${logoWide}" style="height: 38px; width: auto; max-width: 160px; object-fit: contain;">`;
+    logoHtml = `<img src="${logoWide.src}" style="display: block !important; width: ${logoWide.w}px !important; height: ${logoWide.h}px !important;">`;
   } else if (logoSquare) {
     logoHtml = `
       <div style="display: flex; align-items: center; gap: 8px;">
-        <img src="${logoSquare}" style="height: 32px; width: 32px; object-fit: contain;">
+        <img src="${logoSquare.src}" style="display: block !important; width: ${logoSquare.w}px !important; height: ${logoSquare.h}px !important;">
         <div class="brand-name" style="font-size: 15px; font-weight: 800; color: var(--color-accent); font-family: 'Inter', sans-serif; text-transform: uppercase;">${workshopConfig.name || 'Appli-Car'}</div>
       </div>
     `;
@@ -1400,7 +1383,7 @@ window.downloadDeliveryPDF = function(vehicleId, returnBlob = false) {
         .header-title { text-align: center !important; font-size: 14px !important; font-weight: 800 !important; color: #475569 !important; text-transform: uppercase !important; margin: 0 !important; letter-spacing: 0.5px !important; }
         .workshop-card { border: 1px solid #e2e8f0 !important; border-left: 4px solid var(--color-accent) !important; border-radius: 6px !important; padding: 10px 16px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 12px !important; background-color: #ffffff !important; }
         .workshop-logo-area { display: flex !important; align-items: center !important; gap: 10px !important; }
-        .workshop-logo-area img { height: 38px !important; width: auto !important; max-width: 120px !important; object-fit: contain !important; }
+        .workshop-logo-area img { display: block !important; }
         .brand-name { font-size: 15px !important; font-weight: 800 !important; color: var(--color-accent) !important; }
         .workshop-info-area { text-align: right !important; }
         .workshop-name { font-size: 13px !important; font-weight: 800 !important; text-transform: uppercase !important; color: #1e293b !important; }
@@ -1765,13 +1748,14 @@ function loadState() {
   // 7. Registro de Vehículos (Marcas, Modelos, Motores)
   loadVehicleRegistry();
 
-  // 8. Caja
+  // 8. Caja (Carga defensiva local)
   try {
     cajaAccounts = JSON.parse(localStorage.getItem('taller_caja_accounts') || '[]');
     cajaOperations = JSON.parse(localStorage.getItem('taller_caja_operations') || '[]');
     if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
     if (!Array.isArray(cajaOperations)) cajaOperations = [];
   } catch (e) {
+    console.warn("Error al cargar estado de caja local:", e);
     cajaAccounts = [];
     cajaOperations = [];
   }
@@ -2882,8 +2866,8 @@ window.switchView = function(view) {
     'cuentas-cobrar-view-panel',
     'vehiculos-lista-view-panel',
     'reception-panel-view',
-    'configuracion-view-panel',
-    'caja-view-panel'
+    'caja-view-panel',
+    'configuracion-view-panel'
   ];
   allPanels.forEach(p => {
     const el = document.getElementById(p);
@@ -2903,8 +2887,8 @@ window.switchView = function(view) {
     'menu-equipo',
     'menu-clientes-db',
     'menu-cuentas',
-    'menu-vehiculos-db',
-    'menu-caja'
+    'menu-caja',
+    'menu-vehiculos-db'
   ];
   sidebarButtons.forEach(btnId => {
     const btn = document.getElementById(btnId);
@@ -2929,6 +2913,14 @@ window.switchView = function(view) {
     const el = document.getElementById(id);
     if (el) el.style.display = 'flex';
   };
+
+  if (view === 'caja') {
+    getAndShow('caja-view-panel');
+    const menuBtn = document.getElementById('menu-caja');
+    if (menuBtn) menuBtn.classList.add('active');
+    renderCajaView();
+    return;
+  }
 
   if (view === 'recepcion-detalle') {
     getAndShow('reception-panel-view');
@@ -3057,12 +3049,7 @@ window.switchView = function(view) {
       renderVehicleRegistryPanel();
     }
   }
-  else if (view === 'caja') {
-    getAndShow('caja-view-panel');
-    const menuBtn = document.getElementById('menu-caja');
-    if (menuBtn) menuBtn.classList.add('active');
-    renderCajaView();
-  }
+
 
   // Asegurar que el enrutamiento defensivo no rompa clases antiguas
   const dashboardTabNav = document.getElementById('nav-dashboard-tab');
@@ -3835,6 +3822,77 @@ window.handlePlateInput = function(inputEl) {
   }
 };
 
+// ── Autocompletado de Año por Patente Argentina ──────────────────────────────
+window.autocompletarAnioPorPatente = function(valor) {
+  const yearField = document.getElementById('form-year');
+  if (!yearField) return;
+  // Solo autocompletar si el campo año está vacío
+  if (yearField.value && yearField.value.trim() !== '') return;
+
+  const rangos = [
+    { anio: 1995, tipo: 'comun', desde: 'AAA000', hasta: 'ANZ999' },
+    { anio: 1996, tipo: 'comun', desde: 'AOA000', hasta: 'BCZ999' },
+    { anio: 1997, tipo: 'comun', desde: 'BDA000', hasta: 'BTZ999' },
+    { anio: 1998, tipo: 'comun', desde: 'BUA000', hasta: 'CLL999' },
+    { anio: 1999, tipo: 'comun', desde: 'CLM000', hasta: 'DBZ999' },
+    { anio: 2000, tipo: 'comun', desde: 'DCA000', hasta: 'DNN999' },
+    { anio: 2001, tipo: 'comun', desde: 'DNO000', hasta: 'DWZ999' },
+    { anio: 2002, tipo: 'comun', desde: 'DXA000', hasta: 'ECZ999' },
+    { anio: 2003, tipo: 'comun', desde: 'EDA000', hasta: 'EIZ999' },
+    { anio: 2004, tipo: 'comun', desde: 'EJA000', hasta: 'ESS999' },
+    { anio: 2005, tipo: 'comun', desde: 'EST000', hasta: 'FHZ999' },
+    { anio: 2006, tipo: 'comun', desde: 'FIA000', hasta: 'FZZ999' },
+    { anio: 2007, tipo: 'comun', desde: 'GAA000', hasta: 'GUZ999' },
+    { anio: 2008, tipo: 'comun', desde: 'GVA000', hasta: 'HSZ999' },
+    { anio: 2009, tipo: 'comun', desde: 'HTA000', hasta: 'ILZ999' },
+    { anio: 2010, tipo: 'comun', desde: 'IMA000', hasta: 'JMZ999' },
+    { anio: 2011, tipo: 'comun', desde: 'JNA000', hasta: 'KTZ999' },
+    { anio: 2012, tipo: 'comun', desde: 'KUA000', hasta: 'MAZ999' },
+    { anio: 2013, tipo: 'comun', desde: 'MBA000', hasta: 'NLZ999' },
+    { anio: 2014, tipo: 'comun', desde: 'NMA000', hasta: 'OMZ999' },
+    { anio: 2015, tipo: 'comun', desde: 'ONA000', hasta: 'PLZ999' },
+    { anio: 2016, tipo: 'comun', desde: 'PMA000', hasta: 'PMZ999' },
+    // Mercosur: formato AA 000 AA → normalizado como LLNNNLL (letras+numeros+letras)
+    { anio: 2016, tipo: 'mercosur', desde: 'AA000AA', hasta: 'AA899ZZ' },
+    { anio: 2017, tipo: 'mercosur', desde: 'AA900AA', hasta: 'AC149ZZ' },
+    { anio: 2018, tipo: 'mercosur', desde: 'AC150AA', hasta: 'AD349ZZ' },
+    { anio: 2019, tipo: 'mercosur', desde: 'AD350AA', hasta: 'AE099AA' },
+    { anio: 2020, tipo: 'mercosur', desde: 'AE100AA', hasta: 'AE649ZZ' },
+    { anio: 2021, tipo: 'mercosur', desde: 'AE650AA', hasta: 'AF199ZZ' },
+    { anio: 2022, tipo: 'mercosur', desde: 'AF200AA', hasta: 'AF749ZZ' },
+    { anio: 2023, tipo: 'mercosur', desde: 'AF750AA', hasta: 'AG449ZZ' },
+    { anio: 2024, tipo: 'mercosur', desde: 'AG450AA', hasta: 'AH099ZZ' },
+    { anio: 2025, tipo: 'mercosur', desde: 'AH100AA', hasta: 'AI029ZZ' },
+    { anio: 2026, tipo: 'mercosur', desde: 'AI030AA', hasta: 'AI999ZZ' },
+  ];
+
+  // Normalizar patente: quitar espacios y guiones, convertir a mayúsculas
+  const norm = valor.replace(/[\s\-]/g, '').toUpperCase();
+  if (norm.length < 6) return;
+
+  // Detectar formato: Mercosur = 2 letras + 3 dígitos + 2 letras (LLNNNLL)
+  const esMercosur = /^[A-Z]{2}\d{3}[A-Z]{2}$/.test(norm);
+  // Formato común = 3 letras + 3 dígitos (LLLNNN)
+  const esComun = /^[A-Z]{3}\d{3}$/.test(norm);
+
+  if (!esMercosur && !esComun) return;
+
+  // Función de comparación lexicográfica para rangos
+  function enRango(clave, desde, hasta) {
+    return clave >= desde && clave <= hasta;
+  }
+
+  const tipo = esMercosur ? 'mercosur' : 'comun';
+  const rango = rangos.find(r => r.tipo === tipo && enRango(norm, r.desde, r.hasta));
+
+  if (rango) {
+    yearField.value = rango.anio;
+    // Efecto visual para indicar que fue autocompletado
+    yearField.style.borderColor = 'var(--color-accent)';
+    setTimeout(() => { yearField.style.borderColor = ''; }, 2000);
+  }
+};
+
 window.handlePlateBlur = function(inputEl) {
   autoFormatPlateInput(inputEl);
   
@@ -3981,30 +4039,36 @@ window.handleVehicleFormSubmit = function(e) {
   const vinInput = document.getElementById('form-vin');
   const vinVal = vinInput ? vinInput.value.trim() : '';
 
-  if (!plateVal) {
-    alert('Por favor, ingresa la patente del vehículo.');
+  if (!brandVal) {
+    alert('Por favor, ingresa la marca del vehículo.');
+    return;
+  }
+  if (!modelVal) {
+    alert('Por favor, ingresa el modelo del vehículo.');
     return;
   }
 
-  // Validar nomenclatura de patentes argentinas
-  if (!validatePlateFormat(plateVal)) {
-    const confirmPlate = confirm(`La patente ingresada "${plateVal}" no coincide con los formatos estándar de Argentina:\n- AB 123 CD\n- ABC 123\n- A12 3BCD\n\n¿Estás seguro que deseas continuar?`);
-    if (!confirmPlate) return;
-  }
-
-  // Comprobación de duplicados de patente activa
-  const cleanPlate = plateVal.replace(/\s+/g, '').toUpperCase();
+  const cleanPlate = plateVal ? plateVal.replace(/\s+/g, '').toUpperCase() : '';
   let formVehicleId = document.getElementById('form-vehicle-id').value;
 
-  const duplicateVehicle = vehicles.find(v => 
-    v.plate.replace(/\s+/g, '').toUpperCase() === cleanPlate && 
-    String(v.id) !== String(formVehicleId)
-  );
+  if (plateVal) {
+    // Validar nomenclatura de patentes argentinas
+    if (!validatePlateFormat(plateVal)) {
+      const confirmPlate = confirm(`La patente ingresada "${plateVal}" no coincide con los formatos estándar de Argentina:\n- AB 123 CD\n- ABC 123\n- A12 3BCD\n\n¿Estás seguro que deseas continuar?`);
+      if (!confirmPlate) return;
+    }
 
-  if (duplicateVehicle) {
-    if (!duplicateVehicle.delivered) {
-      alert(`El vehículo con la patente "${plateVal}" ya se encuentra activo en el taller en la etapa de "${duplicateVehicle.stage === 'recepcion' ? 'Recepción' : duplicateVehicle.stage === 'cotizacion' ? 'Cotización' : 'Reparación'}".`);
-      return;
+    // Comprobación de duplicados de patente activa
+    const duplicateVehicle = vehicles.find(v => 
+      v.plate && v.plate.replace(/\s+/g, '').toUpperCase() === cleanPlate && 
+      String(v.id) !== String(formVehicleId)
+    );
+
+    if (duplicateVehicle) {
+      if (!duplicateVehicle.delivered) {
+        alert(`El vehículo con la patente "${plateVal}" ya se encuentra activo en el taller en la etapa de "${duplicateVehicle.stage === 'recepcion' ? 'Recepción' : duplicateVehicle.stage === 'cotizacion' ? 'Cotización' : 'Reparación'}".`);
+        return;
+      }
     }
   }
 
@@ -4016,7 +4080,7 @@ window.handleVehicleFormSubmit = function(e) {
   let client = null;
 
   // Buscar si existe un cliente con este nombre (insensible a mayúsculas/minúsculas)
-  const existingClient = clients.find(c => c.name.trim().toLowerCase() === clientSearchName.toLowerCase());
+  const existingClient = clientSearchName ? clients.find(c => c.name.trim().toLowerCase() === clientSearchName.toLowerCase()) : null;
 
   if (existingClient) {
     const phoneMatches = (existingClient.phone || '').trim() === typedPhone;
@@ -4063,26 +4127,35 @@ window.handleVehicleFormSubmit = function(e) {
   }
 
   if (!client) {
-    if (!clientSearchName) {
-      alert('Por favor, selecciona un cliente existente o ingresa el nombre de un nuevo cliente.');
-      return;
+    if (clientSearchName) {
+      // Crear nuevo cliente
+      const newClientId = 'c-' + Date.now();
+      const newClient = {
+        id: newClientId,
+        name: clientSearchName,
+        phone: typedPhone,
+        email: typedEmail,
+        cuit: typedClientCuit || '99-99999999-9',
+        ivaCondition: typedClientIva || 'Consumidor Final',
+        address: typedClientAddress || 'Sin Dirección'
+      };
+      clients.push(newClient);
+      saveClients();
+      client = newClient;
+      clientId = newClientId;
+    } else {
+      // Cliente opcional vacío
+      client = {
+        id: '',
+        name: 'Consumidor Final',
+        phone: typedPhone,
+        email: typedEmail,
+        cuit: typedClientCuit || '99-99999999-9',
+        ivaCondition: typedClientIva || 'Consumidor Final',
+        address: typedClientAddress || 'Sin Dirección'
+      };
+      clientId = '';
     }
-
-    // Crear nuevo cliente
-    const newClientId = 'c-' + Date.now();
-    const newClient = {
-      id: newClientId,
-      name: clientSearchName,
-      phone: typedPhone,
-      email: typedEmail,
-      cuit: typedClientCuit || '99-99999999-9',
-      ivaCondition: typedClientIva || 'Consumidor Final',
-      address: typedClientAddress || 'Sin Dirección'
-    };
-    clients.push(newClient);
-    saveClients();
-    client = newClient;
-    clientId = newClientId;
   }
 
   // Registrar en el catalogo de marcas/modelos/motores
@@ -4139,10 +4212,10 @@ window.handleVehicleFormSubmit = function(e) {
 
   // Siempre crear una nueva ficha de trabajo (nuevo ingreso)
   // Recuperar historial de propietarios del vehiculo mas reciente con la misma patente
-  const prevRecords = vehicles
-    .filter(v => v.plate.replace(/\s+/g, '').toUpperCase() === cleanPlate)
-    .sort((a, b) => (b.entryTime || 0) - (a.entryTime || 0));
-  const mostRecent = prevRecords[0];
+  const prevRecords = cleanPlate
+    ? vehicles.filter(v => v.plate && v.plate.replace(/\s+/g, '').toUpperCase() === cleanPlate)
+    : [];
+  const mostRecent = prevRecords.sort((a, b) => (b.entryTime || 0) - (a.entryTime || 0))[0];
 
   // Construir historial de propietarios heredado
   let inheritedOwnerHistory = mostRecent ? [...(mostRecent.ownerHistory || [])] : [];
@@ -4725,7 +4798,7 @@ window.handleContextDeliver = function() {
     
     // Crear toast y redirigir a caja
     showDeliveryToast(vehicle);
-    goToCajaWithAutoFill(vehicle);
+
   }
   document.getElementById('card-context-menu').classList.remove('show');
 };
@@ -4746,7 +4819,7 @@ window.deliverVehicleFromCard = function(vehicleId) {
     renderApp();
     
     showDeliveryToast(vehicle);
-    goToCajaWithAutoFill(vehicle);
+
   }
 };
 
@@ -7468,7 +7541,7 @@ window.renderProximasCitas = function() {
         const dateObj = new Date(displayDate + 'T00:00:00');
         const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
         const displayTime = v.deliveryDate ? v.deliveryTime : v.time;
-        const titlePrefix = v.deliveryDate ? 'ðŸš— Entrega: ' : '';
+        const titlePrefix = v.deliveryDate ? 'Entrega: ' : '';
 
         card.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
@@ -7962,7 +8035,7 @@ function createAgendaDayCell(dayNumber, isOtherMonth, isToday, dateString) {
     eventTag.className = 'agenda-event-tag entrega';
     
     const timePrefix = vehicle.deliveryTime ? `${vehicle.deliveryTime} - ` : '';
-    eventTag.textContent = `ðŸš— Entrega: ${timePrefix}${vehicle.brand} ${vehicle.model}`;
+    eventTag.textContent = `Entrega: ${timePrefix}${vehicle.brand} ${vehicle.model}`;
     eventTag.title = `Entrega Comprometida: ${vehicle.deliveryTime || ''} hs - ${vehicle.plate || 'Sin Patente'} - ${vehicle.brand} ${vehicle.model} (${vehicle.client})`;
 
     eventTag.addEventListener('click', (e) => {
@@ -10981,12 +11054,65 @@ window.downloadTaxInvoicePDF = function(invoiceType, event, returnBlob = false) 
   }
 };// --- Generación de Cotización en PDF de Alta Fidelidad ---
 
-window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
+// Convierte píxeles blancos/muy claros a negros sin tocar el naranja
+// Procesa el logo para PDF: convierte blancos a negro y calcula dimensiones proporcionales
+function procesarLogoParaPDF(src, maxW, maxH) {
+  return new Promise((resolve) => {
+    if (!src) { resolve(null); return; }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      // Calcular dimensiones respetando proporción original
+      const nw = img.naturalWidth;
+      const nh = img.naturalHeight;
+      const scale = Math.min(maxW / nw, maxH / nh, 1); // nunca escalar hacia arriba
+      const finalW = Math.round(nw * scale);
+      const finalH = Math.round(nh * scale);
+
+      // Crear canvas temporal para aplicar el filtro de color a tamaño original
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width  = nw;
+      tempCanvas.height = nh;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(img, 0, 0);
+      
+      const data = tempCtx.getImageData(0, 0, nw, nh);
+      const px = data.data;
+      for (let i = 0; i < px.length; i += 4) {
+        const r = px[i], g = px[i+1], b = px[i+2], a = px[i+3];
+        if (a < 10) continue;
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const sat = max === 0 ? 0 : (max - min) / max;
+        const lum = (r + g + b) / 3;
+        if (lum > 200 && sat < 0.15) {
+          px[i] = 0; px[i+1] = 0; px[i+2] = 0;
+        }
+      }
+      tempCtx.putImageData(data, 0, 0);
+
+      // Crear canvas final al tamaño escalado exacto
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = finalW;
+      finalCanvas.height = finalH;
+      const finalCtx = finalCanvas.getContext('2d');
+      finalCtx.imageSmoothingEnabled = true;
+      finalCtx.imageSmoothingQuality = 'high';
+      finalCtx.drawImage(tempCanvas, 0, 0, nw, nh, 0, 0, finalW, finalH);
+
+      resolve({ src: finalCanvas.toDataURL('image/png'), w: finalW, h: finalH });
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+window.downloadQuotePDF = async function(vehicleId, returnBlob = false) {
   if (typeof loadWorkshopConfig === 'function') {
     loadWorkshopConfig();
   }
-  const logoWide = localStorage.getItem('taller_logo_wide');
-  const logoSquare = localStorage.getItem('taller_logo_square');
+  const logoWide   = await procesarLogoParaPDF(localStorage.getItem('taller_logo_wide'),   160, 38);
+  const logoSquare = await procesarLogoParaPDF(localStorage.getItem('taller_logo_square'), 38, 38);
 
   const id = vehicleId || activeReceptionVehicleId;
   if (!id) {
@@ -11148,7 +11274,7 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
         .header-date { text-align: right !important; font-size: 10px !important; color: #64748b !important; font-weight: 500 !important; }
         .workshop-card { border: 1px solid #e2e8f0 !important; border-left: 4px solid var(--color-accent) !important; border-radius: 6px !important; padding: 8px 14px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 10px !important; background-color: #ffffff !important; }
         .workshop-logo-area { display: flex !important; align-items: center !important; gap: 10px !important; }
-        .workshop-logo-area img { height: 38px !important; width: auto !important; max-width: 160px !important; object-fit: contain !important; }
+        .workshop-logo-area img { display: block !important; }
         .workshop-logo-area .brand-name { font-size: 15px !important; font-weight: 800 !important; color: var(--color-accent) !important; }
         .workshop-info-area { text-align: right !important; }
         .workshop-name { font-size: 13px !important; font-weight: 800 !important; text-transform: uppercase !important; color: #1e293b !important; }
@@ -11182,10 +11308,10 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
       <div class="workshop-card">
         <div class="workshop-logo-area">
           ${logoWide ? `
-            <img src="${logoWide}" style="height: 38px; width: auto; max-width: 160px; object-fit: contain;">
+            <img src="${logoWide.src}" style="display: block !important; width: ${logoWide.w}px !important; height: ${logoWide.h}px !important;">
           ` : (logoSquare ? `
             <div style="display: flex; align-items: center; gap: 8px;">
-              <img src="${logoSquare}" style="height: 32px; width: 32px; object-fit: contain;">
+              <img src="${logoSquare.src}" style="display: block !important; width: ${logoSquare.w}px !important; height: ${logoSquare.h}px !important;">
               <div class="brand-name" style="font-size: 15px; font-weight: 800; color: var(--color-accent); font-family: 'Inter', sans-serif; text-transform: uppercase;">${workshopConfig.name || 'Appli-Car'}</div>
             </div>
           ` : `
@@ -11199,7 +11325,6 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
           <div class="workshop-name">${workshopConfig.name || '—'}</div>
           <div class="workshop-detail">Tel: ${workshopConfig.phone1 || '—'}${workshopConfig.phone2 ? ' / ' + workshopConfig.phone2 : ''}</div>
           <div class="workshop-detail">${workshopConfig.address || '—'}</div>
-          <div class="workshop-detail">RUT: ${workshopConfig.rut || '—'}</div>
         </div>
       </div>
 
@@ -11253,8 +11378,7 @@ window.downloadQuotePDF = function(vehicleId, returnBlob = false) {
         </div>
       </div>
 
-      <div style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 6px; display: flex; justify-content: space-between; font-size: 8px; color: #94a3b8;">
-        <span>Presupuesto generado con Gestión de Taller ${workshopConfig.name || 'Appli-Car'}</span>
+      <div style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 6px; display: flex; justify-content: flex-end; font-size: 8px; color: #94a3b8;">
         <span>Página 1 de 1</span>
       </div>
     </div>
@@ -12659,29 +12783,29 @@ window.renderMobileVehicleList = function() {
   if (typeof initLucide === 'function') initLucide();
 };
 
+
+
+
+
 // ========================================================================
-//   MÓDULO DE CAJA (LÓGICA Y RENDERIZADO)
+//   MÓDULO DE CAJA (LÓGICA Y RENDERIZADO ORIGINAL - LOCALSTORAGE ONLY)
 // ========================================================================
 
 function saveCajaState() {
   localStorage.setItem('taller_caja_accounts', JSON.stringify(cajaAccounts));
   localStorage.setItem('taller_caja_operations', JSON.stringify(cajaOperations));
-  if (supabaseClient) {
-    syncWithSupabase('taller_config', { id: 'caja_accounts', name: JSON.stringify(cajaAccounts) });
-    syncWithSupabase('taller_config', { id: 'caja_operations', name: JSON.stringify(cajaOperations) });
-  }
 }
 window.saveCajaState = saveCajaState;
 
 // Modales Cuentas
 function openCreateAccountModal() {
   document.getElementById('caja-new-account-name').value = '';
-  document.getElementById('caja-create-account-modal').style.display = 'flex';
+  document.getElementById('caja-create-account-modal').classList.add('open');
 }
 window.openCreateAccountModal = openCreateAccountModal;
 
 function closeCreateAccountModal() {
-  document.getElementById('caja-create-account-modal').style.display = 'none';
+  document.getElementById('caja-create-account-modal').classList.remove('open');
 }
 window.closeCreateAccountModal = closeCreateAccountModal;
 
@@ -12713,9 +12837,7 @@ function openCajaModal(type) {
   document.getElementById('caja-op-concept').value = '';
   document.getElementById('caja-op-amount').value = '';
   document.getElementById('caja-op-method').value = 'efectivo';
-  document.getElementById('caja-op-payment-type').value = 'transferencia';
-  document.getElementById('caja-op-installments').value = '';
-  document.getElementById('caja-op-installment-amount').value = '';
+  document.getElementById('caja-op-payment-type').value = 'efectivo';
 
   const titleEl = document.getElementById('caja-operation-modal-title');
   const submitBtn = document.getElementById('caja-op-submit-btn');
@@ -12746,15 +12868,14 @@ function openCajaModal(type) {
   }
 
   handleCajaOpMethodChange();
-  handleCajaOpPaymentTypeChange();
   
-  document.getElementById('caja-operation-modal').style.display = 'flex';
+  document.getElementById('caja-operation-modal').classList.add('open');
   if (typeof initLucide === 'function') initLucide();
 }
 window.openCajaModal = openCajaModal;
 
 function closeCajaModal() {
-  document.getElementById('caja-operation-modal').style.display = 'none';
+  document.getElementById('caja-operation-modal').classList.remove('open');
 }
 window.closeCajaModal = closeCajaModal;
 
@@ -12767,15 +12888,6 @@ function handleCajaOpMethodChange() {
 }
 window.handleCajaOpMethodChange = handleCajaOpMethodChange;
 
-function handleCajaOpPaymentTypeChange() {
-  const pType = document.getElementById('caja-op-payment-type').value;
-  const type = document.getElementById('caja-operation-type').value;
-  const container = document.getElementById('caja-op-installments-container');
-  if (container) {
-    container.style.display = (type === 'ingreso' && pType === 'cuotas') ? 'flex' : 'none';
-  }
-}
-window.handleCajaOpPaymentTypeChange = handleCajaOpPaymentTypeChange;
 
 function handleCajaOperationSubmit(e) {
   e.preventDefault();
@@ -12784,20 +12896,7 @@ function handleCajaOperationSubmit(e) {
   const amount = parseFloat(document.getElementById('caja-op-amount').value) || 0;
   const method = document.getElementById('caja-op-method').value;
   const accountId = method === 'banco' ? document.getElementById('caja-op-account-id').value : null;
-  const paymentType = type === 'ingreso' ? document.getElementById('caja-op-payment-type').value : 'transferencia';
-
-  let installments = null;
-  let installmentAmount = null;
-
-  if (type === 'ingreso' && paymentType === 'cuotas') {
-    installments = parseInt(document.getElementById('caja-op-installments').value) || 0;
-    installmentAmount = parseFloat(document.getElementById('caja-op-installment-amount').value) || 0;
-
-    if (installments <= 0 || installmentAmount <= 0) {
-      alert('Por favor ingrese valores de cuota válidos.');
-      return;
-    }
-  }
+  const paymentType = type === 'ingreso' ? document.getElementById('caja-op-payment-type').value : 'efectivo';
 
   if (amount <= 0) {
     alert('El monto debe ser mayor a cero.');
@@ -12817,8 +12916,8 @@ function handleCajaOperationSubmit(e) {
     method: method,
     accountId: accountId,
     paymentType: paymentType,
-    installments: installments,
-    installmentAmount: installmentAmount,
+    installments: null,
+    installmentAmount: null,
     date: new Date().toISOString()
   };
 
@@ -12839,10 +12938,7 @@ function deleteCajaOperation(opId) {
 window.deleteCajaOperation = deleteCajaOperation;
 
 function goToCajaWithAutoFill(vehicle) {
-  // Redireccionar a Caja
   switchView('caja');
-
-  // Abrir modal e ingresar datos
   openCajaModal('ingreso');
 
   const conceptInput = document.getElementById('caja-op-concept');
@@ -12872,9 +12968,8 @@ function goToCajaWithAutoFill(vehicle) {
 }
 window.goToCajaWithAutoFill = goToCajaWithAutoFill;
 
-// Renderizado Caja
 function formatCajaCurrency(val) {
-  return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(Math.round(val));
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(Math.round(val));
 }
 window.formatCajaCurrency = formatCajaCurrency;
 
@@ -12962,13 +13057,13 @@ function openCajaTransferModal() {
     }
   }
 
-  document.getElementById('caja-transfer-modal').style.display = 'flex';
+  document.getElementById('caja-transfer-modal').classList.add('open');
   if (typeof initLucide === 'function') initLucide();
 }
 window.openCajaTransferModal = openCajaTransferModal;
 
 function closeCajaTransferModal() {
-  document.getElementById('caja-transfer-modal').style.display = 'none';
+  document.getElementById('caja-transfer-modal').classList.remove('open');
 }
 window.closeCajaTransferModal = closeCajaTransferModal;
 
@@ -13025,10 +13120,10 @@ function clearCajaFilters() {
 }
 window.clearCajaFilters = clearCajaFilters;
 
-// Renderizado Caja
 function renderCajaView() {
   if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
   if (!Array.isArray(cajaOperations)) cajaOperations = [];
+  
   // 1. Calcular Balances
   const efectivoBalance = getAccountBalance('efectivo');
 
@@ -13182,22 +13277,26 @@ function renderCajaView() {
           destStr = `${fromStr} <i data-lucide="arrow-right" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin: 0 4px; color: var(--text-muted);"></i> ${toStr}`;
         }
 
-        const paymentTypeStr = op.type === 'ingreso'
-          ? (op.paymentType === 'cuotas' ? 'Cuotas' : 'Transferencia/Débito')
-          : '—';
-
-        const installmentStr = op.type === 'ingreso' && op.paymentType === 'cuotas'
-          ? `<strong>${op.installments}</strong> cuotas de <strong>${formatCajaCurrency(op.installmentAmount)}</strong>`
-          : '—';
+        let paymentTypeStr = '—';
+        if (op.type === 'ingreso' && op.paymentType) {
+          const mapping = {
+            'efectivo': 'Efectivo',
+            'transferencia': 'Transferencia',
+            'debito': 'Débito',
+            'cuotas': 'Cuotas con tarjeta'
+          };
+          paymentTypeStr = mapping[op.paymentType] || op.paymentType;
+        }
 
         return `
           <tr style="border-bottom: 1px solid var(--border-color); font-size: 13px;">
             <td style="padding: 12px 14px; color: var(--text-secondary);">${dateStr}</td>
             <td style="padding: 12px 14px;">${typeBadge}</td>
             <td style="padding: 12px 14px; font-weight: 600; color: var(--text-primary);">${op.concept}</td>
-            <td style="padding: 12px 14px; color: var(--text-secondary);">${destStr}</td>
+            <td style="padding: 12px 14px; color: var(--text-secondary); position: relative;">
+              ${destStr}
+            </td>
             <td style="padding: 12px 14px; color: var(--text-secondary);">${paymentTypeStr}</td>
-            <td style="padding: 12px 14px; color: var(--text-secondary);">${installmentStr}</td>
             <td style="padding: 12px 14px; font-family: var(--font-display); font-weight: 800; text-align: right; color: ${amountColor};">
               ${amountPrefix} ${formatCajaCurrency(op.amount)}
             </td>
@@ -13215,5 +13314,3 @@ function renderCajaView() {
   if (typeof initLucide === 'function') initLucide();
 }
 window.renderCajaView = renderCajaView;
-
-
