@@ -162,6 +162,28 @@ async function syncWithSupabase(tableName, data) {
             date: item.date
           };
         }
+        if (tableName === 'taller_caja_accounts') {
+          return {
+            id: item.id,
+            name: item.name
+          };
+        }
+        if (tableName === 'taller_caja_operations') {
+          return {
+            id: item.id,
+            type: item.type,
+            concept: item.concept,
+            amount: item.amount,
+            method: item.method || null,
+            account_id: item.accountId || null,
+            from_account_id: item.fromAccountId || null,
+            to_account_id: item.toAccountId || null,
+            payment_type: item.paymentType || null,
+            installments: item.installments || null,
+            installment_amount: item.installmentAmount || null,
+            date: item.date
+          };
+        }
         return { ...item };
       });
       const { error } = await supabaseClient.from(tableName).upsert(mappedData);
@@ -333,6 +355,38 @@ async function loadStateFromSupabase() {
     cajaOperations = JSON.parse(localStorage.getItem('taller_caja_operations') || '[]');
     if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
     if (!Array.isArray(cajaOperations)) cajaOperations = [];
+
+    // Cargar datos de Caja desde la base de datos Supabase
+    try {
+      const { data: cajaAccData, error: cajaAccError } = await supabaseClient.from('taller_caja_accounts').select('*');
+      if (!cajaAccError && cajaAccData) {
+        cajaAccounts = cajaAccData.map(acc => ({
+          id: acc.id,
+          name: acc.name
+        }));
+        localStorage.setItem('taller_caja_accounts', JSON.stringify(cajaAccounts));
+      }
+      const { data: cajaOpData, error: cajaOpError } = await supabaseClient.from('taller_caja_operations').select('*');
+      if (!cajaOpError && cajaOpData) {
+        cajaOperations = cajaOpData.map(op => ({
+          id: op.id,
+          type: op.type,
+          concept: op.concept,
+          amount: op.amount,
+          method: op.method || null,
+          accountId: op.account_id || op.accountId || null,
+          fromAccountId: op.from_account_id || op.fromAccountId || null,
+          toAccountId: op.to_account_id || op.toAccountId || null,
+          paymentType: op.payment_type || op.paymentType || null,
+          installments: op.installments || null,
+          installmentAmount: op.installment_amount || op.installmentAmount || null,
+          date: op.date
+        }));
+        localStorage.setItem('taller_caja_operations', JSON.stringify(cajaOperations));
+      }
+    } catch (e) {
+      console.error("Error al cargar estado de caja desde Supabase:", e);
+    }
 
     const { data: clientData, error: clientError } = await supabaseClient.from('taller_clients').select('*');
     if (!clientError && clientData) {
@@ -3184,6 +3238,8 @@ function renderApp() {
     renderCuentasCobrarView();
   } else if (currentView === 'vehiculos-lista') {
     renderVehiculosView();
+  } else if (currentView === 'caja') {
+    renderCajaView();
   }
   updateMetrics();
   initLucide();
@@ -12794,6 +12850,10 @@ window.renderMobileVehicleList = function() {
 function saveCajaState() {
   localStorage.setItem('taller_caja_accounts', JSON.stringify(cajaAccounts));
   localStorage.setItem('taller_caja_operations', JSON.stringify(cajaOperations));
+  if (typeof syncWithSupabase === 'function') {
+    syncWithSupabase('taller_caja_accounts', cajaAccounts);
+    syncWithSupabase('taller_caja_operations', cajaOperations);
+  }
 }
 window.saveCajaState = saveCajaState;
 
@@ -12932,6 +12992,9 @@ function deleteCajaOperation(opId) {
   if (confirm('¿Está seguro de que desea eliminar este registro de caja de forma permanente?')) {
     cajaOperations = cajaOperations.filter(op => op.id !== opId);
     saveCajaState();
+    if (typeof deleteFromSupabase === 'function') {
+      deleteFromSupabase('taller_caja_operations', opId);
+    }
     renderCajaView();
   }
 }
@@ -13030,6 +13093,9 @@ function deleteCajaAccount(accId) {
 
   cajaAccounts = cajaAccounts.filter(acc => acc.id !== accId);
   saveCajaState();
+  if (typeof deleteFromSupabase === 'function') {
+    deleteFromSupabase('taller_caja_accounts', accId);
+  }
   renderCajaView();
 }
 window.deleteCajaAccount = deleteCajaAccount;
