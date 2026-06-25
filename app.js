@@ -57,6 +57,7 @@ let workshopConfig = {
   expShowAesthetics: false,
   expShowVIN: false,
   expShowColor: false,
+  expShowVehiculosTaller: false,
   defaultDiscount: 0
 };
 
@@ -245,6 +246,7 @@ async function syncWithSupabase(tableName, data) {
           expShowAesthetics: data.expShowAesthetics || false,
           expShowVIN: data.expShowVIN || false,
           expShowColor: data.expShowColor || false,
+          expShowVehiculosTaller: data.expShowVehiculosTaller || false,
           defaultDiscount: data.defaultDiscount || 0
         })
       };
@@ -310,6 +312,7 @@ async function loadStateFromSupabase() {
           workshopConfig.expShowAesthetics = parsed.expShowAesthetics !== undefined ? parsed.expShowAesthetics : false;
           workshopConfig.expShowVIN = parsed.expShowVIN !== undefined ? parsed.expShowVIN : false;
           workshopConfig.expShowColor = parsed.expShowColor !== undefined ? parsed.expShowColor : false;
+          workshopConfig.expShowVehiculosTaller = parsed.expShowVehiculosTaller !== undefined ? parsed.expShowVehiculosTaller : false;
           workshopConfig.defaultDiscount = parsed.defaultDiscount !== undefined ? parsed.defaultDiscount : 0;
         } catch (e) {
           console.error("Error al parsear experimental_configs:", e);
@@ -674,6 +677,8 @@ function loadWorkshopConfig() {
     if (showVINCheckbox) showVINCheckbox.checked = workshopConfig.expShowVIN || false;
     const showColorCheckbox = document.getElementById('config-exp-show-color');
     if (showColorCheckbox) showColorCheckbox.checked = workshopConfig.expShowColor || false;
+    const showVehiculosTallerCheckbox = document.getElementById('config-exp-show-vehiculos-taller');
+    if (showVehiculosTallerCheckbox) showVehiculosTallerCheckbox.checked = workshopConfig.expShowVehiculosTaller || false;
     
     toggleExperimentalSection(workshopConfig.expMaster || false);
   } else {
@@ -780,6 +785,7 @@ window.saveWorkshopConfig = function() {
     expShowAesthetics: document.getElementById('config-exp-show-aesthetics') ? document.getElementById('config-exp-show-aesthetics').checked : (workshopConfig.expShowAesthetics || false),
     expShowVIN: document.getElementById('config-exp-show-vin') ? document.getElementById('config-exp-show-vin').checked : (workshopConfig.expShowVIN || false),
     expShowColor: document.getElementById('config-exp-show-color') ? document.getElementById('config-exp-show-color').checked : (workshopConfig.expShowColor || false),
+    expShowVehiculosTaller: document.getElementById('config-exp-show-vehiculos-taller') ? document.getElementById('config-exp-show-vehiculos-taller').checked : (workshopConfig.expShowVehiculosTaller || false),
     defaultDiscount: document.getElementById('config-workshop-discount') ? parseFloat(document.getElementById('config-workshop-discount').value) || 0 : (workshopConfig.defaultDiscount || 0)
   };
   
@@ -2289,6 +2295,8 @@ window.toggleExperimentalFeature = function(feature, enabled) {
     workshopConfig.expShowVIN = enabled;
   } else if (feature === 'showColor') {
     workshopConfig.expShowColor = enabled;
+  } else if (feature === 'showVehiculosTaller') {
+    workshopConfig.expShowVehiculosTaller = enabled;
   }
   localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
   syncWithSupabase('taller_config', workshopConfig);
@@ -2303,6 +2311,13 @@ window.applyExperimentalFeatures = function() {
   if (menuParts) {
     const showParts = isMaster && !!workshopConfig.expHideParts;
     menuParts.style.display = showParts ? 'flex' : 'none';
+  }
+
+  // Pestaña de Vehículos en taller
+  const menuVehiculos = document.getElementById('menu-vehiculos');
+  if (menuVehiculos) {
+    const showVehiculos = isMaster && !!workshopConfig.expShowVehiculosTaller;
+    menuVehiculos.style.display = showVehiculos ? 'flex' : 'none';
   }
   
   // 2. Botones de Importar Excel
@@ -3043,6 +3058,12 @@ window.switchView = function(view) {
     renderReportesView();
   }
   else if (view === 'vehiculos-ingresados') {
+    const isMaster = !!workshopConfig.expMaster;
+    const showVehiculos = isMaster && !!workshopConfig.expShowVehiculosTaller;
+    if (!showVehiculos) {
+      switchView('tablero');
+      return;
+    }
     getAndShow('vehiculos-ingresados-view-panel');
     const menuBtn = document.getElementById('menu-vehiculos');
     if (menuBtn) menuBtn.classList.add('active');
