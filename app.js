@@ -2936,8 +2936,7 @@ window.switchView = function(view) {
     'vehiculos-lista-view-panel',
     'reception-panel-view',
     'caja-view-panel',
-    'configuracion-view-panel',
-    'historial-view-panel'
+    'configuracion-view-panel'
   ];
   allPanels.forEach(p => {
     const el = document.getElementById(p);
@@ -3118,11 +3117,7 @@ window.switchView = function(view) {
     if (menuBtn) menuBtn.classList.add('active');
     renderVehiculosView();
   }
-  else if (view === 'historial') {
-    getAndShow('historial-view-panel');
-    const menuBtn = document.getElementById('menu-clientes-db');
-    if (menuBtn) menuBtn.classList.add('active');
-  }
+
   else if (view === 'configuracion') {
     getAndShow('configuracion-view-panel');
     loadWorkshopConfig();
@@ -12691,6 +12686,32 @@ window.sendTaxInvoiceWhatsApp = function(invoiceType, event) {
     .catch(err => {
       console.error("Error al enviar factura por WhatsApp:", err);
     });
+};
+
+window.showHistorialPopup = function() {
+  const modal = document.getElementById('historial-popup-modal');
+  if (modal) {
+    modal.classList.add('open');
+    if (typeof initLucide === 'function') initLucide();
+  }
+};
+
+window.hideHistorialPopup = function() {
+  const modal = document.getElementById('historial-popup-modal');
+  if (modal) {
+    modal.classList.remove('open');
+  }
+};
+
+window.closeHistorialPopup = function(e) {
+  if (e.target.id === 'historial-popup-modal') {
+    hideHistorialPopup();
+  }
+};
+
+window.selectHistorialOption = function(view) {
+  hideHistorialPopup();
+  switchView(view);
 };
 
 // ========================================================================

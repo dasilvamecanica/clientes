@@ -776,8 +776,8 @@
     <main class="main-content" id="ordenes-trabajo-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
-          <button class="hide-desktop back-to-history-btn" onclick="switchView('historial')" style="background: none; border: none; color: var(--color-accent); display: flex; align-items: center; gap: 4px; padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
-            <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i> Volver a Historial
+          <button class="hide-desktop back-to-history-btn" onclick="showHistorialPopup()" style="background: none; border: none; color: var(--color-accent); display: flex; align-items: center; gap: 4px; padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+            <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i> Menú Historial
           </button>
           <h1 style="font-family: var(--font-display); font-weight: 700; font-size: 28px; color: var(--text-primary);">Órdenes de Trabajo</h1>
           <span style="font-size: 13px; color: var(--text-secondary);">Gestiona todas las órdenes de trabajo del taller</span>
@@ -1072,66 +1072,12 @@
       </section>
     </main>
 
-    <!-- SECCIÓN: HISTORIAL HUB (MENÚ MULTI-OPCIÓN PARA MÓVIL Y ESCRITORIO) -->
-    <main class="main-content" id="historial-view-panel" style="display: none; flex-direction: column; gap: 20px;">
-      <header class="header">
-        <div class="header-title">
-          <h1 style="font-family: var(--font-display); font-weight: 700; font-size: 28px; color: var(--text-primary);">Historial</h1>
-          <span style="font-size: 13px; color: var(--text-secondary);">Selecciona la sección del historial que deseas consultar</span>
-        </div>
-      </header>
-
-      <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; margin-top: 10px;">
-        <!-- Card 1: Clientes -->
-        <div class="metric-card theme-orange" onclick="switchView('clientes-lista')" style="cursor: pointer; padding: 24px; display: flex; flex-direction: column; gap: 16px; transition: transform 0.2s, box-shadow 0.2s; border: 1.5px solid var(--border-color);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div class="metric-icon-wrapper" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(249, 115, 22, 0.12); display: flex; align-items: center; justify-content: center;">
-              <i data-lucide="users" style="width: 24px; height: 24px; color: #f97316;"></i>
-            </div>
-            <i data-lucide="arrow-right" style="width: 20px; height: 20px; color: var(--text-muted);"></i>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
-            <h3 style="font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); margin: 0;">Clientes</h3>
-            <p style="font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.4;">Ver y gestionar la base de datos de clientes del taller.</p>
-          </div>
-        </div>
-
-        <!-- Card 2: Vehículos -->
-        <div class="metric-card theme-orange" onclick="switchView('vehiculos-lista')" style="cursor: pointer; padding: 24px; display: flex; flex-direction: column; gap: 16px; transition: transform 0.2s, box-shadow 0.2s; border: 1.5px solid var(--border-color);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div class="metric-icon-wrapper" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(249, 115, 22, 0.12); display: flex; align-items: center; justify-content: center;">
-              <i data-lucide="car" style="width: 24px; height: 24px; color: #f97316;"></i>
-            </div>
-            <i data-lucide="arrow-right" style="width: 20px; height: 20px; color: var(--text-muted);"></i>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
-            <h3 style="font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); margin: 0;">Vehículos</h3>
-            <p style="font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.4;">Acceder al inventario y ficha técnica de los vehículos.</p>
-          </div>
-        </div>
-
-        <!-- Card 3: Órdenes de Trabajo -->
-        <div class="metric-card theme-orange" onclick="switchView('ordenes-trabajo')" style="cursor: pointer; padding: 24px; display: flex; flex-direction: column; gap: 16px; transition: transform 0.2s, box-shadow 0.2s; border: 1.5px solid var(--border-color);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div class="metric-icon-wrapper" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(249, 115, 22, 0.12); display: flex; align-items: center; justify-content: center;">
-              <i data-lucide="clipboard-list" style="width: 24px; height: 24px; color: #f97316;"></i>
-            </div>
-            <i data-lucide="arrow-right" style="width: 20px; height: 20px; color: var(--text-muted);"></i>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
-            <h3 style="font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); margin: 0;">Órdenes de Trabajo</h3>
-            <p style="font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.4;">Consultar y emitir órdenes de trabajo para los vehículos.</p>
-          </div>
-        </div>
-      </section>
-    </main>
-
     <!-- SECCIÓN: CLIENTES DE LA BASE DE DATOS (GESTIÓN DE RECURSOS) -->
     <main class="main-content" id="clientes-lista-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
-          <button class="hide-desktop back-to-history-btn" onclick="switchView('historial')" style="background: none; border: none; color: var(--color-accent); display: flex; align-items: center; gap: 4px; padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
-            <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i> Volver a Historial
+          <button class="hide-desktop back-to-history-btn" onclick="showHistorialPopup()" style="background: none; border: none; color: var(--color-accent); display: flex; align-items: center; gap: 4px; padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+            <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i> Menú Historial
           </button>
           <h1 style="font-family: var(--font-display); font-weight: 700; font-size: 28px; color: var(--text-primary);">Clientes</h1>
           <span style="font-size: 13px; color: var(--text-secondary);">Gestiona la base de datos de clientes del taller</span>
@@ -1204,8 +1150,8 @@
     <main class="main-content" id="vehiculos-lista-view-panel" style="display: none; flex-direction: column; gap: 20px;">
       <header class="header">
         <div class="header-title">
-          <button class="hide-desktop back-to-history-btn" onclick="switchView('historial')" style="background: none; border: none; color: var(--color-accent); display: flex; align-items: center; gap: 4px; padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
-            <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i> Volver a Historial
+          <button class="hide-desktop back-to-history-btn" onclick="showHistorialPopup()" style="background: none; border: none; color: var(--color-accent); display: flex; align-items: center; gap: 4px; padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+            <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i> Menú Historial
           </button>
           <h1 style="font-family: var(--font-display); font-weight: 700; font-size: 28px; color: var(--text-primary);">Vehículos</h1>
           <span style="font-size: 13px; color: var(--text-secondary);">Gestiona la flota de vehículos del taller</span>
@@ -4038,7 +3984,7 @@
       <i data-lucide="calendar" style="width: 20px; height: 20px;"></i>
       <span style="font-size: 10.5px; font-weight: 700; margin-top: 3px;">Agenda</span>
     </button>
-    <button class="mobile-nav-item" id="mobile-nav-clientes" onclick="switchView('historial')">
+    <button class="mobile-nav-item" id="mobile-nav-clientes" onclick="showHistorialPopup()">
       <i data-lucide="history" style="width: 20px; height: 20px;"></i>
       <span style="font-size: 10.5px; font-weight: 700; margin-top: 3px;">Historial</span>
     </button>
@@ -4051,6 +3997,52 @@
       <span style="font-size: 10.5px; font-weight: 700; margin-top: 3px;">Ajustes</span>
     </button>
   </nav>
+
+  <!-- MODAL/CUADRO EMERGENTE: SELECCIÓN DE HISTORIAL (MÓVIL) -->
+  <div class="modal-overlay" id="historial-popup-modal" onclick="closeHistorialPopup(event)">
+    <div class="modal-window">
+      <header class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1.5px solid var(--border-color); background: var(--card-bg);">
+        <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="history" style="color: var(--color-accent); width: 18px; height: 18px;"></i> Historial
+        </h2>
+        <button class="close-modal-btn" onclick="hideHistorialPopup()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center;">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </header>
+      <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px 24px 32px 24px;">
+        <!-- Option 1: Clientes -->
+        <button onclick="selectHistorialOption('clientes-lista')" style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; background: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); text-align: left; cursor: pointer; transition: background 0.2s, border-color 0.2s;">
+          <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(249, 115, 22, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="users" style="width: 18px; height: 18px; color: #f97316;"></i>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 14px; font-weight: 700;">Clientes</span>
+            <span style="font-size: 11.5px; color: var(--text-muted);">Base de datos de clientes</span>
+          </div>
+        </button>
+        <!-- Option 2: Vehículos -->
+        <button onclick="selectHistorialOption('vehiculos-lista')" style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; background: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); text-align: left; cursor: pointer; transition: background 0.2s, border-color 0.2s;">
+          <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(249, 115, 22, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="car" style="width: 18px; height: 18px; color: #f97316;"></i>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 14px; font-weight: 700;">Vehículos</span>
+            <span style="font-size: 11.5px; color: var(--text-muted);">Inventario y fichas técnicas</span>
+          </div>
+        </button>
+        <!-- Option 3: Órdenes de Trabajo -->
+        <button onclick="selectHistorialOption('ordenes-trabajo')" style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; background: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); text-align: left; cursor: pointer; transition: background 0.2s, border-color 0.2s;">
+          <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(249, 115, 22, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="clipboard-list" style="width: 18px; height: 18px; color: #f97316;"></i>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 14px; font-weight: 700;">Órdenes de Trabajo</span>
+            <span style="font-size: 11.5px; color: var(--text-muted);">Seguimiento de reparaciones</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL: CREAR NUEVA CUENTA BANCARIA -->
   <div class="modal-overlay" id="caja-create-account-modal" style="z-index: 1200;">
@@ -4186,7 +4178,7 @@
   <!-- Cliente de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=11.4"></script>
+  <script src="app.js?v=11.5"></script>
 </body>
 </html>
 <!-- Build trigger commit -->

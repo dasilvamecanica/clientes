@@ -4330,3 +4330,57 @@ aside.sidebar.collapsed .sidebar-user-container {
     width: 100% !important;
   }
 }
+
+/* Historial Popup Modal (Bottom Sheet on Mobile, Centered Modal on Desktop) */
+#historial-popup-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1200;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  justify-content: center;
+  align-items: flex-end;
+}
+
+#historial-popup-modal .modal-window {
+  width: 100%;
+  max-width: 480px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border: 1.5px solid var(--border-color);
+  border-bottom: none;
+  overflow: hidden;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 -10px 25px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+#historial-popup-modal.open {
+  display: flex !important;
+}
+
+#historial-popup-modal.open .modal-window {
+  transform: translateY(0) !important;
+}
+
+@media (min-width: 769px) {
+  #historial-popup-modal {
+    align-items: center !important;
+  }
+  #historial-popup-modal .modal-window {
+    border-radius: var(--radius-lg) !important;
+    border-bottom: 1.5px solid var(--border-color) !important;
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #historial-popup-modal.open .modal-window {
+    transform: scale(1) !important;
+  }
+}
