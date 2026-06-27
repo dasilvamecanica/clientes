@@ -4033,10 +4033,9 @@ aside.sidebar.collapsed .sidebar-user-container {
     display: none !important;
   }
   
-  /* Asegurar que la barra lateral drawer sea visible y tenga z-index superior */
+  /* Asegurar que la barra lateral no se muestre en móviles */
   #main-sidebar {
-    display: flex !important;
-    z-index: 1100 !important;
+    display: none !important;
   }
   
   /* Asegurar overlay sobre la navegación inferior */
@@ -4387,7 +4386,7 @@ aside.sidebar.collapsed .sidebar-user-container {
 
 /* Override final para asegurar la ocultación absoluta de la barra lateral en móviles */
 @media (max-width: 768px) {
-  aside.sidebar, aside.sidebar.collapsed, .sidebar {
+  #main-sidebar, aside.sidebar, aside.sidebar.collapsed, .sidebar {
     display: none !important;
   }
   .mobile-sidebar-overlay {
