@@ -7,7 +7,7 @@
   <!-- SEO & Favicon -->
   <link rel="icon" type="image/png" href="logo2.png">
   <meta name="description" content="Panel operativo premium de gestión para talleres mecánicos. Gestión de flujos de trabajo, cotizaciones y entregas en tiempo real.">
-  <link rel="stylesheet" href="styles.css?v=11.7">
+  <link rel="stylesheet" href="styles.css?v=11.8">
 </head>
 <body>
   <!-- Filtro SVG para hacer transparente el fondo blanco de los logos PNG conservando sus colores originales -->
@@ -2015,6 +2015,7 @@
                     </div>
                   </div>
                 </div>
+                <span class="hide-desktop" id="det-mobile-subtitle" style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Cargando cliente...</span>
                 <div style="display: flex; gap: 6px; align-items: center; align-self: flex-start; flex-wrap: wrap; margin-top: 2px;">
                   <!-- Badge de Estado Dinámico -->
                   <span class="status-badge theme-red" id="det-status-badge" style="font-size: 11px; width: fit-content; margin: 0;">En reparaci&oacute;n</span>
@@ -2515,6 +2516,97 @@
           </footer>
 
         </div>
+
+        <!-- BOTTOM SHEET: ACCIONES DE TRABAJO PARA MÓVILES -->
+        <div class="actions-sheet-overlay" id="ficha-actions-sheet" onclick="closeFichaActionsSheet(event)">
+          <div class="actions-sheet-window">
+            <header class="actions-sheet-header">
+              <div class="actions-sheet-indicator"></div>
+              <h3>Acciones del Vehículo</h3>
+            </header>
+            <div class="actions-sheet-body">
+              <!-- Cotización / Presupuesto -->
+              <div class="actions-sheet-group" id="mobile-sheet-group-quote" style="display: none;">
+                <div class="group-title">Presupuesto / Cotización</div>
+                <div class="group-buttons">
+                  <button onclick="downloadQuotePDF(); hideFichaActionsSheet();" class="sheet-btn">
+                    <i data-lucide="download"></i> Descargar PDF
+                  </button>
+                  <button onclick="sendQuoteWhatsApp(); hideFichaActionsSheet();" class="sheet-btn success-btn">
+                    <img src="whatsapp-logo-variant-svgrepo-com.svg" alt="WA"> Compartir WhatsApp
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Facturación -->
+              <div class="actions-sheet-group" id="mobile-sheet-group-invoice" style="display: none;">
+                <div class="group-title">Facturación</div>
+                <div class="group-buttons-vertical">
+                  <!-- Factura A -->
+                  <div class="invoice-row">
+                    <span>Factura A</span>
+                    <div class="row-actions">
+                      <button onclick="downloadTaxInvoicePDF('A', event); hideFichaActionsSheet();" class="sheet-sub-btn"><i data-lucide="download"></i> PDF</button>
+                      <button onclick="sendTaxInvoiceWhatsApp('A', event); hideFichaActionsSheet();" class="sheet-sub-btn success-btn"><img src="whatsapp-logo-variant-svgrepo-com.svg" alt="WA"> WhatsApp</button>
+                    </div>
+                  </div>
+                  <!-- Factura B -->
+                  <div class="invoice-row">
+                    <span>Factura B</span>
+                    <div class="row-actions">
+                      <button onclick="downloadTaxInvoicePDF('B', event); hideFichaActionsSheet();" class="sheet-sub-btn"><i data-lucide="download"></i> PDF</button>
+                      <button onclick="sendTaxInvoiceWhatsApp('B', event); hideFichaActionsSheet();" class="sheet-sub-btn success-btn"><img src="whatsapp-logo-variant-svgrepo-com.svg" alt="WA"> WhatsApp</button>
+                    </div>
+                  </div>
+                  <!-- Factura C -->
+                  <div class="invoice-row">
+                    <span>Factura C</span>
+                    <div class="row-actions">
+                      <button onclick="downloadTaxInvoicePDF('C', event); hideFichaActionsSheet();" class="sheet-sub-btn"><i data-lucide="download"></i> PDF</button>
+                      <button onclick="sendTaxInvoiceWhatsApp('C', event); hideFichaActionsSheet();" class="sheet-sub-btn success-btn"><img src="whatsapp-logo-variant-svgrepo-com.svg" alt="WA"> WhatsApp</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Certificado de Entrega -->
+              <div class="actions-sheet-group" id="mobile-sheet-group-delivery" style="display: none;">
+                <div class="group-title">Certificado de Entrega</div>
+                <div class="group-buttons">
+                  <button onclick="downloadDeliveryPDF(); hideFichaActionsSheet();" class="sheet-btn">
+                    <i data-lucide="award"></i> Descargar PDF
+                  </button>
+                  <button onclick="sendDeliveryWhatsApp(); hideFichaActionsSheet();" class="sheet-btn success-btn">
+                    <img src="whatsapp-logo-variant-svgrepo-com.svg" alt="WA"> Compartir WhatsApp
+                  </button>
+                </div>
+              </div>
+
+              <!-- Historial y Otras Acciones -->
+              <div class="actions-sheet-group">
+                <div class="group-title">Historial y Datos</div>
+                <div class="group-buttons-row">
+                  <button onclick="viewWorkOrderHistoryOfActiveVehicle(); hideFichaActionsSheet();" class="sheet-btn-secondary">
+                    <i data-lucide="history"></i> Ver Historial de Órdenes
+                  </button>
+                </div>
+              </div>
+
+              <!-- Peligro -->
+              <div class="actions-sheet-group danger-group">
+                <div class="group-buttons-row">
+                  <button onclick="deleteActiveVehicleFromFicha(); hideFichaActionsSheet();" class="sheet-btn-danger">
+                    <i data-lucide="trash-2"></i> Eliminar Recepción
+                  </button>
+                </div>
+              </div>
+            </div>
+            <footer class="actions-sheet-footer">
+              <button onclick="hideFichaActionsSheet()" class="cancel-sheet-btn">Cerrar</button>
+            </footer>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -4178,7 +4270,7 @@
   <!-- Cliente de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=11.5"></script>
+  <script src="app.js?v=11.6"></script>
 </body>
 </html>
 <!-- Build trigger commit -->

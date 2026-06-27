@@ -4610,6 +4610,17 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
       window.applyDetailedModalReadOnlyState();
     }
 
+    // Set mobile header subtitle
+    const mobSubtitle = document.getElementById('det-mobile-subtitle');
+    if (mobSubtitle) {
+      mobSubtitle.textContent = `Cliente: ${vehicle.clientName || 'Sin registrar'} · Tel: ${vehicle.clientPhone || '—'}`;
+    }
+
+    // Sincronizar visibilidad de acciones móviles
+    if (typeof syncFichaMobileActionsVisibility === 'function') {
+      syncFichaMobileActionsVisibility();
+    }
+
     // Open the detailed reception modal overlay
     const overlay = document.getElementById('reception-panel-view');
     if (overlay) {
@@ -6211,6 +6222,9 @@ window.updateCalculatedTotals = function() {
     vehicle.vatInclusive = vatInclusive;
     vehicle.value = Math.round(total);
     triggerAutoSave();
+    if (typeof syncFichaMobileActionsVisibility === 'function') {
+      syncFichaMobileActionsVisibility();
+    }
   }
 };
 
@@ -10744,6 +10758,10 @@ window.executePaletteAction = function(action, param) {
 // --- Dropdown de Acciones Adicionales en la Cabecera de la Ficha ---
 window.toggleHeaderDropdown = function(event) {
   event.stopPropagation();
+  if (window.innerWidth <= 768) {
+    showFichaActionsSheet();
+    return;
+  }
   const dropdown = document.getElementById('ficha-more-dropdown');
   if (dropdown) {
     dropdown.classList.toggle('show');
@@ -13428,3 +13446,49 @@ function renderCajaView() {
   if (typeof initLucide === 'function') initLucide();
 }
 window.renderCajaView = renderCajaView;
+
+window.showFichaActionsSheet = function() {
+  const sheet = document.getElementById('ficha-actions-sheet');
+  if (sheet) {
+    sheet.classList.add('open');
+    if (typeof syncFichaMobileActionsVisibility === 'function') {
+      syncFichaMobileActionsVisibility();
+    }
+    if (typeof initLucide === 'function') initLucide();
+  }
+};
+
+window.hideFichaActionsSheet = function() {
+  const sheet = document.getElementById('ficha-actions-sheet');
+  if (sheet) {
+    sheet.classList.remove('open');
+  }
+};
+
+window.closeFichaActionsSheet = function(e) {
+  if (e.target.id === 'ficha-actions-sheet') {
+    hideFichaActionsSheet();
+  }
+};
+
+window.syncFichaMobileActionsVisibility = function() {
+  const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
+  if (!vehicle) return;
+
+  const mobQuote = document.getElementById('mobile-sheet-group-quote');
+  const mobInvoice = document.getElementById('mobile-sheet-group-invoice');
+  const mobDelivery = document.getElementById('mobile-sheet-group-delivery');
+
+  const hasQuoteItems = (activeQuoteServices.length > 0) || (activeQuoteParts.length > 0);
+  const isQuoteStageOrLater = ['cotizacion', 'reparacion', 'listo', 'entregado'].includes(vehicle.stage);
+  const shouldShowQuote = hasQuoteItems || isQuoteStageOrLater;
+
+  if (mobQuote) mobQuote.style.display = shouldShowQuote ? 'block' : 'none';
+  if (mobInvoice) mobInvoice.style.display = shouldShowQuote ? 'block' : 'none';
+
+  const showCertificate = workshopConfig.expMaster && !!workshopConfig.expHideCertificate;
+  if (mobDelivery) {
+    mobDelivery.style.display = (showCertificate && shouldShowQuote) ? 'block' : 'none';
+  }
+};
+
