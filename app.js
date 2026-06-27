@@ -89,7 +89,13 @@ async function syncWithSupabase(tableName, data) {
       const mappedData = data.map(item => {
         if (tableName === 'taller_vehicles') {
           // Prepare services array with metadata
-          const servicesWithMeta = [...(item.services || [])];
+          let servicesArray = [];
+          if (typeof item.services === 'string') {
+            servicesArray = item.services.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+          } else if (Array.isArray(item.services)) {
+            servicesArray = [...item.services];
+          }
+          const servicesWithMeta = [...servicesArray];
           const metaObj = {
             otTasks: item.otTasks || [],
             ownerHistory: item.ownerHistory || [],
