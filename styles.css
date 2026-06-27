@@ -2267,27 +2267,21 @@ button {
     font-size: 22px !important;
   }
   
-  /* Menú lateral convertido en Drawer deslizante */
+  /* Menú lateral eliminado para móviles */
   .sidebar {
-    position: fixed !important;
-    top: 0 !important;
-    left: -280px !important;
-    width: 280px !important;
-    height: 100vh !important;
-    z-index: 1000 !important;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    flex-direction: column !important;
-    padding: 20px 16px !important;
-    box-shadow: 4px 0 20px rgba(0,0,0,0.5) !important;
-    background-color: #1a1a1a !important;
-    display: flex !important;
-    justify-content: flex-start !important;
-    align-items: stretch !important;
-    margin: 0 !important;
+    display: none !important;
   }
   
-  .sidebar.mobile-open {
-    transform: translateX(280px) !important;
+  .mobile-sidebar-overlay {
+    display: none !important;
+  }
+  
+  #mobile-menu-btn {
+    display: none !important;
+  }
+  
+  .mobile-header {
+    justify-content: center !important;
   }
   
   .sidebar-toggle-btn {

@@ -2936,7 +2936,8 @@ window.switchView = function(view) {
     'vehiculos-lista-view-panel',
     'reception-panel-view',
     'caja-view-panel',
-    'configuracion-view-panel'
+    'configuracion-view-panel',
+    'historial-view-panel'
   ];
   allPanels.forEach(p => {
     const el = document.getElementById(p);
@@ -3117,6 +3118,11 @@ window.switchView = function(view) {
     if (menuBtn) menuBtn.classList.add('active');
     renderVehiculosView();
   }
+  else if (view === 'historial') {
+    getAndShow('historial-view-panel');
+    const menuBtn = document.getElementById('menu-clientes-db');
+    if (menuBtn) menuBtn.classList.add('active');
+  }
   else if (view === 'configuracion') {
     getAndShow('configuracion-view-panel');
     loadWorkshopConfig();
@@ -3165,7 +3171,7 @@ window.switchView = function(view) {
     mobileActiveId = 'mobile-nav-panel';
   } else if (view === 'agenda') {
     mobileActiveId = 'mobile-nav-agenda';
-  } else if (view === 'clientes-lista') {
+  } else if (view === 'historial' || view === 'clientes-lista' || view === 'vehiculos-lista' || view === 'ordenes-trabajo') {
     mobileActiveId = 'mobile-nav-clientes';
   } else if (view === 'servicios-catalogo') {
     mobileActiveId = 'mobile-nav-servicios';
