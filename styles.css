@@ -2268,7 +2268,7 @@ button {
   }
   
   /* Menú lateral eliminado para móviles */
-  .sidebar {
+  aside.sidebar, aside.sidebar.collapsed, .sidebar {
     display: none !important;
   }
   
