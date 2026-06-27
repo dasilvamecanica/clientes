@@ -4384,3 +4384,19 @@ aside.sidebar.collapsed .sidebar-user-container {
     transform: scale(1) !important;
   }
 }
+
+/* Override final para asegurar la ocultación absoluta de la barra lateral en móviles */
+@media (max-width: 768px) {
+  aside.sidebar, aside.sidebar.collapsed, .sidebar {
+    display: none !important;
+  }
+  .mobile-sidebar-overlay {
+    display: none !important;
+  }
+  #mobile-menu-btn {
+    display: none !important;
+  }
+  .mobile-header {
+    justify-content: center !important;
+  }
+}
