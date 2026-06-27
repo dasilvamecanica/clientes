@@ -4656,4 +4656,9 @@ aside.sidebar.collapsed .sidebar-user-container {
   #tab-content-reception .form-group {
     width: 100% !important;
   }
+
+  /* Asegurar que el panel de recepción esté por encima de la cabecera móvil y barra inferior */
+  #reception-panel-view {
+    z-index: 1100 !important;
+  }
 }
