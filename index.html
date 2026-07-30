@@ -265,6 +265,15 @@
             </button>
           </div>
           <div class="cards-container" id="container-cotizacion">
+            <!-- Botón dashed para crear cotización -->
+            <button class="add-card-btn" onclick="openAddVehicleModal('cotizacion')">
+              <div class="add-icon-pill">
+                <i data-lucide="plus"></i>
+              </div>
+              <span>Crear cotización</span>
+              <span class="sub-text">Click para agregar</span>
+            </button>
+            
             <div class="cards-list" id="list-cotizacion">
               <!-- Renderizado dinámico desde JS -->
             </div>
@@ -4270,7 +4279,7 @@
   <!-- Cliente de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=11.6"></script>
+  <script src="app.js?v=11.7"></script>
 </body>
 </html>
 <!-- Build trigger commit -->

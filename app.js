@@ -4085,6 +4085,8 @@ window.populateAutocompleteDatalists = function() {
 // --- 9. GESTIÓN DEL MODAL DE REGISTRO E INGRESOS ---
 
 window.openAddVehicleModal = function(defaultStage = 'recepcion') {
+  window.currentAddVehicleStage = defaultStage || 'recepcion';
+
   // Resetear Formulario
   document.getElementById('vehicle-form').reset();
   document.getElementById('form-vehicle-id').value = '';
@@ -4093,6 +4095,23 @@ window.openAddVehicleModal = function(defaultStage = 'recepcion') {
     document.getElementById('form-category').value = 'B';
   }
   
+  // Actualizar el título del modal dinámicamente
+  const titleEl = document.getElementById('vehicle-modal-title');
+  if (titleEl) {
+    if (defaultStage === 'cotizacion') {
+      titleEl.innerHTML = `
+        <i data-lucide="file-text" style="color: var(--color-accent); width: 24px; height: 24px;"></i>
+        Crear Cotización
+      `;
+    } else {
+      titleEl.innerHTML = `
+        <i data-lucide="car" style="color: var(--color-accent); width: 24px; height: 24px;"></i>
+        Recepción de Vehículo
+      `;
+    }
+    if (typeof initLucide === 'function') initLucide();
+  }
+
   // Poblar datalists
   populateAutocompleteDatalists();
   
@@ -4287,14 +4306,19 @@ window.handleVehicleFormSubmit = function(e) {
       saveState();
       closeModal('vehicle-modal');
       renderApp();
-      if (wasCita || vehicle.stage === 'recepcion') {
+      if (wasCita || vehicle.stage === 'recepcion' || window.currentAddVehicleStage === 'cotizacion') {
         openDetailedReception(vehicle.id);
+        if (window.currentAddVehicleStage === 'cotizacion') {
+          setActiveTab('quote');
+        }
       }
       return;
     }
   }
 
-  // Siempre crear una nueva ficha de trabajo (nuevo ingreso)
+  // Siempre crear una nueva ficha de trabajo (nuevo ingreso o cotización)
+  const targetStage = window.currentAddVehicleStage || 'recepcion';
+
   // Recuperar historial de propietarios del vehiculo mas reciente con la misma patente
   const prevRecords = cleanPlate
     ? vehicles.filter(v => v.plate && v.plate.replace(/\s+/g, '').toUpperCase() === cleanPlate)
@@ -4328,7 +4352,7 @@ window.handleVehicleFormSubmit = function(e) {
     clientIva: client.ivaCondition || typedClientIva || 'Consumidor Final',
     clientAddress: client.address || typedClientAddress || 'Sin Direccion',
     ownerHistory: inheritedOwnerHistory,
-    stage: 'recepcion',
+    stage: targetStage,
     value: 0,
     entryDate: new Date().toISOString().split('T')[0],
     entryTime: Date.now(),
@@ -4345,6 +4369,9 @@ window.handleVehicleFormSubmit = function(e) {
   closeModal('vehicle-modal');
   renderApp(); // Añadido para actualizar el tablero Kanban inmediatamente
   openDetailedReception(newId);
+  if (targetStage === 'cotizacion') {
+    setActiveTab('quote');
+  }
 };
 
 
