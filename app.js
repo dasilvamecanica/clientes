@@ -4271,6 +4271,10 @@ window.populateAutocompleteDatalists = function() {
 // --- 9. GESTIÓN DEL MODAL DE REGISTRO E INGRESOS ---
 
 window.openAddVehicleModal = function(defaultStage = 'recepcion') {
+  if (window.innerWidth <= 768 && typeof window.openMobileEntryWizard === 'function') {
+    window.openMobileEntryWizard();
+    return;
+  }
   window.currentAddVehicleStage = defaultStage || 'recepcion';
 
   // Resetear Formulario
@@ -13710,4 +13714,311 @@ window.syncFichaMobileActionsVisibility = function() {
     mobDelivery.style.display = (showCertificate && shouldShowQuote) ? 'block' : 'none';
   }
 };
+
+// ========================================================================
+// 10. ASISTENTE GUIADO MÓVIL (PASO A PASO: DATOS -> FOTOS -> KILOMETRAJE)
+// ========================================================================
+
+let mobileWizardData = {
+  step: 1,
+  plate: '',
+  model: '',
+  firstName: '',
+  lastName: '',
+  photos: {
+    adelante: null,
+    derecha: null,
+    atras: null,
+    izquierda: null,
+    tablero: null
+  },
+  km: ''
+};
+
+window.openMobileEntryWizard = function() {
+  mobileWizardData = {
+    step: 1,
+    plate: '',
+    model: '',
+    firstName: '',
+    lastName: '',
+    photos: {
+      adelante: null,
+      derecha: null,
+      atras: null,
+      izquierda: null,
+      tablero: null
+    },
+    km: ''
+  };
+
+  // Reset inputs
+  const pEl = document.getElementById('mob-wiz-plate');
+  const mEl = document.getElementById('mob-wiz-model');
+  const fnEl = document.getElementById('mob-wiz-first-name');
+  const lnEl = document.getElementById('mob-wiz-last-name');
+  const kmEl = document.getElementById('mob-wiz-km');
+
+  if (pEl) pEl.value = '';
+  if (mEl) mEl.value = '';
+  if (fnEl) fnEl.value = '';
+  if (lnEl) lnEl.value = '';
+  if (kmEl) kmEl.value = '';
+
+  // Reset photos UI
+  const slots = ['adelante', 'derecha', 'atras', 'izquierda', 'tablero'];
+  slots.forEach(slot => {
+    const fileEl = document.getElementById(`mob-file-${slot}`);
+    const imgEl = document.getElementById(`img-preview-${slot}`);
+    const placeholderEl = document.getElementById(`placeholder-${slot}`);
+    const badgeEl = document.getElementById(`slot-badge-${slot}`);
+    const textEl = document.getElementById(`btn-text-${slot}`);
+    const cardEl = document.getElementById(`slot-card-${slot}`);
+
+    if (fileEl) fileEl.value = '';
+    if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
+    if (placeholderEl) placeholderEl.style.display = 'flex';
+    if (badgeEl) { badgeEl.textContent = 'Pendiente'; badgeEl.className = 'slot-status-badge pending'; }
+    if (textEl) textEl.textContent = 'Tomar foto';
+    if (cardEl) cardEl.classList.remove('completed');
+  });
+
+  const tabRefImg = document.getElementById('tablero-reference-img');
+  if (tabRefImg) tabRefImg.src = '';
+
+  const wizardModal = document.getElementById('mobile-vehicle-entry-wizard');
+  if (wizardModal) wizardModal.style.display = 'flex';
+
+  updateMobileWizardStepUI(1);
+};
+
+window.closeMobileEntryWizard = function() {
+  const wizardModal = document.getElementById('mobile-vehicle-entry-wizard');
+  if (wizardModal) wizardModal.style.display = 'none';
+};
+
+window.updateMobileWizardStepUI = function(step) {
+  mobileWizardData.step = step;
+
+  // Actualizar etiqueta del header
+  const stepLabel = document.getElementById('wizard-step-label');
+  if (stepLabel) stepLabel.textContent = `Paso ${step} de 3`;
+
+  // Actualizar barra de progreso
+  [1, 2, 3].forEach(s => {
+    const pStep = document.getElementById(`p-step-${s}`);
+    const pLine = document.getElementById(`p-line-${s}`);
+    
+    if (pStep) {
+      if (s === step) {
+        pStep.className = 'progress-step-item active';
+      } else if (s < step) {
+        pStep.className = 'progress-step-item done';
+      } else {
+        pStep.className = 'progress-step-item';
+      }
+    }
+    if (pLine) {
+      if (s < step) {
+        pLine.classList.add('done');
+      } else {
+        pLine.classList.remove('done');
+      }
+    }
+  });
+
+  // Mostrar panel correspondiente
+  const step1Panel = document.getElementById('mobile-wizard-step-1');
+  const step2Panel = document.getElementById('mobile-wizard-step-2');
+  const step3Panel = document.getElementById('mobile-wizard-step-3');
+
+  if (step1Panel) step1Panel.style.display = (step === 1) ? 'block' : 'none';
+  if (step2Panel) step2Panel.style.display = (step === 2) ? 'block' : 'none';
+  if (step3Panel) step3Panel.style.display = (step === 3) ? 'block' : 'none';
+
+  // Actualizar botón del footer
+  const nextBtnText = document.getElementById('mob-wiz-next-btn-text');
+  const nextBtnIcon = document.getElementById('mob-wiz-next-btn-icon');
+  const nextBtn = document.getElementById('mob-wiz-next-btn');
+
+  if (step === 3) {
+    if (nextBtnText) nextBtnText.textContent = 'Confirmar ingreso';
+    if (nextBtnIcon) nextBtnIcon.setAttribute('data-lucide', 'check-circle-2');
+    if (nextBtn) nextBtn.className = 'wizard-btn-next confirm';
+  } else {
+    if (nextBtnText) nextBtnText.textContent = 'Continuar';
+    if (nextBtnIcon) nextBtnIcon.setAttribute('data-lucide', 'arrow-right');
+    if (nextBtn) nextBtn.className = 'wizard-btn-next';
+  }
+
+  if (typeof initLucide === 'function') initLucide();
+};
+
+window.nextMobileWizardStep = function() {
+  const currentStep = mobileWizardData.step;
+
+  if (currentStep === 1) {
+    // Validar Paso 1: Patente y Modelo
+    const plateVal = (document.getElementById('mob-wiz-plate')?.value || '').trim().toUpperCase();
+    const modelVal = (document.getElementById('mob-wiz-model')?.value || '').trim();
+    const firstNameVal = (document.getElementById('mob-wiz-first-name')?.value || '').trim();
+    const lastNameVal = (document.getElementById('mob-wiz-last-name')?.value || '').trim();
+
+    if (!plateVal) {
+      alert('Por favor ingresa la PATENTE del vehículo.');
+      document.getElementById('mob-wiz-plate')?.focus();
+      return;
+    }
+    if (!modelVal) {
+      alert('Por favor ingresa la MARCA Y MODELO del auto.');
+      document.getElementById('mob-wiz-model')?.focus();
+      return;
+    }
+
+    mobileWizardData.plate = plateVal;
+    mobileWizardData.model = modelVal;
+    mobileWizardData.firstName = firstNameVal;
+    mobileWizardData.lastName = lastNameVal;
+
+    updateMobileWizardStepUI(2);
+    return;
+  }
+
+  if (currentStep === 2) {
+    // Validar Paso 2: 5 fotos obligatorias
+    const slots = ['adelante', 'derecha', 'atras', 'izquierda', 'tablero'];
+    const missingSlots = slots.filter(slot => !mobileWizardData.photos[slot]);
+
+    if (missingSlots.length > 0) {
+      const slotNamesAR = {
+        adelante: '1. ADELANTE',
+        derecha: '2. DERECHA',
+        atras: '3. ATRÁS',
+        izquierda: '4. IZQUIERDA',
+        tablero: '5. TABLERO'
+      };
+      const missingLabels = missingSlots.map(s => slotNamesAR[s]).join(', ');
+      alert(`Para continuar debes realizar las 5 fotografías obligatorias.\n\nFaltan las fotos: ${missingLabels}.`);
+      return;
+    }
+
+    // Cargar la foto del tablero en la tarjeta de referencia del Paso 3
+    const tabRefImg = document.getElementById('tablero-reference-img');
+    if (tabRefImg) {
+      tabRefImg.src = mobileWizardData.photos.tablero;
+    }
+
+    updateMobileWizardStepUI(3);
+    return;
+  }
+
+  if (currentStep === 3) {
+    confirmMobileVehicleEntry();
+  }
+};
+
+window.prevMobileWizardStep = function() {
+  if (mobileWizardData.step > 1) {
+    updateMobileWizardStepUI(mobileWizardData.step - 1);
+  } else {
+    closeMobileEntryWizard();
+  }
+};
+
+window.handleMobilePhotoUpload = function(slotName, inputEl) {
+  if (!inputEl || !inputEl.files || !inputEl.files[0]) return;
+
+  const file = inputEl.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    mobileWizardData.photos[slotName] = dataUrl;
+
+    // Actualizar UI del casillero
+    const imgEl = document.getElementById(`img-preview-${slotName}`);
+    const placeholderEl = document.getElementById(`placeholder-${slotName}`);
+    const badgeEl = document.getElementById(`slot-badge-${slotName}`);
+    const textEl = document.getElementById(`btn-text-${slotName}`);
+    const cardEl = document.getElementById(`slot-card-${slotName}`);
+
+    if (imgEl) {
+      imgEl.src = dataUrl;
+      imgEl.style.display = 'block';
+    }
+    if (placeholderEl) {
+      placeholderEl.style.display = 'none';
+    }
+    if (badgeEl) {
+      badgeEl.textContent = '✓ Lista';
+      badgeEl.className = 'slot-status-badge ready';
+    }
+    if (textEl) {
+      textEl.textContent = 'Volver a sacar foto';
+    }
+    if (cardEl) {
+      cardEl.classList.add('completed');
+    }
+  };
+
+  reader.readAsDataURL(file);
+};
+
+window.confirmMobileVehicleEntry = function() {
+  const kmVal = (document.getElementById('mob-wiz-km')?.value || '').trim();
+  if (!kmVal) {
+    alert('Por favor ingresa el KILOMETRAJE que figura en la foto del tablero.');
+    document.getElementById('mob-wiz-km')?.focus();
+    return;
+  }
+
+  mobileWizardData.km = kmVal;
+
+  // Nombre completo combinado
+  const fullNameArr = [mobileWizardData.firstName, mobileWizardData.lastName].filter(Boolean);
+  const clientFullName = fullNameArr.length > 0 ? fullNameArr.join(' ') : 'Sin cliente asignado';
+
+  const now = new Date();
+  const entryDateFormatted = now.toLocaleDateString('es-AR');
+  const newVehicleId = 'v_mob_' + Date.now();
+
+  const newVehicle = {
+    id: newVehicleId,
+    plate: mobileWizardData.plate.toUpperCase().trim(),
+    brand: mobileWizardData.model.trim(),
+    model: mobileWizardData.model.trim(),
+    client: clientFullName,
+    clientFirstName: mobileWizardData.firstName.trim(),
+    clientLastName: mobileWizardData.lastName.trim(),
+    clientPhone: '',
+    clientEmail: '',
+    km: mobileWizardData.km,
+    mileage: mobileWizardData.km,
+    entryTime: now.getTime(),
+    entryDate: entryDateFormatted,
+    delivered: false,
+    stage: 'recepcion',
+    photos: { ...mobileWizardData.photos },
+    receptionPhotos: { ...mobileWizardData.photos }
+  };
+
+  // Agregar al inicio del arreglo de vehículos
+  vehicles.unshift(newVehicle);
+  saveState();
+
+  // Asegurar que la vista móvil esté en la pestaña 'en-curso'
+  if (typeof switchMobileSegment === 'function') {
+    switchMobileSegment('en-curso');
+  }
+
+  renderApp();
+  closeMobileEntryWizard();
+
+  if (typeof showToastNotification === 'function') {
+    showToastNotification(`✓ Vehículo ${newVehicle.brand} (${newVehicle.plate}) ingresado correctamente en En curso`, 'success');
+  } else {
+    alert(`Vehículo ${newVehicle.brand} (${newVehicle.plate}) ingresado correctamente en En curso.`);
+  }
+};
+
 

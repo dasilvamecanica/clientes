@@ -4247,6 +4247,232 @@
   </div>
 </div></div>
 
+  <!-- ASISTENTE GUIADO MÓVIL: INGRESO DE VEHÍCULO PASO A PASO -->
+  <div class="mobile-wizard-overlay" id="mobile-vehicle-entry-wizard" style="display: none;">
+    
+    <!-- Header Fijo -->
+    <header class="wizard-header">
+      <button type="button" class="wizard-header-btn" onclick="prevMobileWizardStep()" title="Volver">
+        <i data-lucide="arrow-left"></i>
+      </button>
+      <div class="wizard-header-center">
+        <h2 class="wizard-header-title">Ingreso de Vehículo</h2>
+        <span class="wizard-header-sub" id="wizard-step-label">Paso 1 de 3</span>
+      </div>
+      <button type="button" class="wizard-header-btn" onclick="closeMobileEntryWizard()" title="Cerrar">
+        <i data-lucide="x"></i>
+      </button>
+    </header>
+
+    <!-- Barra de Progreso Fija -->
+    <div class="wizard-progress-bar">
+      <div class="progress-step-item active" id="p-step-1">
+        <div class="step-circle">1</div>
+        <span class="step-title">Datos</span>
+      </div>
+      <div class="progress-line" id="p-line-1"></div>
+      <div class="progress-step-item" id="p-step-2">
+        <div class="step-circle">2</div>
+        <span class="step-title">Fotos</span>
+      </div>
+      <div class="progress-line" id="p-line-2"></div>
+      <div class="progress-step-item" id="p-step-3">
+        <div class="step-circle">3</div>
+        <span class="step-title">Kilometraje</span>
+      </div>
+    </div>
+
+    <!-- CUERPO DEL ASISTENTE -->
+    <div class="wizard-body-content">
+
+      <!-- PASO 1: DATOS DEL VEHÍCULO -->
+      <div class="wizard-step-panel" id="mobile-wizard-step-1">
+        <div class="wizard-step-intro">
+          <h3 class="step-heading">Paso 1 — Datos principales</h3>
+          <p class="step-subheading">Identificación inicial del vehículo e ingreso de datos</p>
+        </div>
+
+        <div class="wizard-form-group">
+          <label class="wizard-label required">PATENTE DEL VEHÍCULO *</label>
+          <input type="text" id="mob-wiz-plate" class="wizard-input-lg plate-input" placeholder="Ej: AB123CD" required autocomplete="off" onkeyup="this.value = this.value.toUpperCase()">
+          <span class="wizard-input-hint">Campo obligatorio para identificar el vehículo</span>
+        </div>
+
+        <div class="wizard-form-group">
+          <label class="wizard-label required">MARCA Y MODELO DEL AUTO *</label>
+          <input type="text" id="mob-wiz-model" class="wizard-input-lg" placeholder="Ej: Volkswagen Gol Trend" required autocomplete="off">
+          <span class="wizard-input-hint">Campo obligatorio (Marca y Modelo)</span>
+        </div>
+
+        <div class="wizard-form-row">
+          <div class="wizard-form-group flex-1">
+            <label class="wizard-label">NOMBRE DEL CLIENTE</label>
+            <input type="text" id="mob-wiz-first-name" class="wizard-input-md" placeholder="Ej: Juan" autocomplete="off">
+            <span class="wizard-input-hint">Opcional</span>
+          </div>
+
+          <div class="wizard-form-group flex-1">
+            <label class="wizard-label">APELLIDO DEL CLIENTE</label>
+            <input type="text" id="mob-wiz-last-name" class="wizard-input-md" placeholder="Ej: Pérez" autocomplete="off">
+            <span class="wizard-input-hint">Opcional</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASO 2: REGISTRO FOTOGRÁFICO (5 FOTOS OBLIGATORIAS) -->
+      <div class="wizard-step-panel" id="mobile-wizard-step-2" style="display: none;">
+        <div class="wizard-step-intro">
+          <h3 class="step-heading">Paso 2 — Estado del vehículo</h3>
+          <p class="step-subheading">Realizar las 5 fotografías obligatorias del estado al ingresar</p>
+        </div>
+
+        <div class="photo-slots-grid">
+          
+          <!-- 1. ADELANTE -->
+          <div class="photo-slot-card" id="slot-card-adelante">
+            <div class="slot-header">
+              <span class="slot-title">1. ADELANTE</span>
+              <span class="slot-status-badge pending" id="slot-badge-adelante">Pendiente</span>
+            </div>
+            <div class="slot-preview-box" id="preview-box-adelante">
+              <div class="slot-placeholder" id="placeholder-adelante">
+                <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
+                <span>Foto frontal</span>
+              </div>
+              <img id="img-preview-adelante" src="" alt="Adelante" class="slot-preview-img" style="display: none;">
+            </div>
+            <label class="slot-action-btn" id="btn-label-adelante">
+              <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
+              <span id="btn-text-adelante">Tomar foto</span>
+              <input type="file" id="mob-file-adelante" accept="image/*" capture="environment" class="hidden-file-input" onchange="handleMobilePhotoUpload('adelante', this)">
+            </label>
+          </div>
+
+          <!-- 2. DERECHA -->
+          <div class="photo-slot-card" id="slot-card-derecha">
+            <div class="slot-header">
+              <span class="slot-title">2. DERECHA</span>
+              <span class="slot-status-badge pending" id="slot-badge-derecha">Pendiente</span>
+            </div>
+            <div class="slot-preview-box" id="preview-box-derecha">
+              <div class="slot-placeholder" id="placeholder-derecha">
+                <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
+                <span>Lateral derecho</span>
+              </div>
+              <img id="img-preview-derecha" src="" alt="Derecha" class="slot-preview-img" style="display: none;">
+            </div>
+            <label class="slot-action-btn" id="btn-label-derecha">
+              <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
+              <span id="btn-text-derecha">Tomar foto</span>
+              <input type="file" id="mob-file-derecha" accept="image/*" capture="environment" class="hidden-file-input" onchange="handleMobilePhotoUpload('derecha', this)">
+            </label>
+          </div>
+
+          <!-- 3. ATRÁS -->
+          <div class="photo-slot-card" id="slot-card-atras">
+            <div class="slot-header">
+              <span class="slot-title">3. ATRÁS</span>
+              <span class="slot-status-badge pending" id="slot-badge-atras">Pendiente</span>
+            </div>
+            <div class="slot-preview-box" id="preview-box-atras">
+              <div class="slot-placeholder" id="placeholder-atras">
+                <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
+                <span>Foto trasera</span>
+              </div>
+              <img id="img-preview-atras" src="" alt="Atrás" class="slot-preview-img" style="display: none;">
+            </div>
+            <label class="slot-action-btn" id="btn-label-atras">
+              <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
+              <span id="btn-text-atras">Tomar foto</span>
+              <input type="file" id="mob-file-atras" accept="image/*" capture="environment" class="hidden-file-input" onchange="handleMobilePhotoUpload('atras', this)">
+            </label>
+          </div>
+
+          <!-- 4. IZQUIERDA -->
+          <div class="photo-slot-card" id="slot-card-izquierda">
+            <div class="slot-header">
+              <span class="slot-title">4. IZQUIERDA</span>
+              <span class="slot-status-badge pending" id="slot-badge-izquierda">Pendiente</span>
+            </div>
+            <div class="slot-preview-box" id="preview-box-izquierda">
+              <div class="slot-placeholder" id="placeholder-izquierda">
+                <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
+                <span>Lateral izquierdo</span>
+              </div>
+              <img id="img-preview-izquierda" src="" alt="Izquierda" class="slot-preview-img" style="display: none;">
+            </div>
+            <label class="slot-action-btn" id="btn-label-izquierda">
+              <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
+              <span id="btn-text-izquierda">Tomar foto</span>
+              <input type="file" id="mob-file-izquierda" accept="image/*" capture="environment" class="hidden-file-input" onchange="handleMobilePhotoUpload('izquierda', this)">
+            </label>
+          </div>
+
+          <!-- 5. TABLERO -->
+          <div class="photo-slot-card Highlight-tablero" id="slot-card-tablero">
+            <div class="slot-header">
+              <span class="slot-title">5. TABLERO</span>
+              <span class="slot-status-badge pending" id="slot-badge-tablero">Pendiente</span>
+            </div>
+            <div class="slot-preview-box" id="preview-box-tablero">
+              <div class="slot-placeholder" id="placeholder-tablero">
+                <i data-lucide="gauge" style="width: 24px; height: 24px;"></i>
+                <span>Tablero / Luces testigo</span>
+              </div>
+              <img id="img-preview-tablero" src="" alt="Tablero" class="slot-preview-img" style="display: none;">
+            </div>
+            <label class="slot-action-btn" id="btn-label-tablero">
+              <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
+              <span id="btn-text-tablero">Tomar foto</span>
+              <input type="file" id="mob-file-tablero" accept="image/*" capture="environment" class="hidden-file-input" onchange="handleMobilePhotoUpload('tablero', this)">
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PASO 3: KILOMETRAJE CON REFERENCIA DE FOTO TABLERO -->
+      <div class="wizard-step-panel" id="mobile-wizard-step-3" style="display: none;">
+        <div class="wizard-step-intro">
+          <h3 class="step-heading">Paso 3 — Lectura de kilometraje</h3>
+          <p class="step-subheading">Consulta la foto del tablero capturada para cargar el kilometraje</p>
+        </div>
+
+        <!-- Muestra la Foto del Tablero para consulta rápida -->
+        <div class="tablero-reference-card">
+          <div class="reference-card-header">
+            <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
+            <span>Foto del tablero capturada (Referencia)</span>
+          </div>
+          <div class="reference-img-wrapper">
+            <img id="tablero-reference-img" src="" alt="Foto Tablero" class="reference-img">
+          </div>
+        </div>
+
+        <!-- Campo Numérico de Kilometraje -->
+        <div class="wizard-form-group" style="margin-top: 16px;">
+          <label class="wizard-label required">KILOMETRAJE *</label>
+          <div class="km-input-wrapper">
+            <input type="number" inputmode="numeric" id="mob-wiz-km" class="wizard-input-lg km-input" placeholder="80432" required autocomplete="off">
+            <span class="km-unit-badge">km</span>
+          </div>
+          <span class="wizard-input-hint">Abre directamente el teclado numérico</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Fijo con Botón de Acción Principal -->
+    <footer class="wizard-footer">
+      <button type="button" class="wizard-btn-next" id="mob-wiz-next-btn" onclick="nextMobileWizardStep()">
+        <span id="mob-wiz-next-btn-text">Continuar</span>
+        <i data-lucide="arrow-right" id="mob-wiz-next-btn-icon"></i>
+      </button>
+    </footer>
+
+  </div>
+
+
   <!-- Carga de Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Generador Automático de PDF (html2pdf) -->
