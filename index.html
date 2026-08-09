@@ -2104,40 +2104,96 @@
             <!-- Contenidos de Pestañas con Scroll Independiente -->
             <div class="workspace-tab-contents" style="flex-grow: 1; overflow-y: auto; box-sizing: border-box;">
               
-              <!-- PESTAÑA A: RECEPCIÓn -->
+              <!-- PESTAÑA A: RECEPCIÓN -->
               <div class="tab-content-wrapper" id="tab-content-reception">
                 <section class="reception-form-card">
-                  <!-- Kilometraje (1/4 de ancho) -->
-                  <div class="form-group" style="width: 25%; margin-bottom: 14px;">
-                    <label class="form-label">Kilometraje</label>
-                    <div class="input-icon-group" style="width: 100%;">
-                      <i data-lucide="gauge"></i>
-                      <input type="number" class="form-input" id="det-km" placeholder="Ej: 45000" min="0" oninput="updateSidebarOdometer(this.value)" style="width: 100%;">
+
+                  <!-- BANNER Y RESUMEN DE RECEPCIÓN -->
+                  <div class="reception-summary-banner" id="det-reception-summary-banner" style="display: flex; gap: 16px; background-color: #f8fafc; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 18px; flex-wrap: wrap;">
+                    
+                    <div class="reception-meta-item" style="flex: 1; min-width: 160px; display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 36px; height: 36px; border-radius: 8px; background-color: rgba(var(--color-accent-rgb),0.12); color: var(--color-accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i data-lucide="calendar" style="width: 18px; height: 18px;"></i>
+                      </div>
+                      <div>
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; text-transform: uppercase;">Fecha de Ingreso</span>
+                        <span style="font-size: 13.5px; font-weight: 800; color: var(--text-primary);" id="det-reception-date-text">—</span>
+                      </div>
+                    </div>
+
+                    <div class="reception-meta-item" style="flex: 1; min-width: 160px; display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 36px; height: 36px; border-radius: 8px; background-color: rgba(16, 185, 129, 0.12); color: #059669; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i data-lucide="gauge" style="width: 18px; height: 18px;"></i>
+                      </div>
+                      <div>
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; text-transform: uppercase;">Kilometraje</span>
+                        <span style="font-size: 13.5px; font-weight: 800; color: var(--text-primary);" id="det-reception-km-text">—</span>
+                      </div>
+                    </div>
+
+                    <div class="reception-meta-item" style="flex: 1; min-width: 160px; display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 36px; height: 36px; border-radius: 8px; background-color: rgba(99, 102, 241, 0.12); color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i data-lucide="fuel" style="width: 18px; height: 18px;"></i>
+                      </div>
+                      <div>
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; text-transform: uppercase;">Combustible</span>
+                        <span style="font-size: 13.5px; font-weight: 800; color: var(--text-primary);" id="det-reception-fuel-text">—</span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <!-- SECCIÓN: REGISTRO FOTOGRÁFICO DE RECEPCIÓN (5 FOTOS) -->
+                  <div class="reception-photos-section" style="margin-bottom: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                      <h4 style="font-family: var(--font-display); font-weight: 800; font-size: 14px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="camera" style="color: var(--color-accent); width: 16px; height: 16px;"></i>
+                        Fotografías de Recepción del Vehículo
+                      </h4>
+                      <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Haz clic en cualquier foto para ampliarla</span>
+                    </div>
+
+                    <div class="reception-photos-grid" id="det-reception-photos-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
+                      <!-- Renderizado dinámico de las 5 fotos desde JS -->
                     </div>
                   </div>
 
+                  <!-- EDICIÓN RÁPIDA DE KILOMETRAJE Y COMBUSTIBLE -->
+                  <div style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; min-width: 180px;">
+                      <label class="form-label">Kilometraje</label>
+                      <div class="input-icon-group" style="width: 100%;">
+                        <i data-lucide="gauge"></i>
+                        <input type="number" class="form-input" id="det-km" placeholder="Ej: 45000" min="0" oninput="updateSidebarOdometer(this.value)" style="width: 100%;">
+                      </div>
+                    </div>
 
-                  <!-- Nivel Combustible (oculto del panel, disponible en sistema) -->
-                  <select id="det-fuel" style="display:none;">
-                    <option value="Reserva">Reserva (Muy bajo)</option>
-                    <option value="1/4">1/4 de Tanque</option>
-                    <option value="1/2" selected>1/2 de Tanque (Medio)</option>
-                    <option value="3/4">3/4 de Tanque</option>
-                    <option value="Lleno">Tanque Lleno</option>
-                  </select>
-
+                    <div class="form-group" style="flex: 1; min-width: 180px;">
+                      <label class="form-label">Nivel de Combustible</label>
+                      <div class="input-icon-group" style="width: 100%;">
+                        <i data-lucide="fuel"></i>
+                        <select id="det-fuel" class="form-input" style="width: 100%; cursor: pointer;">
+                          <option value="Reserva">Reserva (Muy bajo)</option>
+                          <option value="1/4">1/4 de Tanque</option>
+                          <option value="1/2" selected>1/2 de Tanque (Medio)</option>
+                          <option value="3/4">3/4 de Tanque</option>
+                          <option value="Lleno">Tanque Lleno</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
 
                   <!-- Descripción (Explicación del cliente y problemas del auto) -->
                   <div class="form-group">
-                    <label class="form-label">Descripción</label>
-                    <textarea class="form-input" id="det-service-description" rows="10" placeholder="Explicación del cliente y problemas del auto" style="resize: vertical; min-height: 240px; font-size: 14px; line-height: 1.5;"></textarea>
+                    <label class="form-label">Descripción / Motivo de Ingreso</label>
+                    <textarea class="form-input" id="det-service-description" rows="5" placeholder="Explicación del cliente y problemas reportados del auto" style="resize: vertical; min-height: 140px; font-size: 13.5px; line-height: 1.5;"></textarea>
                   </div>
 
-                  <!-- Contenedor Experimental de Daños y Detalles Físicos -->
-                  <div id="reception-aesthetics-container" style="display: none;">
+                  <!-- Contenedor de Daños y Detalles Físicos -->
+                  <div id="reception-aesthetics-container" style="display: block; margin-top: 14px;">
                     <div class="switch-row" style="margin-bottom: 14px;">
                       <div class="switch-label-wrapper">
-                        <i data-lucide="alert-triangle"></i>
+                        <i data-lucide="alert-triangle" style="color: #f59e0b;"></i>
                         <span>¿El vehículo presenta detalles / daños estéticos?</span>
                       </div>
                       <label class="ios-switch">
@@ -4480,6 +4536,15 @@
 
   </div>
 
+
+  <!-- MODAL LIGHTBOX PARA VER FOTOS EN TAMAÑO COMPLETO -->
+  <div class="modal-overlay" id="photo-lightbox-modal" style="display: none; z-index: 99999; background: rgba(0,0,0,0.92); flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);" onclick="closePhotoLightbox()">
+    <div style="position: relative; max-width: 92vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center;" onclick="event.stopPropagation()">
+      <button type="button" onclick="closePhotoLightbox()" style="position: absolute; top: -45px; right: 0; background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+      <img id="lightbox-img" src="" alt="Foto en tamaño completo" style="max-width: 90vw; max-height: 80vh; object-fit: contain; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1.5px solid rgba(255,255,255,0.15);">
+      <span id="lightbox-caption" style="color: white; font-weight: 700; font-size: 15px; margin-top: 14px; font-family: var(--font-display); background: rgba(0,0,0,0.6); padding: 6px 16px; border-radius: 20px;"></span>
+    </div>
+  </div>
 
   <!-- Carga de Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>

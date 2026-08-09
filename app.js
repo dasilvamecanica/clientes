@@ -4635,10 +4635,65 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
 
     // Opciones de Odometer & Fuel
     const detKm = document.getElementById('det-km');
-    if (detKm) detKm.value = vehicle.kilometers || '';
+    const kmNum = vehicle.km || vehicle.kilometers || vehicle.mileage;
+    if (detKm) detKm.value = kmNum || '';
     
     const detFuel = document.getElementById('det-fuel');
     if (detFuel) detFuel.value = vehicle.fuelLevel || '1/2';
+
+    // --- Poblar Banner y Resumen de Recepción ---
+    const dateText = vehicle.entryDate ? (vehicle.entryTime ? `${vehicle.entryDate} · ${new Date(vehicle.entryTime).toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})} hs` : vehicle.entryDate) : '—';
+    const recDateEl = document.getElementById('det-reception-date-text');
+    if (recDateEl) recDateEl.textContent = dateText;
+
+    const recKmEl = document.getElementById('det-reception-km-text');
+    if (recKmEl) recKmEl.textContent = kmNum ? `${Number(kmNum).toLocaleString('es-AR')} km` : 'Sin registrar';
+
+    const recFuelEl = document.getElementById('det-reception-fuel-text');
+    if (recFuelEl) recFuelEl.textContent = vehicle.fuelLevel || '1/2 (Tanque)';
+
+    // --- Poblar Galería de 5 Fotografías de Recepción ---
+    const photosGrid = document.getElementById('det-reception-photos-grid');
+    if (photosGrid) {
+      const photosObj = vehicle.photos || vehicle.receptionPhotos || {};
+      const photoSlots = [
+        { key: 'adelante', label: '1. ADELANTE', icon: 'camera' },
+        { key: 'derecha', label: '2. DERECHA', icon: 'camera' },
+        { key: 'atras', label: '3. ATRÁS', icon: 'camera' },
+        { key: 'izquierda', label: '4. IZQUIERDA', icon: 'camera' },
+        { key: 'tablero', label: '5. TABLERO', icon: 'gauge', highlight: true }
+      ];
+
+      photosGrid.innerHTML = photoSlots.map(slot => {
+        const photoUrl = photosObj[slot.key];
+        const isTablero = slot.highlight;
+
+        if (photoUrl) {
+          return `
+            <div class="reception-photo-card ${isTablero ? 'highlight-tablero' : ''}" onclick="openPhotoLightbox('${photoUrl.replace(/'/g, "\\'")}', '${slot.label}')" style="background: var(--card-bg); border: 1.5px solid ${isTablero ? 'var(--color-accent)' : 'var(--border-color)'}; border-radius: var(--radius-md); overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: all 0.2s ease; box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='none';">
+              <div style="height: 110px; width: 100%; background: #000; position: relative; overflow: hidden;">
+                <img src="${photoUrl}" alt="${slot.label}" style="width: 100%; height: 100%; object-fit: cover;">
+                <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+                  <i data-lucide="maximize-2" style="width: 12px; height: 12px;"></i>
+                </div>
+              </div>
+              <div style="padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; background: ${isTablero ? 'rgba(var(--color-accent-rgb),0.06)' : 'transparent'};">
+                <span style="font-size: 11.5px; font-weight: 800; color: ${isTablero ? 'var(--color-accent)' : 'var(--text-primary)'};">${slot.label}</span>
+                <span style="font-size: 10px; font-weight: 700; color: #059669; background: rgba(16,185,129,0.12); padding: 1px 6px; border-radius: 8px;">✓ Foto</span>
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="reception-photo-card empty" style="background: #f8fafc; border: 1.5px dashed var(--border-color); border-radius: var(--radius-md); height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-muted); padding: 8px;">
+              <i data-lucide="${slot.icon}" style="width: 22px; height: 22px; opacity: 0.4;"></i>
+              <span style="font-size: 11px; font-weight: 700; text-align: center; color: var(--text-secondary);">${slot.label}</span>
+              <span style="font-size: 10px; color: var(--text-muted);">Sin foto</span>
+            </div>
+          `;
+        }
+      }).join('');
+    }
     
     // Servicios e interruptor de detalles estéticos
     const detServiceDesc = document.getElementById('det-service-description');
@@ -14077,5 +14132,22 @@ window.confirmMobileVehicleEntry = function() {
     alert("Ocurrió un inconveniente al guardar el vehículo. Por favor reintenta.");
   }
 };
+
+window.openPhotoLightbox = function(src, title) {
+  const modal = document.getElementById('photo-lightbox-modal');
+  const img = document.getElementById('lightbox-img');
+  const caption = document.getElementById('lightbox-caption');
+  if (!modal || !img) return;
+
+  img.src = src;
+  if (caption) caption.textContent = title || 'Fotografía de Recepción';
+  modal.style.display = 'flex';
+};
+
+window.closePhotoLightbox = function() {
+  const modal = document.getElementById('photo-lightbox-modal');
+  if (modal) modal.style.display = 'none';
+};
+
 
 
