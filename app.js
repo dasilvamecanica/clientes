@@ -1828,7 +1828,11 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem('taller_vehicles', JSON.stringify(vehicles));
+  try {
+    localStorage.setItem('taller_vehicles', JSON.stringify(vehicles));
+  } catch (err) {
+    console.warn("No se pudo guardar en localStorage (Quota Exceeded):", err);
+  }
   syncWithSupabase('taller_vehicles', vehicles);
 }
 
@@ -13933,15 +13937,47 @@ window.prevMobileWizardStep = function() {
   }
 };
 
+function compressImageDataUrl(dataUrl, maxWidth = 1000, quality = 0.7) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+      resolve(compressedDataUrl);
+    };
+    img.onerror = function() {
+      resolve(dataUrl);
+    };
+    img.src = dataUrl;
+  });
+}
+
 window.handleMobilePhotoUpload = function(slotName, inputEl) {
   if (!inputEl || !inputEl.files || !inputEl.files[0]) return;
 
   const file = inputEl.files[0];
   const reader = new FileReader();
 
-  reader.onload = function(e) {
-    const dataUrl = e.target.result;
-    mobileWizardData.photos[slotName] = dataUrl;
+  reader.onload = async function(e) {
+    const rawDataUrl = e.target.result;
+    
+    // Compresión automática de imagen para evitar desbordar el Quota de localStorage (QuotaExceededError)
+    const compressedDataUrl = await compressImageDataUrl(rawDataUrl, 1000, 0.7);
+    mobileWizardData.photos[slotName] = compressedDataUrl;
 
     // Actualizar UI del casillero
     const imgEl = document.getElementById(`img-preview-${slotName}`);
@@ -13951,7 +13987,7 @@ window.handleMobilePhotoUpload = function(slotName, inputEl) {
     const cardEl = document.getElementById(`slot-card-${slotName}`);
 
     if (imgEl) {
-      imgEl.src = dataUrl;
+      imgEl.src = compressedDataUrl;
       imgEl.style.display = 'block';
     }
     if (placeholderEl) {
@@ -13973,67 +14009,72 @@ window.handleMobilePhotoUpload = function(slotName, inputEl) {
 };
 
 window.confirmMobileVehicleEntry = function() {
-  const kmVal = (document.getElementById('mob-wiz-km')?.value || '').trim();
-  if (!kmVal) {
-    alert('Por favor ingresa el KILOMETRAJE que figura en la foto del tablero.');
-    document.getElementById('mob-wiz-km')?.focus();
-    return;
-  }
+  try {
+    const kmVal = (document.getElementById('mob-wiz-km')?.value || '').trim();
+    if (!kmVal) {
+      alert('Por favor ingresa el KILOMETRAJE que figura en la foto del tablero.');
+      document.getElementById('mob-wiz-km')?.focus();
+      return;
+    }
 
-  mobileWizardData.km = kmVal;
+    mobileWizardData.km = kmVal;
 
-  // Nombre completo combinado
-  const fullNameArr = [mobileWizardData.firstName, mobileWizardData.lastName].filter(Boolean);
-  const clientFullName = fullNameArr.length > 0 ? fullNameArr.join(' ') : 'Sin cliente asignado';
+    // Nombre completo combinado
+    const fullNameArr = [mobileWizardData.firstName, mobileWizardData.lastName].filter(Boolean);
+    const clientFullName = fullNameArr.length > 0 ? fullNameArr.join(' ') : 'Sin cliente asignado';
 
-  const now = new Date();
-  const entryDateFormatted = now.toLocaleDateString('es-AR');
-  const newVehicleId = 'v_mob_' + Date.now();
+    const now = new Date();
+    const entryDateFormatted = now.toLocaleDateString('es-AR');
+    const newVehicleId = 'v_mob_' + Date.now();
 
-  const newVehicle = {
-    id: newVehicleId,
-    plate: mobileWizardData.plate.toUpperCase().trim(),
-    brand: mobileWizardData.model.trim(),
-    model: mobileWizardData.model.trim(),
-    client: clientFullName,
-    clientFirstName: mobileWizardData.firstName.trim(),
-    clientLastName: mobileWizardData.lastName.trim(),
-    clientPhone: '',
-    clientEmail: '',
-    km: mobileWizardData.km,
-    mileage: mobileWizardData.km,
-    entryTime: now.getTime(),
-    entryDate: entryDateFormatted,
-    delivered: false,
-    stage: 'recepcion',
-    photos: { ...mobileWizardData.photos },
-    receptionPhotos: { ...mobileWizardData.photos }
-  };
+    const newVehicle = {
+      id: newVehicleId,
+      plate: mobileWizardData.plate.toUpperCase().trim(),
+      brand: mobileWizardData.model.trim(),
+      model: mobileWizardData.model.trim(),
+      client: clientFullName,
+      clientFirstName: mobileWizardData.firstName.trim(),
+      clientLastName: mobileWizardData.lastName.trim(),
+      clientPhone: '',
+      clientEmail: '',
+      km: mobileWizardData.km,
+      mileage: mobileWizardData.km,
+      entryTime: now.getTime(),
+      entryDate: entryDateFormatted,
+      delivered: false,
+      stage: 'recepcion',
+      photos: { ...mobileWizardData.photos },
+      receptionPhotos: { ...mobileWizardData.photos }
+    };
 
-  // Agregar al inicio del arreglo de vehículos
-  vehicles.unshift(newVehicle);
-  saveState();
+    // Agregar al inicio del arreglo de vehículos
+    vehicles.unshift(newVehicle);
+    saveState();
 
-  // 1. Cambiar a la vista del panel operativo
-  if (typeof switchView === 'function') {
-    switchView('tablero');
-  }
+    // 1. Cambiar a la vista del panel operativo
+    if (typeof switchView === 'function') {
+      switchView('tablero');
+    }
 
-  // 2. Asegurar que la vista móvil esté en la pestaña 'en-curso'
-  if (typeof switchMobileSegment === 'function') {
-    switchMobileSegment('en-curso');
-  }
+    // 2. Asegurar que la vista móvil esté en la pestaña 'en-curso'
+    if (typeof switchMobileSegment === 'function') {
+      switchMobileSegment('en-curso');
+    }
 
-  // 3. Renderizar aplicación y tablas
-  if (typeof renderApp === 'function') renderApp();
-  if (typeof renderWorkshopTables === 'function') renderWorkshopTables();
-  
-  closeMobileEntryWizard();
+    // 3. Renderizar aplicación y tablas
+    if (typeof renderApp === 'function') renderApp();
+    if (typeof renderWorkshopTables === 'function') renderWorkshopTables();
+    
+    closeMobileEntryWizard();
 
-  if (typeof showToastNotification === 'function') {
-    showToastNotification(`✓ Vehículo ${newVehicle.brand} (${newVehicle.plate}) ingresado correctamente en En curso`, 'success');
-  } else {
-    alert(`Vehículo ${newVehicle.brand} (${newVehicle.plate}) ingresado correctamente en En curso.`);
+    if (typeof showToastNotification === 'function') {
+      showToastNotification(`✓ Vehículo ${newVehicle.brand} (${newVehicle.plate}) ingresado correctamente en En curso`, 'success');
+    } else {
+      alert(`Vehículo ${newVehicle.brand} (${newVehicle.plate}) ingresado correctamente en En curso.`);
+    }
+  } catch (error) {
+    console.error("Error al confirmar el ingreso del vehículo:", error);
+    alert("Ocurrió un inconveniente al guardar el vehículo. Por favor reintenta.");
   }
 };
 
