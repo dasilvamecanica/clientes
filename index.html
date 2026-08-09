@@ -226,11 +226,30 @@
         </div>
       </section>
 
-      <!-- SECCIÓN PRINCIPAL: VISTA DE TABLAS DEL TALLER -->
+      <!-- SECCIÓN PRINCIPAL: VISTA DE TABLAS Y TARJETAS DEL TALLER -->
       <section class="workshop-tables-container" id="kanban-view-container">
         
-        <!-- SECCIÓN SUPERIOR: VEHÍCULOS EN CURSO -->
-        <div class="workshop-table-card active-card" id="sec-vehiculos-en-curso">
+        <!-- SELECTOR SEGMENTADO MÓVIL (Solo en celulares) -->
+        <div class="mobile-segmented-bar hide-desktop" id="mobile-segmented-bar">
+          <button class="mobile-tab-btn active" id="mobile-tab-en-curso" onclick="switchMobileSegment('en-curso')">
+            <span class="pulse-dot"></span>
+            <span>En curso</span>
+            <span class="mobile-tab-count active" id="mobile-count-en-curso">0</span>
+          </button>
+          <button class="mobile-tab-btn" id="mobile-tab-historia" onclick="switchMobileSegment('historia')">
+            <i data-lucide="history" style="width: 14px; height: 14px;"></i>
+            <span>Historia</span>
+            <span class="mobile-tab-count history" id="mobile-count-historia">0</span>
+          </button>
+        </div>
+
+        <!-- CONTENEDOR DE TARJETAS MÓVILES (Solo en celulares) -->
+        <div class="mobile-cards-list-container hide-desktop" id="mobile-cards-list-container">
+          <!-- Renderizado dinámico desde JS -->
+        </div>
+
+        <!-- SECCIÓN SUPERIOR: VEHÍCULOS EN CURSO (Desktop) -->
+        <div class="workshop-table-card active-card hide-mobile-section" id="sec-vehiculos-en-curso">
           <div class="workshop-table-header">
             <div class="header-title-group">
               <div class="header-icon-badge active">
@@ -266,8 +285,8 @@
           </div>
         </div>
 
-        <!-- SECCIÓN INFERIOR: HISTORIA -->
-        <div class="workshop-table-card history-card" id="sec-vehiculos-historia">
+        <!-- SECCIÓN INFERIOR: HISTORIA (Desktop) -->
+        <div class="workshop-table-card history-card hide-mobile-section" id="sec-vehiculos-historia">
           <div class="workshop-table-header">
             <div class="header-title-group">
               <div class="header-icon-badge history">

@@ -3274,6 +3274,17 @@ function renderApp() {
 }
 
 
+let currentMobileSegment = 'en-curso';
+
+window.switchMobileSegment = function(segment) {
+  currentMobileSegment = segment;
+  const tabEnCurso = document.getElementById('mobile-tab-en-curso');
+  const tabHistoria = document.getElementById('mobile-tab-historia');
+  if (tabEnCurso) tabEnCurso.classList.toggle('active', segment === 'en-curso');
+  if (tabHistoria) tabHistoria.classList.toggle('active', segment === 'historia');
+  renderWorkshopTables();
+};
+
 window.reenterVehicleFromTable = function(vehicleId) {
   const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(vehicleId));
   if (vehicleIndex !== -1) {
@@ -3296,8 +3307,6 @@ window.renderWorkshopTables = function() {
   const tbodyEnCurso = document.getElementById('tbody-vehiculos-en-curso');
   const tbodyHistoria = document.getElementById('tbody-vehiculos-historia');
   
-  if (!tbodyEnCurso || !tbodyHistoria) return;
-
   const searchInput = document.getElementById('sidebar-search-input');
   const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
@@ -3331,13 +3340,19 @@ window.renderWorkshopTables = function() {
     historyVehicles = historyVehicles.filter(filterFn);
   }
 
-  // Actualizar contadores
+  // Actualizar contadores Desktop
   const countEnCursoEl = document.getElementById('count-vehiculos-en-curso');
   const countHistoriaEl = document.getElementById('count-vehiculos-historia');
   if (countEnCursoEl) countEnCursoEl.textContent = `${activeVehicles.length} ${activeVehicles.length === 1 ? 'activo' : 'activos'}`;
   if (countHistoriaEl) countHistoriaEl.textContent = `${historyVehicles.length} ${historyVehicles.length === 1 ? 'entregado' : 'entregados'}`;
 
-  // Helper para renderizar fila
+  // Actualizar contadores Móviles
+  const mobCountEnCursoEl = document.getElementById('mobile-count-en-curso');
+  const mobCountHistoriaEl = document.getElementById('mobile-count-historia');
+  if (mobCountEnCursoEl) mobCountEnCursoEl.textContent = activeVehicles.length;
+  if (mobCountHistoriaEl) mobCountHistoriaEl.textContent = historyVehicles.length;
+
+  // Helper para renderizar fila desktop
   const renderRow = (v, isEnCurso) => {
     const brandNormalized = v.brand ? v.brand.toLowerCase().trim().replace(/\s+/g, '-') : '';
     const pngBrands = [
@@ -3440,36 +3455,140 @@ window.renderWorkshopTables = function() {
     `;
   };
 
-  // Renderizar Tabla En Curso
-  if (activeVehicles.length === 0) {
-    tbodyEnCurso.innerHTML = `
-      <tr>
-        <td colspan="5" class="empty-table-cell">
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <i data-lucide="inbox" style="width: 24px; height: 24px; opacity: 0.4;"></i>
-            <span>No hay vehículos ingresados actualmente en el taller.</span>
-          </div>
-        </td>
-      </tr>
-    `;
-  } else {
-    tbodyEnCurso.innerHTML = activeVehicles.map(v => renderRow(v, true)).join('');
+  // Renderizar Tablas Desktop
+  if (tbodyEnCurso) {
+    if (activeVehicles.length === 0) {
+      tbodyEnCurso.innerHTML = `
+        <tr>
+          <td colspan="5" class="empty-table-cell">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <i data-lucide="inbox" style="width: 24px; height: 24px; opacity: 0.4;"></i>
+              <span>No hay vehículos ingresados actualmente en el taller.</span>
+            </div>
+          </td>
+        </tr>
+      `;
+    } else {
+      tbodyEnCurso.innerHTML = activeVehicles.map(v => renderRow(v, true)).join('');
+    }
   }
 
-  // Renderizar Tabla Historia
-  if (historyVehicles.length === 0) {
-    tbodyHistoria.innerHTML = `
-      <tr>
-        <td colspan="5" class="empty-table-cell">
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <i data-lucide="history" style="width: 24px; height: 24px; opacity: 0.4;"></i>
-            <span>No hay vehículos en la Historia.</span>
+  if (tbodyHistoria) {
+    if (historyVehicles.length === 0) {
+      tbodyHistoria.innerHTML = `
+        <tr>
+          <td colspan="5" class="empty-table-cell">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <i data-lucide="history" style="width: 24px; height: 24px; opacity: 0.4;"></i>
+              <span>No hay vehículos en la Historia.</span>
+            </div>
+          </td>
+        </tr>
+      `;
+    } else {
+      tbodyHistoria.innerHTML = historyVehicles.map(v => renderRow(v, false)).join('');
+    }
+  }
+
+  // Renderizar Tarjetas Móviles (Segmentado)
+  const mobContainer = document.getElementById('mobile-cards-list-container');
+  if (mobContainer) {
+    const isEnCurso = (currentMobileSegment === 'en-curso');
+    const mobileList = isEnCurso ? activeVehicles : historyVehicles;
+
+    if (mobileList.length === 0) {
+      mobContainer.innerHTML = `
+        <div class="mobile-empty-state">
+          <i data-lucide="${isEnCurso ? 'inbox' : 'history'}" style="width: 28px; height: 28px; opacity: 0.4;"></i>
+          <span>${isEnCurso ? 'No hay vehículos en curso actualmente.' : 'No hay vehículos en la Historia.'}</span>
+        </div>
+      `;
+    } else {
+      mobContainer.innerHTML = mobileList.map(v => {
+        const brandNormalized = v.brand ? v.brand.toLowerCase().trim().replace(/\s+/g, '-') : '';
+        const pngBrands = [
+          "brilliance", "buick", "cadillac", "changan", "chery", "chevrolet", "daewoo", 
+          "datsun", "de-tomaso", "desoto", "dodge", "dongfeng", "fisker", "ford", 
+          "gaz", "gmc", "great-wall", "haval", "hispano-suiza", "honda", "hongqi", 
+          "hyundai", "infiniti", "isuzu", "jaguar", "jeep", "kia", "lada", 
+          "lamborghini", "lancia", "land-rover", "lexus", "lincoln", "lotus", "luxgen", 
+          "mahindra", "maruti-suzuki", "maserati", "maybach", "mazda", "mclaren", "mercedes-benz", 
+          "mg", "mini", "mitsubishi", "nio", "nissan", "opel", "pagani", 
+          "perodua", "peugeot", "polestar", "porsche", "ram", "renault", "roewe", 
+          "rolls-royce", "rover", "saab", "scion", "seat", "skoda", "smart", 
+          "ssangyong", "subaru", "suzuki", "tata", "tesla", "toyota", "vauxhall", 
+          "volkswagen", "volvo", "wuling", "zeekr"
+        ];
+        const isPng = pngBrands.includes(brandNormalized);
+        const logoExt = isPng ? 'png' : 'svg';
+        const fallbackExt = isPng ? 'svg' : 'png';
+        const logoSrc = brandNormalized ? `brand-logos-main/${brandNormalized}-logo.${logoExt}` : '';
+
+        const entryDateStr = v.entryDate ? v.entryDate : (v.entryTime ? new Date(v.entryTime).toLocaleDateString('es-AR') : '—');
+
+        return `
+          <div class="mobile-workshop-card ${isEnCurso ? 'active-card' : 'history-card'}" id="mob-card-${v.id}">
+            <!-- Header Móvil: Badge de estado a la izquierda, Patente a la derecha -->
+            <div class="mobile-card-top">
+              ${isEnCurso ? `
+                <span class="badge-status badge-en-curso">
+                  <span class="pulse-dot"></span>
+                  En curso
+                </span>
+              ` : `
+                <span class="badge-status badge-entregado">
+                  <i data-lucide="check-circle-2" style="width: 12px; height: 12px;"></i>
+                  Entregado
+                </span>
+              `}
+              <span class="mobile-plate-badge ${isEnCurso ? '' : 'history'}">${v.plate || 'SIN PATENTE'}</span>
+            </div>
+
+            <!-- Cuerpo Móvil: Vehículo, Cliente y Fecha pura (sin la palabra Ingreso:) -->
+            <div class="mobile-card-body">
+              <div class="mobile-vehicle-title-row">
+                ${logoSrc ? `
+                  <img src="${logoSrc}" alt="${v.brand}" class="mobile-brand-logo" onerror="if(!this.dataset.retry){this.dataset.retry='1';this.src='brand-logos-main/${brandNormalized}-logo.${fallbackExt}';}else{this.style.display='none';}">
+                ` : `
+                  <div class="mobile-brand-placeholder">
+                    <i data-lucide="car" style="width: 14px; height: 14px;"></i>
+                  </div>
+                `}
+                <span class="mobile-vehicle-name">${v.brand || ''} ${v.model || ''}</span>
+              </div>
+
+              <div class="mobile-card-meta-row">
+                <span class="mobile-client-name"><i data-lucide="user" style="width: 12px; height: 12px;"></i> ${v.client || 'Sin cliente'}</span>
+                <span class="mobile-date-text"><i data-lucide="calendar" style="width: 12px; height: 12px;"></i> ${entryDateStr}</span>
+              </div>
+            </div>
+
+            <!-- Barra de Acciones Móvil (3 Botones) -->
+            <div class="mobile-card-actions">
+              <button class="mobile-action-btn view-btn" onclick="openDetailedReception('${v.id}')">
+                <i data-lucide="eye" style="width: 13px; height: 13px;"></i>
+                <span>Ficha</span>
+              </button>
+              <button class="mobile-action-btn edit-btn" onclick="openEditVehicleModal('${v.id}')">
+                <i data-lucide="pencil" style="width: 13px; height: 13px;"></i>
+                <span>Editar</span>
+              </button>
+              ${isEnCurso ? `
+                <button class="mobile-action-btn deliver-btn" onclick="deliverVehicleFromCard('${v.id}')">
+                  <i data-lucide="check-circle-2" style="width: 13px; height: 13px;"></i>
+                  <span>Entregar</span>
+                </button>
+              ` : `
+                <button class="mobile-action-btn reenter-btn" onclick="reenterVehicleFromTable('${v.id}')">
+                  <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i>
+                  <span>Reingresar</span>
+                </button>
+              `}
+            </div>
           </div>
-        </td>
-      </tr>
-    `;
-  } else {
-    tbodyHistoria.innerHTML = historyVehicles.map(v => renderRow(v, false)).join('');
+        `;
+      }).join('');
+    }
   }
 
   renderProximasCitas();

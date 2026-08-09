@@ -5188,10 +5188,263 @@ aside.sidebar.collapsed .sidebar-user-container {
     flex-shrink: 0;
   }
 
-  .empty-table-cell {
+.empty-table-cell {
     display: block !important;
     padding: 30px 14px !important;
   }
 }
+
+/* ========================================================================
+   ESTILOS PREMIUM PARA EL PANEL OPERATIVO MÓVIL SEGMENTADO Y TARJETAS TÁCTILES
+   ======================================================================== */
+
+/* Visibilidad Desktop vs Móvil */
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-mobile-section {
+    display: none !important;
+  }
+}
+
+/* Selector Segmentado Móvil */
+.mobile-segmented-bar {
+  display: flex;
+  background-color: #f1f5f9;
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.mobile-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.mobile-tab-btn.active {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.mobile-tab-count {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.mobile-tab-count.active {
+  background-color: rgba(var(--color-accent-rgb), 0.12);
+  color: var(--color-accent);
+}
+
+.mobile-tab-count.history {
+  background-color: rgba(100, 116, 139, 0.12);
+  color: #64748b;
+}
+
+/* Lista de Tarjetas Móviles */
+.mobile-cards-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.mobile-workshop-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all var(--transition-fast);
+}
+
+.mobile-workshop-card.active-card {
+  border-left: 4px solid var(--color-accent);
+}
+
+.mobile-workshop-card.history-card {
+  border-left: 4px solid #64748b;
+  opacity: 0.92;
+}
+
+/* Header Móvil de Tarjeta */
+.mobile-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.mobile-plate-badge {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  background-color: #1e293b;
+  color: #ffffff;
+  padding: 3px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  border: 1px solid #334155;
+}
+
+.mobile-plate-badge.history {
+  background-color: #64748b;
+  border-color: #475569;
+}
+
+/* Cuerpo de Tarjeta Móvil */
+.mobile-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mobile-vehicle-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-brand-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.mobile-brand-placeholder {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: rgba(var(--color-accent-rgb), 0.1);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobile-vehicle-name {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.mobile-card-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mobile-client-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mobile-date-text {
+  font-weight: 500;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Barra de Acciones Móvil (3 Botones táctiles) */
+.mobile-card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+  width: 100%;
+}
+
+.mobile-action-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  cursor: pointer;
+  min-height: 38px;
+  transition: all var(--transition-fast);
+}
+
+.mobile-action-btn.view-btn {
+  color: var(--color-accent);
+  border-color: rgba(var(--color-accent-rgb), 0.3);
+  background-color: rgba(var(--color-accent-rgb), 0.05);
+}
+
+.mobile-action-btn.edit-btn {
+  color: var(--text-secondary);
+  background-color: #f8fafc;
+}
+
+.mobile-action-btn.deliver-btn {
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.3);
+  background-color: rgba(16, 185, 129, 0.08);
+}
+
+.mobile-action-btn.reenter-btn {
+  color: #475569;
+  border-color: rgba(100, 116, 139, 0.3);
+  background-color: rgba(100, 116, 139, 0.08);
+}
+
+.mobile-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 13px;
+  gap: 10px;
+  text-align: center;
+  background-color: var(--card-bg);
+}
+
 
 
