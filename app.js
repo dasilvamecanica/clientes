@@ -3018,12 +3018,12 @@ window.switchView = function(view) {
 
     const boardContainer = document.getElementById('kanban-view-container');
     const calendarContainer = document.getElementById('calendar-view-container');
-    if (boardContainer) boardContainer.style.display = 'grid';
+    if (boardContainer) boardContainer.style.display = 'flex';
     if (calendarContainer) calendarContainer.style.display = 'none';
 
-    // Mostrar listado móvil en tablero
+    // Ocultar listado móvil antiguo si existe para usar las tablas adaptadas
     const mobList = document.getElementById('mobile-vehicle-list-view');
-    if (mobList) mobList.style.display = '';
+    if (mobList) mobList.style.display = 'none';
 
     const pageTitle = document.getElementById('page-title');
     if (pageTitle) pageTitle.textContent = 'Panel Operativo';
