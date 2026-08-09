@@ -229,6 +229,14 @@
       <!-- SECCIÓN PRINCIPAL: VISTA DE TABLAS Y TARJETAS DEL TALLER -->
       <section class="workshop-tables-container" id="kanban-view-container">
         
+        <!-- BOTÓN MÓVIL PRINCIPAL DE INGRESO -->
+        <div class="mobile-dashboard-header hide-desktop" style="margin-bottom: 12px;">
+          <button class="btn-mobile-add-vehicle" onclick="openMobileEntryWizard()">
+            <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i>
+            <span>+ Ingresar vehículo</span>
+          </button>
+        </div>
+
         <!-- SELECTOR SEGMENTADO MÓVIL (Solo en celulares) -->
         <div class="mobile-segmented-bar hide-desktop" id="mobile-segmented-bar">
           <button class="mobile-tab-btn active" id="mobile-tab-en-curso" onclick="switchMobileSegment('en-curso')">

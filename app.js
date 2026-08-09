@@ -13786,6 +13786,10 @@ window.openMobileEntryWizard = function() {
   const tabRefImg = document.getElementById('tablero-reference-img');
   if (tabRefImg) tabRefImg.src = '';
 
+  // Ocultar barra de navegación inferior para evitar solapamientos
+  const mobNav = document.getElementById('mobile-bottom-nav');
+  if (mobNav) mobNav.style.display = 'none';
+
   const wizardModal = document.getElementById('mobile-vehicle-entry-wizard');
   if (wizardModal) wizardModal.style.display = 'flex';
 
@@ -13795,6 +13799,10 @@ window.openMobileEntryWizard = function() {
 window.closeMobileEntryWizard = function() {
   const wizardModal = document.getElementById('mobile-vehicle-entry-wizard');
   if (wizardModal) wizardModal.style.display = 'none';
+
+  // Restaurar barra de navegación inferior
+  const mobNav = document.getElementById('mobile-bottom-nav');
+  if (mobNav) mobNav.style.display = 'flex';
 };
 
 window.updateMobileWizardStepUI = function(step) {
@@ -14006,12 +14014,20 @@ window.confirmMobileVehicleEntry = function() {
   vehicles.unshift(newVehicle);
   saveState();
 
-  // Asegurar que la vista móvil esté en la pestaña 'en-curso'
+  // 1. Cambiar a la vista del panel operativo
+  if (typeof switchView === 'function') {
+    switchView('tablero');
+  }
+
+  // 2. Asegurar que la vista móvil esté en la pestaña 'en-curso'
   if (typeof switchMobileSegment === 'function') {
     switchMobileSegment('en-curso');
   }
 
-  renderApp();
+  // 3. Renderizar aplicación y tablas
+  if (typeof renderApp === 'function') renderApp();
+  if (typeof renderWorkshopTables === 'function') renderWorkshopTables();
+  
   closeMobileEntryWizard();
 
   if (typeof showToastNotification === 'function') {
