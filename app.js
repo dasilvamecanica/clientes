@@ -3274,145 +3274,210 @@ function renderApp() {
 }
 
 
-function renderKanban() {
-  const stages = ['recepcion', 'cotizacion', 'reparacion', 'listo'];
+window.reenterVehicleFromTable = function(vehicleId) {
+  const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(vehicleId));
+  if (vehicleIndex !== -1) {
+    const vehicle = vehicles[vehicleIndex];
+    vehicles[vehicleIndex].delivered = false;
+    if (vehicles[vehicleIndex].stage === 'entregado') {
+      vehicles[vehicleIndex].stage = 'recepcion';
+    }
+    saveState();
+    renderApp();
+    if (typeof showToastNotification === 'function') {
+      showToastNotification(`✓ Vehículo ${vehicle.brand} ${vehicle.model} reingresado a En curso`, 'success');
+    } else {
+      alert(`Vehículo ${vehicle.brand} ${vehicle.model} reingresado a En curso.`);
+    }
+  }
+};
+
+window.renderWorkshopTables = function() {
+  const tbodyEnCurso = document.getElementById('tbody-vehiculos-en-curso');
+  const tbodyHistoria = document.getElementById('tbody-vehiculos-historia');
   
+  if (!tbodyEnCurso || !tbodyHistoria) return;
+
   const searchInput = document.getElementById('sidebar-search-input');
   const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
-  
-  stages.forEach(stage => {
-    const listContainer = document.getElementById(`list-${stage}`);
-    if (!listContainer) return;
 
-    // Filtrar vehículos de la etapa actual
-    let stageVehicles = vehicles.filter(v => v.stage === stage && !v.delivered);
-    
-    if (searchVal) {
-      stageVehicles = stageVehicles.filter(v => {
-        const isGolMock = v.id === 'mock-vehicle-gol-2026';
-        const idStr = String(v.id || '');
-        const indexNum = isGolMock ? '2' : (idStr.length >= 2 ? idStr.substring(idStr.length - 2) : '01');
-        const client = v.client ? v.client.toLowerCase() : '';
-        const phone = v.clientPhone ? v.clientPhone.toLowerCase() : '';
-        const plate = v.plate ? v.plate.toLowerCase() : '';
-        const brand = v.brand ? v.brand.toLowerCase() : '';
-        const model = v.model ? v.model.toLowerCase() : '';
-        
-        // Normalizar patentes para búsqueda insensible a espacios, guiones o mayúsculas
-        const normPlate = plate.replace(/[^a-z0-9]/g, '');
-        const normSearch = searchVal.replace(/[^a-z0-9]/g, '');
-        
-        return client.includes(searchVal) || 
-               phone.includes(searchVal) || 
-               plate.includes(searchVal) || 
-               (normPlate && normSearch && normPlate.includes(normSearch)) ||
-               brand.includes(searchVal) || 
-               model.includes(searchVal) ||
-               `#${indexNum}`.includes(searchVal);
-      });
-    }
-    
-    // Actualizar contadores de columna
-    document.getElementById(`count-${stage}`).textContent = stageVehicles.length;
+  let activeVehicles = vehicles.filter(v => !v.delivered);
+  let historyVehicles = vehicles.filter(v => v.delivered);
 
-    // Si no hay tarjetas, mostrar estado vacío (excepto en recepción que tiene el botón dashed)
-    if (stageVehicles.length === 0) {
-      if (stage === 'recepcion') {
-        listContainer.innerHTML = '';
-      } else {
-        listContainer.innerHTML = `
-          <div class="empty-state">
-            <i data-lucide="inbox"></i>
-            <span>Sin registros</span>
-          </div>
-        `;
-      }
-      return;
-    }
+  if (searchVal) {
+    const filterFn = (v) => {
+      const isGolMock = v.id === 'mock-vehicle-gol-2026';
+      const idStr = String(v.id || '');
+      const indexNum = isGolMock ? '2' : (idStr.length >= 2 ? idStr.substring(idStr.length - 2) : '01');
+      const client = v.client ? v.client.toLowerCase() : '';
+      const phone = v.clientPhone ? v.clientPhone.toLowerCase() : '';
+      const plate = v.plate ? v.plate.toLowerCase() : '';
+      const brand = v.brand ? v.brand.toLowerCase() : '';
+      const model = v.model ? v.model.toLowerCase() : '';
+      
+      const normPlate = plate.replace(/[^a-z0-9]/g, '');
+      const normSearch = searchVal.replace(/[^a-z0-9]/g, '');
+      
+      return client.includes(searchVal) || 
+             phone.includes(searchVal) || 
+             plate.includes(searchVal) || 
+             (normPlate && normSearch && normPlate.includes(normSearch)) ||
+             brand.includes(searchVal) || 
+             model.includes(searchVal) ||
+             `#${indexNum}`.includes(searchVal);
+    };
 
-    // Renderizar tarjetas
-    listContainer.innerHTML = stageVehicles.map(vehicle => {
-      const isGolMock = vehicle.id === 'mock-vehicle-gol-2026';
-      const idStr = String(vehicle.id);
-      const indexNum = isGolMock ? '2' : idStr.substring(idStr.length - 2, idStr.length);
-      return `
-        <div class="vehicle-card" id="card-${vehicle.id}" draggable="true" ondragstart="handleDragStart(event, '${vehicle.id}')" ondragend="handleDragEnd(event, '${vehicle.id}')">
-          <div class="card-top">
-            <span class="license-plate">${vehicle.plate}</span>
-            <span class="elapsed-time">
-              <i data-lucide="clock"></i>
-              <span class="elapsed-time-value" data-entry-time="${vehicle.entryTime}">Calculando...</span>
+    activeVehicles = activeVehicles.filter(filterFn);
+    historyVehicles = historyVehicles.filter(filterFn);
+  }
+
+  // Actualizar contadores
+  const countEnCursoEl = document.getElementById('count-vehiculos-en-curso');
+  const countHistoriaEl = document.getElementById('count-vehiculos-historia');
+  if (countEnCursoEl) countEnCursoEl.textContent = `${activeVehicles.length} ${activeVehicles.length === 1 ? 'activo' : 'activos'}`;
+  if (countHistoriaEl) countHistoriaEl.textContent = `${historyVehicles.length} ${historyVehicles.length === 1 ? 'entregado' : 'entregados'}`;
+
+  // Helper para renderizar fila
+  const renderRow = (v, isEnCurso) => {
+    const brandNormalized = v.brand ? v.brand.toLowerCase().trim().replace(/\s+/g, '-') : '';
+    const pngBrands = [
+      "brilliance", "buick", "cadillac", "changan", "chery", "chevrolet", "daewoo", 
+      "datsun", "de-tomaso", "desoto", "dodge", "dongfeng", "fisker", "ford", 
+      "gaz", "gmc", "great-wall", "haval", "hispano-suiza", "honda", "hongqi", 
+      "hyundai", "infiniti", "isuzu", "jaguar", "jeep", "kia", "lada", 
+      "lamborghini", "lancia", "land-rover", "lexus", "lincoln", "lotus", "luxgen", 
+      "mahindra", "maruti-suzuki", "maserati", "maybach", "mazda", "mclaren", "mercedes-benz", 
+      "mg", "mini", "mitsubishi", "nio", "nissan", "opel", "pagani", 
+      "perodua", "peugeot", "polestar", "porsche", "ram", "renault", "roewe", 
+      "rolls-royce", "rover", "saab", "scion", "seat", "skoda", "smart", 
+      "ssangyong", "subaru", "suzuki", "tata", "tesla", "toyota", "vauxhall", 
+      "volkswagen", "volvo", "wuling", "zeekr"
+    ];
+    const isPng = pngBrands.includes(brandNormalized);
+    const logoSrc = brandNormalized ? (isPng ? `brand-logos-main/png/${brandNormalized}.png` : `brand-logos-main/svg/${brandNormalized}.svg`) : '';
+
+    const entryDateStr = v.entryDate ? v.entryDate : (v.entryTime ? new Date(v.entryTime).toLocaleDateString('es-AR') : '—');
+
+    return `
+      <tr id="row-veh-${v.id}">
+        <!-- 1. Estado (Badge al inicio) -->
+        <td>
+          ${isEnCurso ? `
+            <span class="badge-status badge-en-curso">
+              <span class="pulse-dot"></span>
+              En curso
             </span>
-          </div>
-          
-          <div class="card-middle" onclick="openDetailedReceptionFromKanban('${vehicle.id}')" style="cursor: pointer;">
-            <span class="entry-badge">Ingreso # ${indexNum}</span>
-            <h4 class="vehicle-name" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
-              <span>${vehicle.brand} ${vehicle.model}</span>
-              ${vehicle.stage === 'cotizacion' ? `
-                <span class="quote-status-badge" style="font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background-color: ${vehicle.quoteCompleted ? 'rgba(16, 185, 129, 0.12)' : 'rgba(100, 116, 139, 0.12)'}; color: ${vehicle.quoteCompleted ? 'var(--color-listo)' : 'var(--text-secondary)'}; transition: all 0.2s;">
-                  ${vehicle.quoteCompleted ? 'Cotización aprobada' : 'Cotización pendiente'}
-                </span>
-              ` : ''}
-            </h4>
-            <div class="responsible-info" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <i data-lucide="user"></i>
-                <span>${vehicle.client}</span>
+          ` : `
+            <span class="badge-status badge-entregado">
+              <i data-lucide="check-circle-2" style="width: 13px; height: 13px;"></i>
+              Entregado
+            </span>
+          `}
+        </td>
+
+        <!-- 2. Vehículo (Marca, Modelo, Patente) -->
+        <td>
+          <div class="vehicle-cell-content">
+            ${logoSrc ? `
+              <img src="${logoSrc}" alt="${v.brand}" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;" onerror="this.style.display='none'">
+            ` : `
+              <div style="width: 28px; height: 28px; border-radius: 6px; background-color: rgba(var(--color-accent-rgb),0.1); color: var(--color-accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0;">
+                <i data-lucide="car" style="width: 14px; height: 14px;"></i>
               </div>
-              ${vehicle.stage === 'cotizacion' ? `
-                <label class="ios-switch" style="flex-shrink: 0; width: 34px; height: 20px; scale: 0.8; margin-right: -4px;" onclick="event.stopPropagation();">
-                  <input type="checkbox" ${vehicle.quoteCompleted ? 'checked' : ''} onchange="toggleQuoteApproval(event, '${vehicle.id}')" onclick="event.stopPropagation();">
-                  <span class="switch-slider" style="border-radius: 20px; ${vehicle.quoteCompleted ? 'background-color: var(--color-listo) !important;' : ''}"></span>
-                </label>
-              ` : ''}
+            `}
+            <div class="vehicle-cell-info">
+              <span class="vehicle-name-title">${v.brand || ''} ${v.model || ''}</span>
+              <span class="table-plate-badge ${isEnCurso ? '' : 'history'}">${v.plate || 'SIN PATENTE'}</span>
             </div>
           </div>
-          
-          <div class="card-bottom">
-            ${vehicle.stage === 'listo' ? `
-              <button class="view-quote-btn" onclick="openDetailedDeliveryView('${vehicle.id}')" style="color: var(--color-listo);">
-                <i data-lucide="check-circle" style="width: 14px; color: var(--color-listo);"></i>
-                Gestionar Entrega
+        </td>
+
+        <!-- 3. Cliente -->
+        <td>
+          <div class="client-cell-info">
+            <span class="client-name-text">${v.client || 'Sin cliente asignado'}</span>
+            ${v.clientPhone ? `<span class="client-sub-text">${v.clientPhone}</span>` : ''}
+          </div>
+        </td>
+
+        <!-- 4. Ingreso -->
+        <td>
+          <span class="date-cell-text">${entryDateStr}</span>
+        </td>
+
+        <!-- 5. Acciones -->
+        <td>
+          <div class="table-actions-group">
+            <button class="btn-action-pill view-btn" onclick="openDetailedReception('${v.id}')" title="Ver ficha técnica del vehículo">
+              <i data-lucide="eye" style="width: 13px; height: 13px;"></i>
+              <span>Ficha</span>
+            </button>
+            <button class="btn-action-pill edit-btn" onclick="openEditVehicleModal('${v.id}')" title="Editar vehículo">
+              <i data-lucide="pencil" style="width: 13px; height: 13px;"></i>
+              <span>Editar</span>
+            </button>
+            ${isEnCurso ? `
+              <button class="btn-action-pill deliver-btn" onclick="deliverVehicleFromCard('${v.id}')" title="Marcar vehículo como Entregado">
+                <i data-lucide="check-circle-2" style="width: 13px; height: 13px;"></i>
+                <span>Entregar</span>
               </button>
-            ` : vehicle.stage === 'reparacion' ? `
-              <button class="view-quote-btn" onclick="openDetailedWorkOrderView('${vehicle.id}')" style="color: var(--color-reparacion);">
-                <i data-lucide="wrench" style="width: 14px; color: var(--color-reparacion);"></i>
-                Ver Orden de Trabajo
-              </button>
-            ` : vehicle.stage === 'recepcion' ? (() => {
-                const isReceptionCreated = true;
-                if (!isReceptionCreated) {
-                  return `
-                    <button class="view-quote-btn" onclick="openDetailedReceptionFromCard('${vehicle.id}')" style="color: var(--color-recepcion);">
-                      <i data-lucide="clipboard-check" style="width: 14px; color: var(--color-recepcion);"></i>
-                      Recepcionar
-                    </button>
-                  `;
-                } else {
-                  return `
-                    <button class="view-quote-btn" onclick="openDetailedReceptionFromCard('${vehicle.id}')" style="color: var(--color-recepcion);">
-                      <i data-lucide="clipboard-check" style="width: 14px; color: var(--color-recepcion);"></i>
-                      Recepcionar
-                    </button>
-                  `;
-                }
-              })() : `
-              <button class="view-quote-btn" onclick="openDetailedQuoteView('${vehicle.id}')" style="color: var(--color-cotizacion);">
-                <i data-lucide="file-spreadsheet" style="width: 14px; color: var(--color-cotizacion);"></i>
-                ${vehicle.quoteCompleted ? 'Ver Cotización' : 'Crear Cotización'}
+            ` : `
+              <button class="btn-action-pill reenter-btn" onclick="reenterVehicleFromTable('${v.id}')" title="Reingresar vehículo a En curso">
+                <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i>
+                <span>Reingresar</span>
               </button>
             `}
-            <button class="card-actions-btn" onclick="openContextMenu(event, '${vehicle.id}', '${vehicle.stage}')">
-              <i data-lucide="more-horizontal"></i>
-            </button>
+            ${v.clientPhone ? `
+              <button class="btn-action-icon" onclick="sendClientWhatsApp({name: '${(v.client||'').replace(/'/g, "\\'")}', phone: '${v.clientPhone}'})" title="Enviar WhatsApp al cliente">
+                <i data-lucide="message-square" style="width: 14px; height: 14px; color: #25D366;"></i>
+              </button>
+            ` : ''}
           </div>
-        </div>
-      `;
-    }).join('');
-  });
+        </td>
+      </tr>
+    `;
+  };
+
+  // Renderizar Tabla En Curso
+  if (activeVehicles.length === 0) {
+    tbodyEnCurso.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty-table-cell">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <i data-lucide="inbox" style="width: 24px; height: 24px; opacity: 0.4;"></i>
+            <span>No hay vehículos ingresados actualmente en el taller.</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  } else {
+    tbodyEnCurso.innerHTML = activeVehicles.map(v => renderRow(v, true)).join('');
+  }
+
+  // Renderizar Tabla Historia
+  if (historyVehicles.length === 0) {
+    tbodyHistoria.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty-table-cell">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <i data-lucide="history" style="width: 24px; height: 24px; opacity: 0.4;"></i>
+            <span>No hay vehículos en la Historia.</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  } else {
+    tbodyHistoria.innerHTML = historyVehicles.map(v => renderRow(v, false)).join('');
+  }
+
   renderProximasCitas();
+  if (typeof initLucide === 'function') initLucide();
+};
+
+function renderKanban() {
+  renderWorkshopTables();
 }
+
 
 window.openDetailedReceptionFromKanban = function(vehicleId) {
   try {

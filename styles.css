@@ -4662,3 +4662,379 @@ aside.sidebar.collapsed .sidebar-user-container {
     z-index: 1100 !important;
   }
 }
+
+/* ========================================================================
+   ESTILOS NUEVOS: VISTA GENERAL Y TABLAS DE VEHÍCULOS (EN CURSO E HISTORIA)
+   ======================================================================== */
+
+.workshop-tables-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+}
+
+.workshop-table-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+}
+
+.workshop-table-card.active-card {
+  border-left: 4px solid var(--color-accent);
+}
+
+.workshop-table-card.history-card {
+  border-left: 4px solid #64748b;
+  background: rgba(255, 255, 255, 0.85);
+  opacity: 0.95;
+}
+
+/* Encabezados de sección */
+.workshop-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.header-icon-badge.active {
+  background-color: rgba(var(--color-accent-rgb), 0.12);
+  color: var(--color-accent);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.25);
+}
+
+.header-icon-badge.history {
+  background-color: rgba(100, 116, 139, 0.12);
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+}
+
+.workshop-table-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 2px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.workshop-table-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.count-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.count-badge.active-badge {
+  background-color: rgba(var(--color-accent-rgb), 0.12);
+  color: var(--color-accent);
+}
+
+.count-badge.history-badge {
+  background-color: rgba(100, 116, 139, 0.12);
+  color: #64748b;
+}
+
+/* Botón primario de ingreso */
+.btn-primary-accent {
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px 18px;
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.25);
+  transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.btn-primary-accent:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+/* Tabla custom para taller */
+.table-responsive-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.workshop-custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+  background-color: var(--card-bg);
+}
+
+.workshop-custom-table thead th {
+  background-color: #f8fafc;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 14px 18px;
+  border-bottom: 1.5px solid var(--border-color);
+}
+
+.workshop-custom-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color var(--transition-fast);
+}
+
+.workshop-custom-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.workshop-custom-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.workshop-custom-table tbody td {
+  padding: 14px 18px;
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+
+/* Badges de Estado en la Primera Columna */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.badge-en-curso {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse-dot-anim 2s infinite;
+}
+
+@keyframes pulse-dot-anim {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.badge-entregado {
+  background-color: rgba(100, 116, 139, 0.12);
+  color: #475569;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+}
+
+/* Celda Vehículo */
+.vehicle-cell-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vehicle-cell-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vehicle-name-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.table-plate-badge {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+  background-color: #1e293b;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  width: fit-content;
+  border: 1px solid #334155;
+}
+
+.table-plate-badge.history {
+  background-color: #64748b;
+  border-color: #475569;
+}
+
+/* Celda Cliente */
+.client-cell-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.client-name-text {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.client-sub-text {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Celda Ingreso */
+.date-cell-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Acciones */
+.table-actions-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.btn-action-pill {
+  border: 1px solid var(--border-color);
+  background-color: transparent;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-action-pill.view-btn {
+  color: var(--color-accent);
+  border-color: rgba(var(--color-accent-rgb), 0.3);
+  background-color: rgba(var(--color-accent-rgb), 0.04);
+}
+
+.btn-action-pill.view-btn:hover {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.btn-action-pill.edit-btn {
+  color: var(--text-secondary);
+}
+
+.btn-action-pill.edit-btn:hover {
+  background-color: #f1f5f9;
+  color: var(--text-primary);
+}
+
+.btn-action-pill.deliver-btn {
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.3);
+  background-color: rgba(16, 185, 129, 0.06);
+}
+
+.btn-action-pill.deliver-btn:hover {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-action-pill.reenter-btn {
+  color: #475569;
+  border-color: rgba(100, 116, 139, 0.3);
+  background-color: rgba(100, 116, 139, 0.06);
+}
+
+.btn-action-pill.reenter-btn:hover {
+  background-color: #64748b;
+  color: white;
+}
+
+.btn-action-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-action-icon:hover {
+  background-color: #f1f5f9;
+  color: var(--text-primary);
+}
+
+.empty-table-cell {
+  padding: 40px 20px !important;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+

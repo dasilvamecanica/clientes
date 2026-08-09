@@ -226,125 +226,81 @@
         </div>
       </section>
 
-      <!-- SECCIÓN DEL TABLERO KANBAN -->
-      <section class="kanban-board" id="kanban-view-container">
+      <!-- SECCIÓN PRINCIPAL: VISTA DE TABLAS DEL TALLER -->
+      <section class="workshop-tables-container" id="kanban-view-container">
         
-        <!-- Columna 1: Recepción -->
-        <div class="kanban-column recepcion-col" id="col-recepcion" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="handleDrop(event, 'recepcion')">
-          <div class="column-header">
-            <h2 class="column-title">
-              <i data-lucide="car"></i>
-              Recepción
-            </h2>
-            <span class="column-count-badge" id="count-recepcion">0</span>
-          </div>
-          <div class="cards-container" id="container-recepcion">
-            <!-- Botón dashed para ingresar vehículo -->
-            <button class="add-card-btn" onclick="openAddVehicleModal('recepcion')">
-              <div class="add-icon-pill">
-                <i data-lucide="plus"></i>
+        <!-- SECCIÓN SUPERIOR: VEHÍCULOS EN CURSO -->
+        <div class="workshop-table-card active-card" id="sec-vehiculos-en-curso">
+          <div class="workshop-table-header">
+            <div class="header-title-group">
+              <div class="header-icon-badge active">
+                <i data-lucide="car"></i>
               </div>
+              <div>
+                <h2 class="workshop-table-title">Vehículos en curso</h2>
+                <p class="workshop-table-subtitle">Vehículos ingresados actualmente en el taller</p>
+              </div>
+              <span class="count-badge active-badge" id="count-vehiculos-en-curso">0 activos</span>
+            </div>
+            <button class="btn-primary-accent" onclick="openAddVehicleModal()">
+              <i data-lucide="plus"></i>
               <span>Ingresar vehículo</span>
-              <span class="sub-text">Click para agregar</span>
             </button>
-            
-            <div class="cards-list" id="list-recepcion"></div>
+          </div>
+          
+          <div class="table-responsive-wrapper">
+            <table class="workshop-custom-table">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">Estado</th>
+                  <th>Vehículo</th>
+                  <th>Cliente</th>
+                  <th style="width: 150px;">Ingreso</th>
+                  <th style="width: 250px; text-align: right;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-vehiculos-en-curso">
+                <!-- Renderizado dinámico desde JS -->
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Columna 2: Cotización -->
-        <div class="kanban-column cotizacion-col" id="col-cotizacion" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="handleDrop(event, 'cotizacion')">
-          <div class="column-header">
-            <h2 class="column-title">
-              <i data-lucide="file-text"></i>
-              Cotización
-            </h2>
-            <span class="column-count-badge" id="count-cotizacion">1</span>
-            <button class="column-filter-btn">
-              <i data-lucide="sliders-horizontal"></i>
-            </button>
-          </div>
-          <div class="cards-container" id="container-cotizacion">
-            <!-- Botón dashed para crear cotización -->
-            <button class="add-card-btn" onclick="openAddVehicleModal('cotizacion')">
-              <div class="add-icon-pill">
-                <i data-lucide="plus"></i>
+        <!-- SECCIÓN INFERIOR: HISTORIA -->
+        <div class="workshop-table-card history-card" id="sec-vehiculos-historia">
+          <div class="workshop-table-header">
+            <div class="header-title-group">
+              <div class="header-icon-badge history">
+                <i data-lucide="history"></i>
               </div>
-              <span>Crear cotización</span>
-              <span class="sub-text">Click para agregar</span>
-            </button>
-            
-            <div class="cards-list" id="list-cotizacion">
-              <!-- Renderizado dinámico desde JS -->
+              <div>
+                <h2 class="workshop-table-title">Historia</h2>
+                <p class="workshop-table-subtitle">Historial de vehículos que ya fueron entregados</p>
+              </div>
+              <span class="count-badge history-badge" id="count-vehiculos-historia">0 entregados</span>
             </div>
           </div>
-        </div>
-
-        <!-- Columna 3: Reparación -->
-        <div class="kanban-column reparacion-col" id="col-reparacion" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="handleDrop(event, 'reparacion')">
-          <div class="column-header">
-            <h2 class="column-title">
-              <i data-lucide="wrench"></i>
-              Reparación
-            </h2>
-            <span class="column-count-badge" id="count-reparacion">0</span>
-          </div>
-          <div class="cards-container" id="container-reparacion">
-            <div class="cards-list" id="list-reparacion">
-              <!-- Renderizado dinámico desde JS -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Columna 4: Listo -->
-        <div class="kanban-column listo-col" id="col-listo" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="handleDrop(event, 'listo')">
-          <div class="column-header">
-            <h2 class="column-title">
-              <i data-lucide="check-circle-2"></i>
-              Listo
-            </h2>
-            <span class="column-count-badge" id="count-listo">0</span>
-          </div>
-          <div class="cards-container" id="container-listo">
-            <div class="cards-list" id="list-listo">
-              <!-- Renderizado dinámico desde JS -->
-            </div>
+          
+          <div class="table-responsive-wrapper">
+            <table class="workshop-custom-table history-table">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">Estado</th>
+                  <th>Vehículo</th>
+                  <th>Cliente</th>
+                  <th style="width: 150px;">Ingreso</th>
+                  <th style="width: 250px; text-align: right;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-vehiculos-historia">
+                <!-- Renderizado dinámico desde JS -->
+              </tbody>
+            </table>
           </div>
         </div>
 
       </section>
 
-      <!-- SECCIÓN DE VISTA DE LISTA DE VEHÍCULOS PARA MÓVILES -->
-      <section id="mobile-vehicle-list-view" class="mobile-vehicle-list-view hide-desktop" style="display: none; width: 100%;">
-        <!-- Chips de filtros de etapa -->
-        <div class="mobile-stage-filters" style="display: flex; gap: 8px; overflow-x: auto; padding: 4px 4px 12px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
-          <button class="stage-filter-chip active" id="mobile-filter-all" onclick="setMobileStageFilter('all')">
-            <span>Todos</span>
-            <span class="chip-count" id="mobile-count-all">0</span>
-          </button>
-          <button class="stage-filter-chip" id="mobile-filter-recepcion" onclick="setMobileStageFilter('recepcion')">
-            <span>Recepción</span>
-            <span class="chip-count" id="mobile-count-recepcion">0</span>
-          </button>
-          <button class="stage-filter-chip" id="mobile-filter-cotizacion" onclick="setMobileStageFilter('cotizacion')">
-            <span>Cotización</span>
-            <span class="chip-count" id="mobile-count-cotizacion">0</span>
-          </button>
-          <button class="stage-filter-chip" id="mobile-filter-reparacion" onclick="setMobileStageFilter('reparacion')">
-            <span>Reparación</span>
-            <span class="chip-count" id="mobile-count-reparacion">0</span>
-          </button>
-          <button class="stage-filter-chip" id="mobile-filter-listo" onclick="setMobileStageFilter('listo')">
-            <span>Listo</span>
-            <span class="chip-count" id="mobile-count-listo">0</span>
-          </button>
-        </div>
-
-        <!-- Contenedor vertical de tarjetas -->
-        <div id="mobile-vehicle-cards-container" style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px;">
-          <!-- Renderizado dinámico desde JS -->
-        </div>
-      </section>
 
       <!-- SECCIÓN DEL CALENDARIO (OCULTA POR DEFECTO) -->
       <section id="calendar-view-container" style="display: none; grid-template-columns: 3fr 1fr; gap: 20px; width: 100%;">
