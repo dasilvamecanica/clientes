@@ -3354,7 +3354,9 @@ window.renderWorkshopTables = function() {
       "volkswagen", "volvo", "wuling", "zeekr"
     ];
     const isPng = pngBrands.includes(brandNormalized);
-    const logoSrc = brandNormalized ? (isPng ? `brand-logos-main/png/${brandNormalized}.png` : `brand-logos-main/svg/${brandNormalized}.svg`) : '';
+    const logoExt = isPng ? 'png' : 'svg';
+    const fallbackExt = isPng ? 'svg' : 'png';
+    const logoSrc = brandNormalized ? `brand-logos-main/${brandNormalized}-logo.${logoExt}` : '';
 
     const entryDateStr = v.entryDate ? v.entryDate : (v.entryTime ? new Date(v.entryTime).toLocaleDateString('es-AR') : '—');
 
@@ -3379,7 +3381,7 @@ window.renderWorkshopTables = function() {
         <td>
           <div class="vehicle-cell-content">
             ${logoSrc ? `
-              <img src="${logoSrc}" alt="${v.brand}" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;" onerror="this.style.display='none'">
+              <img src="${logoSrc}" alt="${v.brand}" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;" onerror="if(!this.dataset.retry){this.dataset.retry='1';this.src='brand-logos-main/${brandNormalized}-logo.${fallbackExt}';}else{this.style.display='none';}">
             ` : `
               <div style="width: 28px; height: 28px; border-radius: 6px; background-color: rgba(var(--color-accent-rgb),0.1); color: var(--color-accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0;">
                 <i data-lucide="car" style="width: 14px; height: 14px;"></i>

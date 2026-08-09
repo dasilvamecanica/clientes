@@ -4025,37 +4025,31 @@ aside.sidebar.collapsed .sidebar-user-container {
 
 /* --- ESTILOS COMPLEMENTARIOS PARA LA VERSIÓN MÓVIL --- */
 @media (max-width: 768px) {
-  /* Ocultar métricas y tablero Kanban */
+  /* Ocultar métricas y mostrar contenedor de tablas del taller */
   .metrics-grid {
     display: none !important;
   }
   #kanban-view-container {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  #mobile-vehicle-list-view {
     display: none !important;
   }
-  
-  /* Asegurar que la barra lateral no se muestre en móviles */
   #main-sidebar {
     display: none !important;
   }
-  
-  /* Asegurar overlay sobre la navegación inferior */
   #mobile-sidebar-overlay {
     z-index: 1050 !important;
   }
-  
-  /* Ajuste de márgenes del contenido para acomodar la barra inferior */
   .main-content {
     padding-bottom: 80px !important;
     height: calc(100vh - 60px) !important;
     overflow-y: auto !important;
   }
-
-  /* Mostrar barra inferior y vista de lista móvil */
   #mobile-bottom-nav {
     display: flex !important;
-  }
-  #mobile-vehicle-list-view {
-    display: block !important;
   }
 
   /* Estilos de botones de navegación inferior */
