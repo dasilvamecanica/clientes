@@ -81,14 +81,20 @@ if (window.supabase) {
 }
 
 // Sincronización en segundo plano con Supabase (Upsert)
+// Sincronización completa en segundo plano con Supabase (Upsert + Purga de eliminados)
 async function syncWithSupabase(tableName, data) {
   if (!supabaseClient) return;
   try {
     if (Array.isArray(data)) {
-      if (data.length === 0) return;
+      if (data.length === 0) {
+        // Si el arreglo está vacío, purgar la tabla en Supabase
+        const { error: clearErr } = await supabaseClient.from(tableName).delete().neq('id', '___none___');
+        if (clearErr) console.error(`Error al vaciar ${tableName} en Supabase:`, clearErr);
+        return;
+      }
+
       const mappedData = data.map(item => {
         if (tableName === 'taller_vehicles') {
-          // Prepare services array with metadata
           let servicesArray = [];
           if (typeof item.services === 'string') {
             servicesArray = item.services.split('\n').map(s => s.trim()).filter(s => s.length > 0);
@@ -111,7 +117,7 @@ async function syncWithSupabase(tableName, data) {
           servicesWithMeta.push('__METADATA__:' + JSON.stringify(metaObj));
 
           return {
-            id: item.id,
+            id: String(item.id),
             plate: item.plate,
             brand: item.brand,
             model: item.model,
@@ -142,7 +148,7 @@ async function syncWithSupabase(tableName, data) {
         }
         if (tableName === 'taller_clients') {
           return {
-            id: item.id,
+            id: String(item.id),
             name: item.name,
             phone: item.phone,
             email: item.email,
@@ -151,7 +157,7 @@ async function syncWithSupabase(tableName, data) {
         }
         if (tableName === 'taller_reminders') {
           return {
-            id: item.id,
+            id: String(item.id),
             date: item.date,
             title: item.title,
             description: item.description,
@@ -167,7 +173,7 @@ async function syncWithSupabase(tableName, data) {
           };
           const serializedDesc = `${item.description || ''} ||| ${JSON.stringify(metaObj)}`;
           return {
-            id: item.id,
+            id: String(item.id),
             name: item.name,
             description: serializedDesc,
             price: item.price || 0,
@@ -176,13 +182,13 @@ async function syncWithSupabase(tableName, data) {
         }
         if (tableName === 'taller_caja_accounts') {
           return {
-            id: item.id,
+            id: String(item.id),
             name: item.name
           };
         }
         if (tableName === 'taller_caja_operations') {
           return {
-            id: item.id,
+            id: String(item.id),
             type: item.type,
             concept: item.concept,
             amount: item.amount,
@@ -196,10 +202,34 @@ async function syncWithSupabase(tableName, data) {
             date: item.date
           };
         }
-        return { ...item };
+        return { ...item, id: String(item.id) };
       });
+
+      // 1. Upsert registros actuales en Supabase
       const { error } = await supabaseClient.from(tableName).upsert(mappedData);
-      if (error) console.error(`Error de sync en ${tableName}:`, error);
+      if (error) {
+        console.error(`Error de sync en batch para ${tableName}, ejecutando fallback individual:`, error);
+        for (const singleItem of mappedData) {
+          const { error: itemErr } = await supabaseClient.from(tableName).upsert(singleItem);
+          if (itemErr) console.error(`Error al upsert individual en ${tableName} (${singleItem.id}):`, itemErr);
+        }
+      }
+
+      // 2. Limpieza y purga automática de registros eliminados en Supabase
+      const currentIds = data.map(item => String(item.id));
+      const { data: dbRows, error: fetchErr } = await supabaseClient.from(tableName).select('id');
+      if (!fetchErr && dbRows && Array.isArray(dbRows)) {
+        const dbIds = dbRows.map(r => String(r.id));
+        const deletedIds = dbIds.filter(id => !currentIds.includes(id));
+        for (const delId of deletedIds) {
+          const { error: purgeErr } = await supabaseClient.from(tableName).delete().eq('id', delId);
+          if (purgeErr) {
+            console.error(`Error al purgar ${tableName} (ID: ${delId}):`, purgeErr);
+          } else {
+            console.log(`✓ Registro eliminado purgado en Supabase (${tableName}, ID: ${delId})`);
+          }
+        }
+      }
     } else {
       if (data.id && data.id !== 'workshop_config') {
         const genericItem = {
@@ -280,9 +310,17 @@ async function deleteFromSupabase(tableName, id) {
   }
 }
 
-// Cargar estado inicial desde Supabase
+let lastUserInteractionTime = Date.now();
+window.addEventListener('input', () => { lastUserInteractionTime = Date.now(); }, true);
+window.addEventListener('change', () => { lastUserInteractionTime = Date.now(); }, true);
+
+// Cargar estado desde Supabase
 async function loadStateFromSupabase() {
   if (!supabaseClient) return;
+  const isEditing = document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+  if (isEditing && (Date.now() - lastUserInteractionTime < 4000)) {
+    return;
+  }
   console.log("AutoTech: Sincronizando datos desde la base de datos Supabase...");
   try {
     const { data: configData, error: configError } = await supabaseClient.from('taller_config').select('*').eq('id', 'workshop_config');
