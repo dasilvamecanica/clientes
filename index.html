@@ -2527,17 +2527,15 @@
               </label>
             </div>
             
-            <!-- Botón Finalizar y Archivar (Solo visible en pestaña Entrega) -->
-            <button class="btn-recepcionar-confirm" onclick="archiveVehicle()" id="btn-archive-vehicle" style="display: none; background-color: #00b050; color: white; border: none; box-shadow: 0 4px 12px rgba(0,176,80,0.2); cursor: pointer; align-items: center; gap: 6px; padding: 10px 18px; border-radius: var(--radius-md); font-weight: 700; font-size: 13px;">
-              <i data-lucide="archive" style="width: 14px; height: 14px;"></i> Finalizar y Archivar Vehículo
-            </button>
-
-            <!-- Botón Aceptar (Dinámico, ejecuta confirmación de pestaña activa) -->
+            <!-- Botón Cancelar (En Entrega) / Guardar (En otras pestañas) -->
             <button class="btn-recepcionar-confirm" id="btn-accept-global-footer" onclick="handleGlobalAccept()" style="background-color: var(--color-accent); box-shadow: 0 4px 12px rgba(var(--color-accent-rgb),0.2); border: none; color: white; cursor: pointer;">
               Aceptar
             </button>
 
-
+            <!-- Botón Entregar y Archivar vehículo (Solo visible en pestaña Entrega) -->
+            <button class="btn-recepcionar-confirm" onclick="archiveVehicle()" id="btn-archive-vehicle" style="display: none; background-color: #00b050; color: white; border: none; box-shadow: 0 4px 12px rgba(0,176,80,0.2); cursor: pointer; align-items: center; gap: 6px; padding: 10px 18px; border-radius: var(--radius-md); font-weight: 700; font-size: 13px;">
+              <i data-lucide="archive" style="width: 14px; height: 14px;"></i> Entregar y Archivar vehiculo
+            </button>
           </footer>
 
         </div>

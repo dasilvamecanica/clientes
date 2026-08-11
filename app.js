@@ -5676,14 +5676,29 @@ window.setActiveTab = function(tabName) {
     acceptBtn.style.setProperty('display', 'inline-flex', 'important');
     if (tabName === 'reception') {
       acceptBtn.textContent = 'Guardar Recepción';
+      acceptBtn.style.backgroundColor = 'var(--color-accent)';
+      acceptBtn.style.color = 'white';
+      acceptBtn.style.border = 'none';
     } else if (tabName === 'quote') {
       acceptBtn.textContent = 'Guardar Cotización';
+      acceptBtn.style.backgroundColor = 'var(--color-accent)';
+      acceptBtn.style.color = 'white';
+      acceptBtn.style.border = 'none';
     } else if (tabName === 'workorder') {
       acceptBtn.textContent = 'Guardar Orden de Trabajo';
+      acceptBtn.style.backgroundColor = 'var(--color-accent)';
+      acceptBtn.style.color = 'white';
+      acceptBtn.style.border = 'none';
     } else if (tabName === 'delivery') {
-      acceptBtn.textContent = 'Guardar Entrega';
+      acceptBtn.textContent = 'Cancelar';
+      acceptBtn.style.backgroundColor = 'var(--card-bg-hover)';
+      acceptBtn.style.color = 'var(--text-primary)';
+      acceptBtn.style.border = '1.5px solid var(--border-color)';
     } else {
       acceptBtn.textContent = 'Aceptar';
+      acceptBtn.style.backgroundColor = 'var(--color-accent)';
+      acceptBtn.style.color = 'white';
+      acceptBtn.style.border = 'none';
     }
   }
   
@@ -6068,7 +6083,7 @@ window.handleGlobalAccept = function() {
   } else if (window.activeTabName === 'workorder') {
     saveOTAndUpdate();
   } else if (window.activeTabName === 'delivery') {
-    saveDeliveryDetails();
+    exitDetailedReception();
   }
 };
 
