@@ -4321,14 +4321,14 @@
       </button>
       <div class="wizard-header-center">
         <h2 class="wizard-header-title">Ingreso de Vehículo</h2>
-        <span class="wizard-header-sub" id="wizard-step-label">Paso 1 de 3</span>
+        <span class="wizard-header-sub" id="wizard-step-label">Paso 1 de 4</span>
       </div>
       <button type="button" class="wizard-header-btn" onclick="closeMobileEntryWizard()" title="Cerrar">
         <i data-lucide="x"></i>
       </button>
     </header>
 
-    <!-- Barra de Progreso Fija -->
+    <!-- Barra de Progreso Fija (4 Pasos) -->
     <div class="wizard-progress-bar">
       <div class="progress-step-item active" id="p-step-1">
         <div class="step-circle">1</div>
@@ -4337,11 +4337,16 @@
       <div class="progress-line" id="p-line-1"></div>
       <div class="progress-step-item" id="p-step-2">
         <div class="step-circle">2</div>
-        <span class="step-title">Fotos</span>
+        <span class="step-title">Detalles</span>
       </div>
       <div class="progress-line" id="p-line-2"></div>
       <div class="progress-step-item" id="p-step-3">
         <div class="step-circle">3</div>
+        <span class="step-title">Fotos</span>
+      </div>
+      <div class="progress-line" id="p-line-3"></div>
+      <div class="progress-step-item" id="p-step-4">
+        <div class="step-circle">4</div>
         <span class="step-title">Kilometraje</span>
       </div>
     </div>
@@ -4383,10 +4388,46 @@
         </div>
       </div>
 
-      <!-- PASO 2: REGISTRO FOTOGRÁFICO (5 FOTOS OBLIGATORIAS) -->
+      <!-- PASO 2: DETALLES Y DAÑOS PREVIOS -->
       <div class="wizard-step-panel" id="mobile-wizard-step-2" style="display: none;">
         <div class="wizard-step-intro">
-          <h3 class="step-heading">Paso 2 — Estado del vehículo</h3>
+          <h3 class="step-heading">Paso 2 — Detalles y observaciones</h3>
+          <p class="step-subheading">Registra el estado general, rayones, bollos o faltantes de ingreso (Opcional)</p>
+        </div>
+
+        <div class="wizard-form-group">
+          <label class="wizard-label">¿PRESENTA DETALLES O DAÑOS ESTÉTICOS PREVIOS?</label>
+          <div class="wizard-switch-row" style="display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); border: 1.5px solid var(--border-color); padding: 12px 16px; border-radius: var(--radius-md);">
+            <span style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="alert-triangle" style="color: #f59e0b; width: 16px; height: 16px;"></i>
+              Detalles / Rayones / Faltantes
+            </span>
+            <label class="ios-switch">
+              <input type="checkbox" id="mob-wiz-details-toggle" onchange="toggleMobileWizardDetailsArea()">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="wizard-form-group" id="mob-wiz-details-group" style="display: none;">
+          <label class="wizard-label">DESCRIPCIÓN DE DETALLES / DAÑOS PREVIOS</label>
+          <textarea id="mob-wiz-details-notes" class="wizard-input-lg" rows="4" placeholder="Ej: Pequeño rayón en puerta trasera izquierda, óptica derecha opaca, sin auxilio..." style="resize: vertical; min-height: 100px; font-size: 14px;"></textarea>
+          
+          <!-- Píldoras de selección rápida -->
+          <div class="wizard-quick-pills" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+            <button type="button" class="wiz-pill-btn" onclick="addQuickDetailText('Rayón puerta')">+ Rayón puerta</button>
+            <button type="button" class="wiz-pill-btn" onclick="addQuickDetailText('Bollo paragolpes')">+ Bollo paragolpes</button>
+            <button type="button" class="wiz-pill-btn" onclick="addQuickDetailText('Óptica opaca')">+ Óptica opaca</button>
+            <button type="button" class="wiz-pill-btn" onclick="addQuickDetailText('Sin auxilio')">+ Sin auxilio</button>
+            <button type="button" class="wiz-pill-btn" onclick="addQuickDetailText('Taza faltante')">+ Taza faltante</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASO 3: REGISTRO FOTOGRÁFICO (5 FOTOS OBLIGATORIAS) -->
+      <div class="wizard-step-panel" id="mobile-wizard-step-3" style="display: none;">
+        <div class="wizard-step-intro">
+          <h3 class="step-heading">Paso 3 — Estado del vehículo</h3>
           <p class="step-subheading">Realizar las 5 fotografías obligatorias del estado al ingresar</p>
         </div>
 
@@ -4495,10 +4536,10 @@
         </div>
       </div>
 
-      <!-- PASO 3: KILOMETRAJE CON REFERENCIA DE FOTO TABLERO -->
-      <div class="wizard-step-panel" id="mobile-wizard-step-3" style="display: none;">
+      <!-- PASO 4: KILOMETRAJE CON REFERENCIA DE FOTO TABLERO -->
+      <div class="wizard-step-panel" id="mobile-wizard-step-4" style="display: none;">
         <div class="wizard-step-intro">
-          <h3 class="step-heading">Paso 3 — Lectura de kilometraje</h3>
+          <h3 class="step-heading">Paso 4 — Lectura de kilometraje</h3>
           <p class="step-subheading">Consulta la foto del tablero capturada para cargar el kilometraje</p>
         </div>
 

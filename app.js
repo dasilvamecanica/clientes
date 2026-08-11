@@ -3439,7 +3439,7 @@ window.renderWorkshopTables = function() {
     const entryDateStr = v.entryDate ? v.entryDate : (v.entryTime ? new Date(v.entryTime).toLocaleDateString('es-AR') : '—');
 
     return `
-      <tr id="row-veh-${v.id}">
+      <tr id="row-veh-${v.id}" onclick="openDetailedReception('${v.id}')" style="cursor: pointer;">
         <!-- 1. Estado (Badge al inicio) -->
         <td>
           ${isEnCurso ? `
@@ -3488,27 +3488,27 @@ window.renderWorkshopTables = function() {
         <!-- 5. Acciones -->
         <td>
           <div class="table-actions-group">
-            <button class="btn-action-pill view-btn" onclick="openDetailedReception('${v.id}')" title="Ver ficha técnica del vehículo">
+            <button class="btn-action-pill view-btn" onclick="event.stopPropagation(); openDetailedReception('${v.id}')" title="Ver ficha técnica del vehículo">
               <i data-lucide="eye" style="width: 13px; height: 13px;"></i>
               <span>Ficha</span>
             </button>
-            <button class="btn-action-pill edit-btn" onclick="openEditVehicleModal('${v.id}')" title="Editar vehículo">
+            <button class="btn-action-pill edit-btn" onclick="event.stopPropagation(); openEditVehicleModal('${v.id}')" title="Editar vehículo">
               <i data-lucide="pencil" style="width: 13px; height: 13px;"></i>
               <span>Editar</span>
             </button>
             ${isEnCurso ? `
-              <button class="btn-action-pill deliver-btn" onclick="deliverVehicleFromCard('${v.id}')" title="Marcar vehículo como Entregado">
+              <button class="btn-action-pill deliver-btn" onclick="event.stopPropagation(); deliverVehicleFromCard('${v.id}')" title="Marcar vehículo como Entregado">
                 <i data-lucide="check-circle-2" style="width: 13px; height: 13px;"></i>
                 <span>Entregar</span>
               </button>
             ` : `
-              <button class="btn-action-pill reenter-btn" onclick="reenterVehicleFromTable('${v.id}')" title="Reingresar vehículo a En curso">
+              <button class="btn-action-pill reenter-btn" onclick="event.stopPropagation(); reenterVehicleFromTable('${v.id}')" title="Reingresar vehículo a En curso">
                 <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i>
                 <span>Reingresar</span>
               </button>
             `}
             ${v.clientPhone ? `
-              <button class="btn-action-icon" onclick="sendClientWhatsApp({name: '${(v.client||'').replace(/'/g, "\\'")}', phone: '${v.clientPhone}'})" title="Enviar WhatsApp al cliente">
+              <button class="btn-action-icon" onclick="event.stopPropagation(); sendClientWhatsApp({name: '${(v.client||'').replace(/'/g, "\\'")}', phone: '${v.clientPhone}'})" title="Enviar WhatsApp al cliente">
                 <i data-lucide="message-square" style="width: 14px; height: 14px; color: #25D366;"></i>
               </button>
             ` : ''}
@@ -3590,7 +3590,7 @@ window.renderWorkshopTables = function() {
         const entryDateStr = v.entryDate ? v.entryDate : (v.entryTime ? new Date(v.entryTime).toLocaleDateString('es-AR') : '—');
 
         return `
-          <div class="mobile-workshop-card ${isEnCurso ? 'active-card' : 'history-card'}" id="mob-card-${v.id}">
+          <div class="mobile-workshop-card ${isEnCurso ? 'active-card' : 'history-card'}" id="mob-card-${v.id}" onclick="openDetailedReception('${v.id}')" style="cursor: pointer;">
             <!-- Header Móvil: Badge de estado a la izquierda, Patente a la derecha -->
             <div class="mobile-card-top">
               ${isEnCurso ? `
@@ -3628,21 +3628,21 @@ window.renderWorkshopTables = function() {
 
             <!-- Barra de Acciones Móvil (3 Botones) -->
             <div class="mobile-card-actions">
-              <button class="mobile-action-btn view-btn" onclick="openDetailedReception('${v.id}')">
+              <button class="mobile-action-btn view-btn" onclick="event.stopPropagation(); openDetailedReception('${v.id}')">
                 <i data-lucide="eye" style="width: 13px; height: 13px;"></i>
                 <span>Ficha</span>
               </button>
-              <button class="mobile-action-btn edit-btn" onclick="openEditVehicleModal('${v.id}')">
+              <button class="mobile-action-btn edit-btn" onclick="event.stopPropagation(); openEditVehicleModal('${v.id}')">
                 <i data-lucide="pencil" style="width: 13px; height: 13px;"></i>
                 <span>Editar</span>
               </button>
               ${isEnCurso ? `
-                <button class="mobile-action-btn deliver-btn" onclick="deliverVehicleFromCard('${v.id}')">
+                <button class="mobile-action-btn deliver-btn" onclick="event.stopPropagation(); deliverVehicleFromCard('${v.id}')">
                   <i data-lucide="check-circle-2" style="width: 13px; height: 13px;"></i>
                   <span>Entregar</span>
                 </button>
               ` : `
-                <button class="mobile-action-btn reenter-btn" onclick="reenterVehicleFromTable('${v.id}')">
+                <button class="mobile-action-btn reenter-btn" onclick="event.stopPropagation(); reenterVehicleFromTable('${v.id}')">
                   <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i>
                   <span>Reingresar</span>
                 </button>
@@ -13843,6 +13843,8 @@ let mobileWizardData = {
   model: '',
   firstName: '',
   lastName: '',
+  hasDetails: false,
+  detailsNotes: '',
   photos: {
     adelante: null,
     derecha: null,
@@ -13853,6 +13855,29 @@ let mobileWizardData = {
   km: ''
 };
 
+window.toggleMobileWizardDetailsArea = function() {
+  const toggle = document.getElementById('mob-wiz-details-toggle');
+  const group = document.getElementById('mob-wiz-details-group');
+  if (toggle && group) {
+    group.style.display = toggle.checked ? 'block' : 'none';
+    if (!toggle.checked) {
+      const notes = document.getElementById('mob-wiz-details-notes');
+      if (notes) notes.value = '';
+    }
+  }
+};
+
+window.addQuickDetailText = function(text) {
+  const notes = document.getElementById('mob-wiz-details-notes');
+  if (!notes) return;
+  const current = notes.value.trim();
+  if (current) {
+    notes.value = current + ', ' + text;
+  } else {
+    notes.value = text;
+  }
+};
+
 window.openMobileEntryWizard = function() {
   mobileWizardData = {
     step: 1,
@@ -13860,6 +13885,8 @@ window.openMobileEntryWizard = function() {
     model: '',
     firstName: '',
     lastName: '',
+    hasDetails: false,
+    detailsNotes: '',
     photos: {
       adelante: null,
       derecha: null,
@@ -13876,12 +13903,18 @@ window.openMobileEntryWizard = function() {
   const fnEl = document.getElementById('mob-wiz-first-name');
   const lnEl = document.getElementById('mob-wiz-last-name');
   const kmEl = document.getElementById('mob-wiz-km');
+  const detailsToggle = document.getElementById('mob-wiz-details-toggle');
+  const detailsNotes = document.getElementById('mob-wiz-details-notes');
+  const detailsGroup = document.getElementById('mob-wiz-details-group');
 
   if (pEl) pEl.value = '';
   if (mEl) mEl.value = '';
   if (fnEl) fnEl.value = '';
   if (lnEl) lnEl.value = '';
   if (kmEl) kmEl.value = '';
+  if (detailsToggle) detailsToggle.checked = false;
+  if (detailsNotes) detailsNotes.value = '';
+  if (detailsGroup) detailsGroup.style.display = 'none';
 
   // Reset photos UI
   const slots = ['adelante', 'derecha', 'atras', 'izquierda', 'tablero'];
@@ -13928,10 +13961,10 @@ window.updateMobileWizardStepUI = function(step) {
 
   // Actualizar etiqueta del header
   const stepLabel = document.getElementById('wizard-step-label');
-  if (stepLabel) stepLabel.textContent = `Paso ${step} de 3`;
+  if (stepLabel) stepLabel.textContent = `Paso ${step} de 4`;
 
-  // Actualizar barra de progreso
-  [1, 2, 3].forEach(s => {
+  // Actualizar barra de progreso (4 pasos)
+  [1, 2, 3, 4].forEach(s => {
     const pStep = document.getElementById(`p-step-${s}`);
     const pLine = document.getElementById(`p-line-${s}`);
     
@@ -13957,17 +13990,19 @@ window.updateMobileWizardStepUI = function(step) {
   const step1Panel = document.getElementById('mobile-wizard-step-1');
   const step2Panel = document.getElementById('mobile-wizard-step-2');
   const step3Panel = document.getElementById('mobile-wizard-step-3');
+  const step4Panel = document.getElementById('mobile-wizard-step-4');
 
   if (step1Panel) step1Panel.style.display = (step === 1) ? 'block' : 'none';
   if (step2Panel) step2Panel.style.display = (step === 2) ? 'block' : 'none';
   if (step3Panel) step3Panel.style.display = (step === 3) ? 'block' : 'none';
+  if (step4Panel) step4Panel.style.display = (step === 4) ? 'block' : 'none';
 
   // Actualizar botón del footer
   const nextBtnText = document.getElementById('mob-wiz-next-btn-text');
   const nextBtnIcon = document.getElementById('mob-wiz-next-btn-icon');
   const nextBtn = document.getElementById('mob-wiz-next-btn');
 
-  if (step === 3) {
+  if (step === 4) {
     if (nextBtnText) nextBtnText.textContent = 'Confirmar ingreso';
     if (nextBtnIcon) nextBtnIcon.setAttribute('data-lucide', 'check-circle-2');
     if (nextBtn) nextBtn.className = 'wizard-btn-next confirm';
@@ -14011,7 +14046,18 @@ window.nextMobileWizardStep = function() {
   }
 
   if (currentStep === 2) {
-    // Validar Paso 2: 5 fotos obligatorias
+    // Guardar Paso 2: Detalles y Observaciones estéticas
+    const detailsToggle = document.getElementById('mob-wiz-details-toggle');
+    const detailsNotes = document.getElementById('mob-wiz-details-notes');
+    mobileWizardData.hasDetails = detailsToggle ? detailsToggle.checked : false;
+    mobileWizardData.detailsNotes = detailsNotes ? detailsNotes.value.trim() : '';
+
+    updateMobileWizardStepUI(3);
+    return;
+  }
+
+  if (currentStep === 3) {
+    // Validar Paso 3: 5 fotos obligatorias
     const slots = ['adelante', 'derecha', 'atras', 'izquierda', 'tablero'];
     const missingSlots = slots.filter(slot => !mobileWizardData.photos[slot]);
 
@@ -14028,17 +14074,17 @@ window.nextMobileWizardStep = function() {
       return;
     }
 
-    // Cargar la foto del tablero en la tarjeta de referencia del Paso 3
+    // Cargar la foto del tablero en la tarjeta de referencia del Paso 4
     const tabRefImg = document.getElementById('tablero-reference-img');
     if (tabRefImg) {
       tabRefImg.src = mobileWizardData.photos.tablero;
     }
 
-    updateMobileWizardStepUI(3);
+    updateMobileWizardStepUI(4);
     return;
   }
 
-  if (currentStep === 3) {
+  if (currentStep === 4) {
     confirmMobileVehicleEntry();
   }
 };
@@ -14150,8 +14196,10 @@ window.confirmMobileVehicleEntry = function() {
       clientFirstName: mobileWizardData.firstName.trim(),
       clientLastName: mobileWizardData.lastName.trim(),
       clientPhone: '',
-      clientEmail: '',
+      hasDetails: mobileWizardData.hasDetails || false,
+      detailsNotes: mobileWizardData.detailsNotes || '',
       km: mobileWizardData.km,
+      kilometers: Number(mobileWizardData.km) || 0,
       mileage: mobileWizardData.km,
       entryTime: now.getTime(),
       entryDate: entryDateFormatted,
