@@ -2078,13 +2078,13 @@
           <section class="workspace-main" style="flex-grow: 1; display: flex; flex-direction: column; height: 0; box-sizing: border-box; overflow: hidden; background-color: var(--card-bg); padding: 20px 24px;">
 
             <!-- Barra de Pestañas (Recepción, Trabajo y Presupuesto, Entrega) -->
-            <div class="workspace-tabs-bar" style="display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 0px; flex-shrink: 0;">
-              <button class="workspace-tab-btn active" id="tab-reception-btn" onclick="setActiveTab('reception')">
+            <div class="workspace-tabs-bar" style="display: flex; width: 100%; gap: 6px; margin-bottom: 16px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 0px; flex-shrink: 0;">
+              <button class="workspace-tab-btn active" id="tab-reception-btn" onclick="setActiveTab('reception')" style="flex: 1; justify-content: center;">
                 <i data-lucide="search"></i>
                 Recepci&oacute;n
                 <span class="stage-pending-badge" id="tab-badge-reception">Pendiente</span>
               </button>
-              <button class="workspace-tab-btn" id="tab-quote-btn" onclick="setActiveTab('quote')">
+              <button class="workspace-tab-btn" id="tab-quote-btn" onclick="setActiveTab('quote')" style="flex: 1; justify-content: center;">
                 <i data-lucide="wrench"></i>
                 Trabajo y Presupuesto
                 <span class="stage-pending-badge" id="tab-badge-quote">Pendiente</span>
@@ -2094,7 +2094,7 @@
                 Orden de trabajo
                 <span class="stage-pending-badge" id="tab-badge-workorder">Pendiente</span>
               </button>
-              <button class="workspace-tab-btn" id="tab-delivery-btn" onclick="setActiveTab('delivery')">
+              <button class="workspace-tab-btn" id="tab-delivery-btn" onclick="setActiveTab('delivery')" style="flex: 1; justify-content: center;">
                 <i data-lucide="package-check"></i>
                 Entrega
                 <span class="stage-pending-badge" id="tab-badge-delivery">Pendiente</span>
@@ -2180,10 +2180,10 @@
               </div>
 
               <!-- PESTAÑA B: TRABAJO Y PRESUPUESTO -->
-              <div class="tab-content-wrapper" id="tab-content-quote" style="display: none; animation: slide-down 0.25s ease;">
+              <div class="tab-content-wrapper" id="tab-content-quote" style="display: none; flex-direction: column; height: 100%; box-sizing: border-box; animation: slide-down 0.25s ease;">
                 
                 <!-- SUB-VISTA B1: EDITOR DE TRABAJO Y PRESUPUESTO -->
-                <div id="quote-editor-view">
+                <div id="quote-editor-view" style="display: flex; flex-direction: column; height: 100%; flex-grow: 1;">
                   <!-- Contenedores ocultos para preservar compatibilidad con actualizaciones JS en app.js -->
                   <div style="display: none !important;">
                     <span id="label-serv-count">(0)</span>
@@ -2192,62 +2192,68 @@
                     <span id="quote-parts-sum">$0</span>
                   </div>
 
-                  <section class="reception-form-card" style="flex-grow: 1; gap: 16px; padding: 0px; border: none !important; background: transparent !important; box-shadow: none !important;">
-                    <!-- Bloque Servicios -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                      <div class="added-services-list" id="quote-services-list" onclick="handleListContainerClick(event, 'service')" style="display: flex; flex-direction: column; gap: 2px;">
-                        <!-- Servicios listados aquí -->
-                      </div>
-                    </div>
-
-                    <!-- Bloque Repuestos e Insumos -->
-                    <div class="form-group" style="padding-top: 16px; margin-bottom: 0;">
-                      <div class="added-services-list" id="quote-parts-list" onclick="handleListContainerClick(event, 'part')" style="display: flex; flex-direction: column; gap: 2px;">
-                        <!-- Repuestos listados aquí -->
-                      </div>
-                    </div>
-
-                    <!-- Observaciones y Adjuntos de Trabajo -->
-                    <div style="display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 12px;">
-                      <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">Observaciones del Trabajo</span>
+                  <section class="reception-form-card" style="flex-grow: 1; display: flex; flex-direction: column; height: 100%; gap: 0px; padding: 0px; border: none !important; background: transparent !important; box-shadow: none !important;">
+                    
+                    <!-- ÁREA CON SCROLL INDEPENDIENTE (Servicios, Repuestos y Observaciones) -->
+                    <div style="flex-grow: 1; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 4px;">
                       
-                      <div style="display: flex; flex-direction: column; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--card-bg-hover); overflow: hidden; min-height: 140px; box-sizing: border-box; width: 100%;">
-                        <textarea
-                          id="ot-observations"
-                          class="form-input"
-                          placeholder="Notas técnicas, hallazgos, recomendaciones al cliente..."
-                          style="resize: none; font-size: 13px; line-height: 1.5; padding: 12px 14px; flex-grow: 1; border: none; background: transparent; min-height: 80px; width: 100%; box-sizing: border-box; outline: none; box-shadow: none;"
-                          onblur="saveOTObservations()"
-                        ></textarea>
-                        
-                        <!-- Grid de miniaturas -->
-                        <div id="ot-images-grid" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 0 14px 10px 14px;">
-                          <!-- Renderizado dinámico desde JS -->
-                        </div>
-                        
-                        <div id="ot-images-empty" style="display: none !important;"></div>
-                        
-                        <!-- Barra de acciones inferior -->
-                        <div style="display: flex; justify-content: flex-end; gap: 14px; padding: 8px 14px; border-top: 1px solid var(--border-color-light); background-color: var(--card-bg); align-items: center;">
-                          <span style="font-size: 11px; color: var(--text-muted); flex-grow: 1; font-weight: 500;">Adjuntar fotos del trabajo:</span>
-                          <label for="ot-camera-capture" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; color: var(--color-accent); cursor: pointer; transition: all 0.2s; background: var(--card-bg-hover); border: 1px solid var(--border-color);" title="Tomar Foto">
-                            <i data-lucide="camera" style="width: 16px; height: 16px;"></i>
-                            <input type="file" id="ot-camera-capture" accept="image/*" capture="environment" style="display: none;" onchange="addOTImages(event)">
-                          </label>
-                          <label for="ot-image-upload" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; color: var(--color-accent); cursor: pointer; transition: all 0.2s; background: var(--card-bg-hover); border: 1px solid var(--border-color);" title="Subir de Galería">
-                            <i data-lucide="image" style="width: 16px; height: 16px;"></i>
-                            <input type="file" id="ot-image-upload" accept="image/*" multiple style="display: none;" onchange="addOTImages(event)">
-                          </label>
+                      <!-- Bloque Servicios -->
+                      <div class="form-group" style="margin-bottom: 0;">
+                        <div class="added-services-list" id="quote-services-list" onclick="handleListContainerClick(event, 'service')" style="display: flex; flex-direction: column; gap: 2px;">
+                          <!-- Servicios listados aquí -->
                         </div>
                       </div>
+
+                      <!-- Bloque Repuestos e Insumos -->
+                      <div class="form-group" style="padding-top: 4px; margin-bottom: 0;">
+                        <div class="added-services-list" id="quote-parts-list" onclick="handleListContainerClick(event, 'part')" style="display: flex; flex-direction: column; gap: 2px;">
+                          <!-- Repuestos listados aquí -->
+                        </div>
+                      </div>
+
+                      <!-- Observaciones y Adjuntos de Trabajo -->
+                      <div style="display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 6px;">
+                        <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">Observaciones del Trabajo</span>
+                        
+                        <div style="display: flex; flex-direction: column; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--card-bg-hover); overflow: hidden; min-height: 120px; box-sizing: border-box; width: 100%;">
+                          <textarea
+                            id="ot-observations"
+                            class="form-input"
+                            placeholder="Notas técnicas, hallazgos, recomendaciones al cliente..."
+                            style="resize: none; font-size: 13px; line-height: 1.5; padding: 10px 12px; flex-grow: 1; border: none; background: transparent; min-height: 65px; width: 100%; box-sizing: border-box; outline: none; box-shadow: none;"
+                            onblur="saveOTObservations()"
+                          ></textarea>
+                          
+                          <!-- Grid de miniaturas -->
+                          <div id="ot-images-grid" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 0 12px 8px 12px;">
+                            <!-- Renderizado dinámico desde JS -->
+                          </div>
+                          
+                          <div id="ot-images-empty" style="display: none !important;"></div>
+                          
+                          <!-- Barra de acciones inferior -->
+                          <div style="display: flex; justify-content: flex-end; gap: 14px; padding: 6px 12px; border-top: 1px solid var(--border-color-light); background-color: var(--card-bg); align-items: center;">
+                            <span style="font-size: 11px; color: var(--text-muted); flex-grow: 1; font-weight: 500;">Adjuntar fotos del trabajo:</span>
+                            <label for="ot-camera-capture" style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: var(--color-accent); cursor: pointer; transition: all 0.2s; background: var(--card-bg-hover); border: 1px solid var(--border-color);" title="Tomar Foto">
+                              <i data-lucide="camera" style="width: 15px; height: 15px;"></i>
+                              <input type="file" id="ot-camera-capture" accept="image/*" capture="environment" style="display: none;" onchange="addOTImages(event)">
+                            </label>
+                            <label for="ot-image-upload" style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: var(--color-accent); cursor: pointer; transition: all 0.2s; background: var(--card-bg-hover); border: 1px solid var(--border-color);" title="Subir de Galería">
+                              <i data-lucide="image" style="width: 15px; height: 15px;"></i>
+                              <input type="file" id="ot-image-upload" accept="image/*" multiple style="display: none;" onchange="addOTImages(event)">
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
                     </div>
 
                     <!-- Elementos ocultos para preservar compatibilidad de estado de app.js -->
                     <input type="hidden" id="quote-notes" value="">
                     <input type="hidden" id="quote-send-email" value="">
 
-                    <!-- Panel de Footer: Grilla Resumen Financiero y Entrega -->
-                    <div class="quote-editor-footer-grid" style="margin-top: 12px;">
+                    <!-- Panel de Footer FIJO/STICKY: Grilla Resumen Financiero y Entrega -->
+                    <div class="quote-editor-footer-grid" style="flex-shrink: 0; margin-top: 8px; padding-top: 12px; border-top: 1.5px solid var(--border-color); background-color: var(--card-bg); z-index: 5;">
 
                       <!-- Columna 1: Fecha y hora de entrega comprometida -->
                       <div style="display: flex; flex-direction: column; gap: 8px;">
