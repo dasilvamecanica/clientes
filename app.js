@@ -4922,8 +4922,20 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
     const detServiceDesc = document.getElementById('det-service-description');
     if (detServiceDesc) detServiceDesc.value = activeReceptionServices;
 
+    const hasDetails = !!vehicle.hasDetails;
+    const radioYes = document.querySelector('input[name="det-has-details-radio"][value="yes"]');
+    const radioNo = document.querySelector('input[name="det-has-details-radio"][value="no"]');
+    if (radioYes && radioNo) {
+      radioYes.checked = hasDetails;
+      radioNo.checked = !hasDetails;
+    }
+    const detDetailsContainer = document.getElementById('det-details-container');
+    if (detDetailsContainer) {
+      detDetailsContainer.style.display = hasDetails ? 'block' : 'none';
+    }
+
     const detDetailsToggle = document.getElementById('det-details-toggle');
-    if (detDetailsToggle) detDetailsToggle.checked = vehicle.hasDetails || false;
+    if (detDetailsToggle) detDetailsToggle.checked = hasDetails;
 
     const detDetailsNotes = document.getElementById('det-details-notes');
     if (detDetailsNotes) detDetailsNotes.value = vehicle.detailsNotes || '';
@@ -5257,16 +5269,28 @@ window.toggleVoiceDictation = function() {
   }, 1000);
 };
 
-// Switch Detalles
+window.toggleDetailsNotesField = function(show) {
+  const container = document.getElementById('det-details-container');
+  if (container) {
+    container.style.display = show ? 'block' : 'none';
+    if (show) {
+      const notesEl = document.getElementById('det-details-notes');
+      if (notesEl) notesEl.focus();
+    }
+  }
+};
+
+// Switch / Radio Detalles
 window.toggleDetailsArea = function() {
   const toggle = document.getElementById('det-details-toggle');
   const areaGroup = document.getElementById('det-details-notes-group');
-  
+  if (!toggle) return;
   if (toggle.checked) {
-    areaGroup.style.display = 'flex';
-    document.getElementById('det-details-notes').focus();
+    if (areaGroup) areaGroup.style.display = 'flex';
+    const notesEl = document.getElementById('det-details-notes');
+    if (notesEl) notesEl.focus();
   } else {
-    areaGroup.style.display = 'none';
+    if (areaGroup) areaGroup.style.display = 'none';
   }
 };
 
