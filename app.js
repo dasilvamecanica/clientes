@@ -5368,20 +5368,10 @@ window.openEditVehicleModal = function(vehicleId) {
 
 window.handleContextDeliver = function() {
   if (!activeContextVehicleId) return;
-  
-  const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(activeContextVehicleId));
-  if (vehicleIndex !== -1) {
-    const vehicle = vehicles[vehicleIndex];
-    vehicles[vehicleIndex].delivered = true;
-    vehicles[vehicleIndex].deliveryTime = Date.now();
-    saveState();
-    renderApp();
-    
-    // Crear toast y redirigir a caja
-    showDeliveryToast(vehicle);
-
-  }
-  document.getElementById('card-context-menu').classList.remove('show');
+  const menu = document.getElementById('card-context-menu');
+  if (menu) menu.classList.remove('show');
+  openDetailedReception(activeContextVehicleId);
+  setActiveTab('delivery');
 };
 
 window.handleContextViewQuote = function() {
@@ -5391,17 +5381,8 @@ window.handleContextViewQuote = function() {
 };
 
 window.deliverVehicleFromCard = function(vehicleId) {
-  const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(vehicleId));
-  if (vehicleIndex !== -1) {
-    const vehicle = vehicles[vehicleIndex];
-    vehicles[vehicleIndex].delivered = true;
-    vehicles[vehicleIndex].deliveryTime = Date.now();
-    saveState();
-    renderApp();
-    
-    showDeliveryToast(vehicle);
-
-  }
+  openDetailedReception(vehicleId);
+  setActiveTab('delivery');
 };
 
 function showDeliveryToast(vehicle) {
