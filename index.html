@@ -4429,18 +4429,27 @@
               <span class="slot-title">1. ADELANTE</span>
               <span class="slot-status-badge pending" id="slot-badge-adelante">Pendiente</span>
             </div>
-            <div class="slot-preview-box" id="preview-box-adelante" onclick="onMobilePhotoSlotClick('adelante')" style="cursor: pointer;">
+            <div class="slot-preview-box" id="preview-box-adelante" onclick="onMobilePreviewClick('adelante')" style="cursor: pointer;">
               <div class="slot-placeholder" id="placeholder-adelante">
                 <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
                 <span>Foto frontal</span>
               </div>
               <img id="img-preview-adelante" src="" alt="Adelante" class="slot-preview-img" style="display: none;">
             </div>
-            <button type="button" class="slot-action-btn" id="btn-label-adelante" onclick="onMobilePhotoSlotClick('adelante')">
-              <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
-              <span id="btn-text-adelante">Tomar foto</span>
-            </button>
-            <input type="file" id="mob-file-adelante" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('adelante', this)" onclick="event.stopPropagation()">
+
+            <input type="file" id="mob-file-adelante" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('adelante', this)">
+
+            <div class="slot-actions-row" style="display: flex; gap: 8px; margin-top: 10px;">
+              <label for="mob-file-adelante" class="slot-action-btn" id="btn-label-adelante" style="flex: 1; margin: 0; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
+                <span id="btn-text-adelante">Tomar foto</span>
+              </label>
+
+              <button type="button" class="slot-view-btn" id="btn-view-adelante" onclick="openSlotPhotoLightbox('adelante')" style="display: none; background: var(--card-bg-hover); color: var(--text-primary); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 8px 12px; font-weight: 700; font-size: 13px; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+                <i data-lucide="maximize-2" style="width: 14px; height: 14px;"></i>
+                <span>Ver</span>
+              </button>
+            </div>
           </div>
 
           <!-- 2. DERECHA -->
@@ -4449,18 +4458,27 @@
               <span class="slot-title">2. DERECHA</span>
               <span class="slot-status-badge pending" id="slot-badge-derecha">Pendiente</span>
             </div>
-            <div class="slot-preview-box" id="preview-box-derecha" onclick="onMobilePhotoSlotClick('derecha')" style="cursor: pointer;">
+            <div class="slot-preview-box" id="preview-box-derecha" onclick="onMobilePreviewClick('derecha')" style="cursor: pointer;">
               <div class="slot-placeholder" id="placeholder-derecha">
                 <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
                 <span>Lateral derecho</span>
               </div>
               <img id="img-preview-derecha" src="" alt="Derecha" class="slot-preview-img" style="display: none;">
             </div>
-            <button type="button" class="slot-action-btn" id="btn-label-derecha" onclick="onMobilePhotoSlotClick('derecha')">
-              <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
-              <span id="btn-text-derecha">Tomar foto</span>
-            </button>
-            <input type="file" id="mob-file-derecha" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('derecha', this)" onclick="event.stopPropagation()">
+
+            <input type="file" id="mob-file-derecha" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('derecha', this)">
+
+            <div class="slot-actions-row" style="display: flex; gap: 8px; margin-top: 10px;">
+              <label for="mob-file-derecha" class="slot-action-btn" id="btn-label-derecha" style="flex: 1; margin: 0; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
+                <span id="btn-text-derecha">Tomar foto</span>
+              </label>
+
+              <button type="button" class="slot-view-btn" id="btn-view-derecha" onclick="openSlotPhotoLightbox('derecha')" style="display: none; background: var(--card-bg-hover); color: var(--text-primary); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 8px 12px; font-weight: 700; font-size: 13px; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+                <i data-lucide="maximize-2" style="width: 14px; height: 14px;"></i>
+                <span>Ver</span>
+              </button>
+            </div>
           </div>
 
           <!-- 3. ATRÁS -->
@@ -4469,18 +4487,27 @@
               <span class="slot-title">3. ATRÁS</span>
               <span class="slot-status-badge pending" id="slot-badge-atras">Pendiente</span>
             </div>
-            <div class="slot-preview-box" id="preview-box-atras" onclick="onMobilePhotoSlotClick('atras')" style="cursor: pointer;">
+            <div class="slot-preview-box" id="preview-box-atras" onclick="onMobilePreviewClick('atras')" style="cursor: pointer;">
               <div class="slot-placeholder" id="placeholder-atras">
                 <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
                 <span>Foto trasera</span>
               </div>
               <img id="img-preview-atras" src="" alt="Atrás" class="slot-preview-img" style="display: none;">
             </div>
-            <button type="button" class="slot-action-btn" id="btn-label-atras" onclick="onMobilePhotoSlotClick('atras')">
-              <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
-              <span id="btn-text-atras">Tomar foto</span>
-            </button>
-            <input type="file" id="mob-file-atras" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('atras', this)" onclick="event.stopPropagation()">
+
+            <input type="file" id="mob-file-atras" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('atras', this)">
+
+            <div class="slot-actions-row" style="display: flex; gap: 8px; margin-top: 10px;">
+              <label for="mob-file-atras" class="slot-action-btn" id="btn-label-atras" style="flex: 1; margin: 0; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
+                <span id="btn-text-atras">Tomar foto</span>
+              </label>
+
+              <button type="button" class="slot-view-btn" id="btn-view-atras" onclick="openSlotPhotoLightbox('atras')" style="display: none; background: var(--card-bg-hover); color: var(--text-primary); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 8px 12px; font-weight: 700; font-size: 13px; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+                <i data-lucide="maximize-2" style="width: 14px; height: 14px;"></i>
+                <span>Ver</span>
+              </button>
+            </div>
           </div>
 
           <!-- 4. IZQUIERDA -->
@@ -4489,18 +4516,27 @@
               <span class="slot-title">4. IZQUIERDA</span>
               <span class="slot-status-badge pending" id="slot-badge-izquierda">Pendiente</span>
             </div>
-            <div class="slot-preview-box" id="preview-box-izquierda" onclick="onMobilePhotoSlotClick('izquierda')" style="cursor: pointer;">
+            <div class="slot-preview-box" id="preview-box-izquierda" onclick="onMobilePreviewClick('izquierda')" style="cursor: pointer;">
               <div class="slot-placeholder" id="placeholder-izquierda">
                 <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
                 <span>Lateral izquierdo</span>
               </div>
               <img id="img-preview-izquierda" src="" alt="Izquierda" class="slot-preview-img" style="display: none;">
             </div>
-            <button type="button" class="slot-action-btn" id="btn-label-izquierda" onclick="onMobilePhotoSlotClick('izquierda')">
-              <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
-              <span id="btn-text-izquierda">Tomar foto</span>
-            </button>
-            <input type="file" id="mob-file-izquierda" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('izquierda', this)" onclick="event.stopPropagation()">
+
+            <input type="file" id="mob-file-izquierda" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('izquierda', this)">
+
+            <div class="slot-actions-row" style="display: flex; gap: 8px; margin-top: 10px;">
+              <label for="mob-file-izquierda" class="slot-action-btn" id="btn-label-izquierda" style="flex: 1; margin: 0; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
+                <span id="btn-text-izquierda">Tomar foto</span>
+              </label>
+
+              <button type="button" class="slot-view-btn" id="btn-view-izquierda" onclick="openSlotPhotoLightbox('izquierda')" style="display: none; background: var(--card-bg-hover); color: var(--text-primary); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 8px 12px; font-weight: 700; font-size: 13px; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+                <i data-lucide="maximize-2" style="width: 14px; height: 14px;"></i>
+                <span>Ver</span>
+              </button>
+            </div>
           </div>
 
           <!-- 5. TABLERO -->
@@ -4509,18 +4545,27 @@
               <span class="slot-title">5. TABLERO</span>
               <span class="slot-status-badge pending" id="slot-badge-tablero">Pendiente</span>
             </div>
-            <div class="slot-preview-box" id="preview-box-tablero" onclick="onMobilePhotoSlotClick('tablero')" style="cursor: pointer;">
+            <div class="slot-preview-box" id="preview-box-tablero" onclick="onMobilePreviewClick('tablero')" style="cursor: pointer;">
               <div class="slot-placeholder" id="placeholder-tablero">
                 <i data-lucide="gauge" style="width: 24px; height: 24px;"></i>
                 <span>Tablero / Luces testigo</span>
               </div>
               <img id="img-preview-tablero" src="" alt="Tablero" class="slot-preview-img" style="display: none;">
             </div>
-            <button type="button" class="slot-action-btn" id="btn-label-tablero" onclick="onMobilePhotoSlotClick('tablero')">
-              <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
-              <span id="btn-text-tablero">Tomar foto</span>
-            </button>
-            <input type="file" id="mob-file-tablero" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('tablero', this)" onclick="event.stopPropagation()">
+
+            <input type="file" id="mob-file-tablero" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('tablero', this)">
+
+            <div class="slot-actions-row" style="display: flex; gap: 8px; margin-top: 10px;">
+              <label for="mob-file-tablero" class="slot-action-btn" id="btn-label-tablero" style="flex: 1; margin: 0; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
+                <span id="btn-text-tablero">Tomar foto</span>
+              </label>
+
+              <button type="button" class="slot-view-btn" id="btn-view-tablero" onclick="openSlotPhotoLightbox('tablero')" style="display: none; background: var(--card-bg-hover); color: var(--text-primary); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 8px 12px; font-weight: 700; font-size: 13px; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+                <i data-lucide="maximize-2" style="width: 14px; height: 14px;"></i>
+                <span>Ver</span>
+              </button>
+            </div>
           </div>
 
         </div>

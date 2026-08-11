@@ -14032,6 +14032,7 @@ window.openMobileEntryWizard = function(vehicleToEdit = null) {
     const placeholderEl = document.getElementById(`placeholder-${slot}`);
     const badgeEl = document.getElementById(`slot-badge-${slot}`);
     const textEl = document.getElementById(`btn-text-${slot}`);
+    const viewBtnEl = document.getElementById(`btn-view-${slot}`);
     const cardEl = document.getElementById(`slot-card-${slot}`);
 
     if (fileEl) fileEl.value = '';
@@ -14041,13 +14042,15 @@ window.openMobileEntryWizard = function(vehicleToEdit = null) {
       if (imgEl) { imgEl.src = photoUrl; imgEl.style.display = 'block'; }
       if (placeholderEl) placeholderEl.style.display = 'none';
       if (badgeEl) { badgeEl.textContent = '✓ Lista'; badgeEl.className = 'slot-status-badge ready'; }
-      if (textEl) textEl.textContent = 'Opciones de foto';
+      if (textEl) textEl.textContent = 'Reemplazar foto';
+      if (viewBtnEl) viewBtnEl.style.display = 'flex';
       if (cardEl) cardEl.classList.add('completed');
     } else {
       if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
       if (placeholderEl) placeholderEl.style.display = 'flex';
       if (badgeEl) { badgeEl.textContent = 'Pendiente'; badgeEl.className = 'slot-status-badge pending'; }
       if (textEl) textEl.textContent = 'Tomar foto';
+      if (viewBtnEl) viewBtnEl.style.display = 'none';
       if (cardEl) cardEl.classList.remove('completed');
     }
   });
@@ -14222,6 +14225,27 @@ window.prevMobileWizardStep = function() {
   }
 };
 
+window.openSlotPhotoLightbox = function(slotName) {
+  const photoUrl = mobileWizardData.photos ? mobileWizardData.photos[slotName] : null;
+  const slotNamesAR = {
+    adelante: '1. ADELANTE',
+    derecha: '2. DERECHA',
+    atras: '3. ATRÁS',
+    izquierda: '4. IZQUIERDA',
+    tablero: '5. TABLERO'
+  };
+  if (photoUrl) {
+    openPhotoLightbox(photoUrl, slotNamesAR[slotName] || 'Fotografía de Recepción');
+  }
+};
+
+window.onMobilePreviewClick = function(slotName) {
+  const photoUrl = mobileWizardData.photos ? mobileWizardData.photos[slotName] : null;
+  if (photoUrl) {
+    openSlotPhotoLightbox(slotName);
+  }
+};
+
 window.onMobilePhotoSlotClick = function(slotName) {
   window.activePhotoSlot = slotName;
   
@@ -14268,17 +14292,7 @@ window.executePhotoAction = function(actionType) {
       if (fileInput) fileInput.click();
     }, 100);
   } else if (actionType === 'view') {
-    const photoUrl = mobileWizardData.photos ? mobileWizardData.photos[slotName] : null;
-    const slotNamesAR = {
-      adelante: '1. ADELANTE',
-      derecha: '2. DERECHA',
-      atras: '3. ATRÁS',
-      izquierda: '4. IZQUIERDA',
-      tablero: '5. TABLERO'
-    };
-    if (photoUrl) {
-      openPhotoLightbox(photoUrl, slotNamesAR[slotName] || 'Fotografía de Recepción');
-    }
+    openSlotPhotoLightbox(slotName);
   }
 };
 
@@ -14329,6 +14343,7 @@ window.handleMobilePhotoUpload = function(slotName, inputEl) {
     const placeholderEl = document.getElementById(`placeholder-${slotName}`);
     const badgeEl = document.getElementById(`slot-badge-${slotName}`);
     const textEl = document.getElementById(`btn-text-${slotName}`);
+    const viewBtnEl = document.getElementById(`btn-view-${slotName}`);
     const cardEl = document.getElementById(`slot-card-${slotName}`);
 
     if (imgEl) {
@@ -14343,11 +14358,16 @@ window.handleMobilePhotoUpload = function(slotName, inputEl) {
       badgeEl.className = 'slot-status-badge ready';
     }
     if (textEl) {
-      textEl.textContent = 'Opciones de foto';
+      textEl.textContent = 'Reemplazar foto';
+    }
+    if (viewBtnEl) {
+      viewBtnEl.style.display = 'flex';
     }
     if (cardEl) {
       cardEl.classList.add('completed');
     }
+
+    if (typeof initLucide === 'function') initLucide();
   };
 
   reader.readAsDataURL(file);
