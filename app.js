@@ -4331,7 +4331,129 @@ window.populateAutocompleteDatalists = function() {
   }
 };
 
-// --- 9. GESTIÓN DEL MODAL DE REGISTRO E INGRESOS ---
+// --- 9. GESTIÓN DEL MODAL DE REGISTRO E INGRESOS (WIZARD DESKTOP) ---
+
+window.desktopWizCurrentStep = 1;
+
+window.updateDesktopWizStepUI = function(step) {
+  window.desktopWizCurrentStep = step;
+  
+  const p1 = document.getElementById('desk-wiz-panel-1');
+  const p2 = document.getElementById('desk-wiz-panel-2');
+  const p3 = document.getElementById('desk-wiz-panel-3');
+
+  if (p1) p1.style.display = step === 1 ? 'grid' : 'none';
+  if (p2) p2.style.display = step === 2 ? 'block' : 'none';
+  if (p3) p3.style.display = step === 3 ? 'block' : 'none';
+
+  // Actualizar indicadores visuales de pasos
+  for (let i = 1; i <= 3; i++) {
+    const item = document.getElementById(`desk-wiz-step-${i}`);
+    if (!item) continue;
+    const num = item.querySelector('.desk-step-num');
+    if (i < step) {
+      item.style.color = '#059669';
+      if (num) {
+        num.style.background = '#059669';
+        num.style.color = 'white';
+        num.style.border = 'none';
+      }
+    } else if (i === step) {
+      item.style.color = 'var(--color-accent)';
+      if (num) {
+        num.style.background = 'var(--color-accent)';
+        num.style.color = 'white';
+        num.style.border = 'none';
+      }
+    } else {
+      item.style.color = 'var(--text-muted)';
+      if (num) {
+        num.style.background = 'var(--card-bg-hover)';
+        num.style.color = 'var(--text-muted)';
+        num.style.border = '1px solid var(--border-color)';
+      }
+    }
+  }
+
+  // Actualizar líneas conectoras
+  const l1 = document.getElementById('desk-wiz-line-1');
+  const l2 = document.getElementById('desk-wiz-line-2');
+  if (l1) l1.style.background = step > 1 ? '#059669' : 'var(--border-color)';
+  if (l2) l2.style.background = step > 2 ? '#059669' : 'var(--border-color)';
+
+  // Botones de navegación
+  const btnCancel = document.getElementById('desk-wiz-btn-cancel');
+  const btnPrev = document.getElementById('desk-wiz-btn-prev');
+  const btnNext = document.getElementById('desk-wiz-btn-next');
+
+  if (btnCancel) btnCancel.style.display = step === 1 ? 'inline-block' : 'none';
+  if (btnPrev) btnPrev.style.display = step > 1 ? 'inline-block' : 'none';
+
+  if (btnNext) {
+    if (step === 3) {
+      btnNext.innerHTML = `Confirmar Ingreso <i data-lucide="check" style="width: 16px;"></i>`;
+      btnNext.style.backgroundColor = '#059669';
+    } else {
+      btnNext.innerHTML = `Siguiente <i data-lucide="arrow-right" style="width: 16px;"></i>`;
+      btnNext.style.backgroundColor = 'var(--color-accent)';
+    }
+  }
+
+  if (typeof initLucide === 'function') initLucide();
+};
+
+window.nextDesktopWizardStep = function() {
+  if (window.desktopWizCurrentStep === 1) {
+    const brandVal = (document.getElementById('form-brand')?.value || '').trim();
+    const modelVal = (document.getElementById('form-model')?.value || '').trim();
+
+    if (!brandVal) {
+      alert('Por favor, ingresa la marca del vehículo.');
+      document.getElementById('form-brand')?.focus();
+      return;
+    }
+    if (!modelVal) {
+      alert('Por favor, ingresa el modelo del vehículo.');
+      document.getElementById('form-model')?.focus();
+      return;
+    }
+
+    updateDesktopWizStepUI(2);
+    return;
+  }
+
+  if (window.desktopWizCurrentStep === 2) {
+    updateDesktopWizStepUI(3);
+    return;
+  }
+
+  if (window.desktopWizCurrentStep === 3) {
+    // Disparar envío final del formulario
+    const form = document.getElementById('vehicle-form');
+    if (form) {
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+      } else {
+        handleVehicleFormSubmit(new Event('submit'));
+      }
+    }
+  }
+};
+
+window.prevDesktopWizardStep = function() {
+  if (window.desktopWizCurrentStep > 1) {
+    updateDesktopWizStepUI(window.desktopWizCurrentStep - 1);
+  }
+};
+
+window.onDesktopWizFormSubmit = function(e) {
+  e.preventDefault();
+  if (window.desktopWizCurrentStep < 3) {
+    nextDesktopWizardStep();
+  } else {
+    handleVehicleFormSubmit(e);
+  }
+};
 
 window.openAddVehicleModal = function(defaultStage = 'recepcion') {
   if (window.innerWidth <= 768 && typeof window.openMobileEntryWizard === 'function') {
@@ -4340,25 +4462,34 @@ window.openAddVehicleModal = function(defaultStage = 'recepcion') {
   }
   window.currentAddVehicleStage = defaultStage || 'recepcion';
 
-  // Resetear Formulario
+  // Resetear Formulario y Pasos
   document.getElementById('vehicle-form').reset();
   document.getElementById('form-vehicle-id').value = '';
   document.getElementById('form-client-select').value = '';
+  if (document.getElementById('desk-wiz-details-notes')) {
+    document.getElementById('desk-wiz-details-notes').value = '';
+  }
+  if (document.getElementById('desk-wiz-km')) {
+    document.getElementById('desk-wiz-km').value = '';
+  }
   if (document.getElementById('form-category')) {
     document.getElementById('form-category').value = 'B';
   }
   
+  // Resetear a Paso 1
+  updateDesktopWizStepUI(1);
+
   // Actualizar el título del modal dinámicamente
   const titleEl = document.getElementById('vehicle-modal-title');
   if (titleEl) {
     if (defaultStage === 'cotizacion') {
       titleEl.innerHTML = `
-        <i data-lucide="file-text" style="color: var(--color-accent); width: 24px; height: 24px;"></i>
+        <i data-lucide="file-text" style="color: var(--color-accent); width: 22px; height: 22px;"></i>
         Crear Cotización
       `;
     } else {
       titleEl.innerHTML = `
-        <i data-lucide="car" style="color: var(--color-accent); width: 24px; height: 24px;"></i>
+        <i data-lucide="car" style="color: var(--color-accent); width: 22px; height: 22px;"></i>
         Recepción de Vehículo
       `;
     }
@@ -4379,33 +4510,39 @@ window.closeModal = function(modalId) {
 
 // Acción: RECEPCIONAR / GUARDAR
 window.handleVehicleFormSubmit = function(e) {
-  e.preventDefault();
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
 
   const plateInput = document.getElementById('form-plate');
-  autoFormatPlateInput(plateInput);
+  if (plateInput) autoFormatPlateInput(plateInput);
 
-  const plateVal  = plateInput.value.trim();
-  const brandVal  = document.getElementById('form-brand').value.trim();
-  const modelVal  = document.getElementById('form-model').value.trim();
-  const yearVal   = document.getElementById('form-year').value.trim();
-  const colorVal  = document.getElementById('form-color').value.trim();
-  const motorVal  = document.getElementById('form-motor').value.trim();
+  const plateVal  = plateInput ? plateInput.value.trim() : '';
+  const brandVal  = (document.getElementById('form-brand')?.value || '').trim();
+  const modelVal  = (document.getElementById('form-model')?.value || '').trim();
+  const yearVal   = (document.getElementById('form-year')?.value || '').trim();
+  const colorVal  = (document.getElementById('form-color')?.value || '').trim();
+  const motorVal  = (document.getElementById('form-motor')?.value || '').trim();
+  
+  const kmInputEl = document.getElementById('desk-wiz-km');
   const mileageInput = document.getElementById('form-mileage');
-  const mileageVal = mileageInput ? parseInt(mileageInput.value) || 0 : 0;
+  const mileageVal = kmInputEl ? (parseFloat(kmInputEl.value) || 0) : (mileageInput ? (parseInt(mileageInput.value) || 0) : 0);
+  
+  const detailsNotes = (document.getElementById('desk-wiz-details-notes')?.value || '').trim();
   const vinInput = document.getElementById('form-vin');
   const vinVal = vinInput ? vinInput.value.trim() : '';
 
   if (!brandVal) {
     alert('Por favor, ingresa la marca del vehículo.');
+    updateDesktopWizStepUI(1);
     return;
   }
   if (!modelVal) {
     alert('Por favor, ingresa el modelo del vehículo.');
+    updateDesktopWizStepUI(1);
     return;
   }
 
   const cleanPlate = plateVal ? plateVal.replace(/\s+/g, '').toUpperCase() : '';
-  let formVehicleId = document.getElementById('form-vehicle-id').value;
+  let formVehicleId = document.getElementById('form-vehicle-id')?.value || '';
 
   if (plateVal) {
     // Validar nomenclatura de patentes argentinas
@@ -4429,10 +4566,10 @@ window.handleVehicleFormSubmit = function(e) {
   }
 
   // Manejo de Clientes y Homónimos
-  const clientSearchName = document.getElementById('form-client-search').value.trim();
-  const typedPhone = document.getElementById('form-nc-phone').value.trim();
-  const typedEmail = document.getElementById('form-nc-email').value.trim() || '';
-  let clientId = document.getElementById('form-client-select').value;
+  const clientSearchName = (document.getElementById('form-client-search')?.value || '').trim();
+  const typedPhone = (document.getElementById('form-nc-phone')?.value || '').trim();
+  const typedEmail = (document.getElementById('form-nc-email')?.value || '').trim();
+  let clientId = document.getElementById('form-client-select')?.value || '';
   let client = null;
 
   // Buscar si existe un cliente con este nombre (insensible a mayúsculas/minúsculas)
@@ -4447,19 +4584,15 @@ window.handleVehicleFormSubmit = function(e) {
       // Si coinciden perfectamente los contactos, asumimos que es el mismo cliente y lo vinculamos
       clientId = existingClient.id;
     } else {
-      // Si el teléfono no está escrito aún o no coincide (y/o el mail),
-      // consideramos que puede ser un homónimo (un nuevo cliente con igual nombre)
       if (window.confirmedHomonymName !== clientSearchName) {
-        const confirmNewClient = confirm(`El nombre que introduciste ("${clientSearchName}") es igual al nombre de otro cliente existente, pero los datos de contacto no coinciden o están incompletos.\n\n¿Estás seguro que querés crear un nuevo cliente con este nombre?\n(Si presionas Aceptar, podrás completar o corregir el Teléfono y Correo antes de guardar haciendo clic en "Recepcionar" de nuevo. Si presionas Cancelar, podrás buscar el cliente existente).`);
+        const confirmNewClient = confirm(`El nombre que introduciste ("${clientSearchName}") es igual al nombre de otro cliente existente, pero los datos de contacto no coinciden o están incompletos.\n\n¿Estás seguro que querés crear un nuevo cliente con este nombre?`);
         if (!confirmNewClient) return;
 
-        // Detenemos la sumisión actual para dejarle completar Teléfono y Correo
         window.confirmedHomonymName = clientSearchName;
-        alert("Confirmado. Ahora puedes verificar o completar el Teléfono y Correo Electrónico del nuevo cliente, y hacer clic en \"Recepcionar\" nuevamente para confirmar el ingreso.");
+        alert("Confirmado. Ahora puedes verificar o completar el Teléfono y Correo Electrónico del nuevo cliente, y hacer clic en \"Confirmar Ingreso\" nuevamente.");
         return;
       }
       
-      // Si ya confirmó la creación del homónimo, forzamos creación de nuevo cliente (vaciamos clientId)
       clientId = '';
     }
   }
@@ -4472,7 +4605,6 @@ window.handleVehicleFormSubmit = function(e) {
   if (clientId) {
     client = clients.find(c => String(c.id) === String(clientId));
     if (client) {
-      // Actualizar datos del cliente existente
       client.phone = typedPhone;
       client.email = typedEmail;
       if (typedClientCuit) client.cuit = typedClientCuit;
@@ -4484,7 +4616,6 @@ window.handleVehicleFormSubmit = function(e) {
 
   if (!client) {
     if (clientSearchName) {
-      // Crear nuevo cliente
       const newClientId = 'c-' + Date.now();
       const newClient = {
         id: newClientId,
@@ -4500,7 +4631,6 @@ window.handleVehicleFormSubmit = function(e) {
       client = newClient;
       clientId = newClientId;
     } else {
-      // Cliente opcional vacío
       client = {
         id: '',
         name: 'Consumidor Final',
@@ -4514,10 +4644,10 @@ window.handleVehicleFormSubmit = function(e) {
     }
   }
 
-  // Registrar en el catalogo de marcas/modelos/motores
+  // Registrar en el catálogo de marcas/modelos/motores
   addToVehicleRegistry(brandVal, modelVal, motorVal);
 
-  // Si estamos editando un vehículo existente, actualizamos sus datos en lugar de crear una nueva ficha
+  // Si estamos editando un vehículo existente, actualizamos sus datos
   if (formVehicleId) {
     const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(formVehicleId));
     if (vehicleIndex !== -1) {
@@ -4530,9 +4660,10 @@ window.handleVehicleFormSubmit = function(e) {
       vehicle.motor = motorVal;
       vehicle.kilometers = mileageVal;
       vehicle.vin = vinVal;
-      vehicle.category = document.getElementById('form-category') ? document.getElementById('form-category').value : 'B';
+      vehicle.detailsNotes = detailsNotes || vehicle.detailsNotes;
+      vehicle.services = detailsNotes || vehicle.services;
+      vehicle.hasDetails = Boolean(vehicle.detailsNotes);
 
-      // Registrar propietario anterior en historial si cambia
       const prevOwner = vehicle.client;
       if (prevOwner && prevOwner.trim().toLowerCase() !== client.name.trim().toLowerCase()) {
         if (!vehicle.ownerHistory) vehicle.ownerHistory = [];
@@ -4554,7 +4685,7 @@ window.handleVehicleFormSubmit = function(e) {
       vehicle.clientEmail = client.email;
       vehicle.clientCuit = client.cuit || typedClientCuit || '99-99999999-9';
       vehicle.clientIva = client.ivaCondition || typedClientIva || 'Consumidor Final';
-      vehicle.clientAddress = client.address || typedClientAddress || 'Sin Direccion';
+      vehicle.clientAddress = client.address || typedClientAddress || 'Sin Dirección';
 
       saveState();
       closeModal('vehicle-modal');
@@ -4572,16 +4703,14 @@ window.handleVehicleFormSubmit = function(e) {
   // Siempre crear una nueva ficha de trabajo (nuevo ingreso o cotización)
   const targetStage = window.currentAddVehicleStage || 'recepcion';
 
-  // Recuperar historial de propietarios del vehiculo mas reciente con la misma patente
+  // Recuperar historial de propietarios del vehículo más reciente con la misma patente
   const prevRecords = cleanPlate
     ? vehicles.filter(v => v.plate && v.plate.replace(/\s+/g, '').toUpperCase() === cleanPlate)
     : [];
   const mostRecent = prevRecords.sort((a, b) => (b.entryTime || 0) - (a.entryTime || 0))[0];
 
-  // Construir historial de propietarios heredado
   let inheritedOwnerHistory = mostRecent ? [...(mostRecent.ownerHistory || [])] : [];
   if (mostRecent && mostRecent.client && mostRecent.client !== client.name) {
-    // El ultimo dueno del vehiculo pasa al historial si es distinto del nuevo propietario
     if (!inheritedOwnerHistory.find(o => o.name === mostRecent.client)) {
       inheritedOwnerHistory.push({ name: mostRecent.client });
     }
@@ -4603,7 +4732,7 @@ window.handleVehicleFormSubmit = function(e) {
     clientEmail: client.email,
     clientCuit: client.cuit || typedClientCuit || '99-99999999-9',
     clientIva: client.ivaCondition || typedClientIva || 'Consumidor Final',
-    clientAddress: client.address || typedClientAddress || 'Sin Direccion',
+    clientAddress: client.address || typedClientAddress || 'Sin Dirección',
     ownerHistory: inheritedOwnerHistory,
     stage: targetStage,
     value: 0,
@@ -4611,16 +4740,19 @@ window.handleVehicleFormSubmit = function(e) {
     entryTime: Date.now(),
     delivered: false,
     kilometers: mileageVal,
-    fuelLevel: '1/2',
-    services: [],
-    hasDetails: false,
-    detailsNotes: ''
+    km: mileageVal,
+    mileage: mileageVal,
+    services: detailsNotes,
+    detailsNotes: detailsNotes,
+    hasDetails: Boolean(detailsNotes),
+    photos: {},
+    receptionPhotos: {}
   };
 
   vehicles.push(newVehicle);
   saveState();
   closeModal('vehicle-modal');
-  renderApp(); // Añadido para actualizar el tablero Kanban inmediatamente
+  renderApp();
   openDetailedReception(newId);
   if (targetStage === 'cotizacion') {
     setActiveTab('quote');
