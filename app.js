@@ -5775,13 +5775,7 @@ window.setActiveTab = function(tabName) {
         blockingMessage = 'Debes completar la etapa anterior (Aprobar Cotización) para acceder a Orden de Trabajo.';
       }
     } else if (tabName === 'delivery') {
-      if (activeVehicle.stage === 'reparacion') {
-        isBlocked = true;
-        isMoveToReadyRequired = true;
-      } else if (tabBlockingEnabled && !isWorkOrderDone) {
-        isBlocked = true;
-        blockingMessage = 'Debes completar la etapa anterior (Finalizar Orden de Trabajo) para acceder a Entrega.';
-      }
+      isBlocked = false;
     }
   }
 
