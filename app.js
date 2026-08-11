@@ -101,7 +101,12 @@ async function syncWithSupabase(tableName, data) {
             ownerHistory: item.ownerHistory || [],
             deliveryDate: item.deliveryDate || '',
             deliveryNotes: item.deliveryNotes || '',
-            category: item.category || 'B'
+            category: item.category || 'B',
+            photos: item.photos || item.receptionPhotos || null,
+            receptionPhotos: item.receptionPhotos || item.photos || null,
+            km: item.km || item.kilometers || null,
+            clientFirstName: item.clientFirstName || '',
+            clientLastName: item.clientLastName || ''
           };
           servicesWithMeta.push('__METADATA__:' + JSON.stringify(metaObj));
 
@@ -484,6 +489,11 @@ async function loadStateFromSupabase() {
         let deliveryDate = '';
         let deliveryNotes = '';
         let category = 'B';
+        let photos = null;
+        let receptionPhotos = null;
+        let km = '';
+        let clientFirstName = '';
+        let clientLastName = '';
         let services = [];
 
         if (Array.isArray(item.services)) {
@@ -496,6 +506,11 @@ async function loadStateFromSupabase() {
                 if (meta.deliveryDate) deliveryDate = meta.deliveryDate;
                 if (meta.deliveryNotes) deliveryNotes = meta.deliveryNotes;
                 if (meta.category) category = meta.category;
+                if (meta.photos) photos = meta.photos;
+                if (meta.receptionPhotos) receptionPhotos = meta.receptionPhotos;
+                if (meta.km) km = meta.km;
+                if (meta.clientFirstName) clientFirstName = meta.clientFirstName;
+                if (meta.clientLastName) clientLastName = meta.clientLastName;
               } catch (e) {
                 console.error("Error parsing vehicle metadata:", e);
               }
@@ -514,6 +529,8 @@ async function loadStateFromSupabase() {
           color: item.color,
           motor: item.motor,
           client: item.client,
+          clientFirstName: clientFirstName,
+          clientLastName: clientLastName,
           clientPhone: item.client_phone,
           clientEmail: item.client_email,
           stage: item.stage,
@@ -521,7 +538,8 @@ async function loadStateFromSupabase() {
           entryDate: item.entry_date,
           entryTime: Number(item.entry_time),
           delivered: item.delivered || false,
-          kilometers: Number(item.kilometers),
+          kilometers: Number(item.kilometers) || Number(km) || 0,
+          km: km || item.kilometers || '',
           fuelLevel: item.fuel_level,
           services: services,
           hasDetails: item.has_details || false,
@@ -537,17 +555,58 @@ async function loadStateFromSupabase() {
           ownerHistory: ownerHistory,
           deliveryDate: deliveryDate,
           deliveryNotes: deliveryNotes,
-          category: category
+          category: category,
+          photos: photos || {},
+          receptionPhotos: receptionPhotos || photos || {}
         };
       });
       localStorage.setItem('taller_vehicles', JSON.stringify(vehicles));
     }
     console.log("AutoTech: Datos de Supabase sincronizados localmente.");
     if (typeof renderApp === 'function') renderApp();
+    if (typeof renderWorkshopTables === 'function') renderWorkshopTables();
+    setupSupabaseRealtime();
   } catch (err) {
     console.error("Fallo al sincronizar desde Supabase:", err);
   }
 }
+
+let isRealtimeSubscribed = false;
+
+function setupSupabaseRealtime() {
+  if (!supabaseClient || isRealtimeSubscribed) return;
+  try {
+    isRealtimeSubscribed = true;
+    console.log("⚡ AutoTech: Suscribiendo a eventos en Tiempo Real (Realtime) de Supabase...");
+
+    supabaseClient
+      .channel('public:taller_db_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'taller_vehicles' }, (payload) => {
+        console.log("⚡ Cambio detectado en Tiempo Real (taller_vehicles):", payload);
+        loadStateFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'taller_clients' }, (payload) => {
+        console.log("⚡ Cambio detectado en Tiempo Real (taller_clients):", payload);
+        loadStateFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'taller_caja_operations' }, (payload) => {
+        console.log("⚡ Cambio detectado en Tiempo Real (taller_caja_operations):", payload);
+        loadStateFromSupabase();
+      })
+      .subscribe((status) => {
+        console.log("⚡ Supabase Realtime canal activo, estado:", status);
+      });
+  } catch (err) {
+    console.error("Error al suscribirse a Supabase Realtime:", err);
+  }
+}
+
+// Bucle de sincronización periódica en segundo plano (cada 15 segundos) para asegurar actualización en otras PCs
+setInterval(() => {
+  if (supabaseClient && document.visibilityState === 'visible') {
+    loadStateFromSupabase();
+  }
+}, 15000);
 
 window.toggleWaConfigFields = function(method) {
   const container = document.getElementById('meta-wa-config-fields');
