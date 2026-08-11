@@ -2560,134 +2560,227 @@ button {
     flex-direction: column !important;
   }
 
-  /* Rediseño responsivo para el modal de Recepción Detallada (Ficha de trabajo) */
+  /* Rediseño responsivo avanzado para el Panel Operativo (Comanda del vehículo) */
   #reception-panel-view {
     padding: 0 !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    z-index: 99999 !important;
+    background-color: var(--bg-app) !important;
   }
 
   .workspace-outer-container {
     flex-direction: column !important;
     width: 100vw !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
     gap: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
+    border-radius: 0 !important;
   }
 
+  /* Píldoras Horizontales Superiores de Cliente y Vehículo */
   .workspace-sidebar {
     width: 100% !important;
     height: auto !important;
-    max-height: 110px !important;
+    min-height: 50px !important;
+    max-height: 60px !important;
     flex-shrink: 0 !important;
     flex-direction: row !important;
     display: flex !important;
-    gap: 12px !important;
+    align-items: center !important;
+    gap: 10px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     padding: 8px 12px !important;
     border-bottom: 1.5px solid var(--border-color) !important;
     box-sizing: border-box !important;
     -webkit-overflow-scrolling: touch !important;
-    background-color: #111827 !important;
+    background-color: var(--card-bg-hover) !important;
   }
 
   .workspace-sidebar .workspace-card {
-    min-width: 250px !important;
-    max-width: 280px !important;
-    height: 100% !important;
+    min-width: max-content !important;
+    max-width: none !important;
+    height: 38px !important;
     flex-shrink: 0 !important;
-    padding: 10px 12px !important;
-    gap: 6px !important;
-    box-shadow: var(--shadow-sm) !important;
+    padding: 6px 12px !important;
+    gap: 8px !important;
+    border-radius: var(--radius-md) !important;
+    display: flex !important;
+    align-items: center !important;
+    box-shadow: none !important;
+    border: 1px solid var(--border-color) !important;
   }
 
   .workspace-sidebar .workspace-card-title {
-    padding-bottom: 4px !important;
-    font-size: 13px !important;
+    padding-bottom: 0 !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
   }
 
   .workspace-sidebar .workspace-card-content {
+    display: flex !important;
     flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: 6px 12px !important;
+    align-items: center !important;
+    gap: 6px !important;
   }
 
   .workspace-sidebar .workspace-card-field {
-    flex-direction: row !important;
-    gap: 4px !important;
+    display: inline-flex !important;
     align-items: center !important;
+    gap: 4px !important;
   }
 
   .workspace-sidebar .workspace-card-label {
-    font-size: 8px !important;
+    display: none !important;
   }
 
   .workspace-sidebar .workspace-card-value,
   .workspace-sidebar .giant-plate {
-    font-size: 11px !important;
+    font-size: 11.5px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
+  /* Ventana Principal del Panel Operativo */
   .workspace-main-window {
     width: 100% !important;
     flex-grow: 1 !important;
-    height: calc(100% - 110px) !important;
+    height: calc(100dvh - 50px) !important;
     display: flex !important;
     flex-direction: column !important;
     border-radius: 0 !important;
+    box-shadow: none !important;
+    background-color: var(--card-bg) !important;
   }
 
+  /* Cabecera Fija Móvil */
   .reception-header-bar {
-    flex-direction: column !important;
-    align-items: flex-start !important;
+    padding: 10px 14px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     gap: 10px !important;
-    padding: 12px 16px !important;
+    background-color: var(--card-bg) !important;
+    border-bottom: 1.5px solid var(--border-color) !important;
+  }
+
+  .reception-header-left {
+    gap: 8px !important;
+    overflow: hidden !important;
+  }
+
+  .reception-vehicle-name {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 180px !important;
   }
 
   .reception-header-right {
-    width: 100% !important;
-    justify-content: flex-start !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
+    width: auto !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
   }
 
+  .reception-header-right button,
+  .reception-header-right div > button {
+    height: 34px !important;
+    padding: 6px 10px !important;
+    font-size: 11.5px !important;
+  }
+
+  /* Selector de Pestañas de Etapa Desplazable (ScrollSnap) */
   .workspace-tabs-bar {
     overflow-x: auto !important;
     flex-wrap: nowrap !important;
     width: 100% !important;
-    padding-bottom: 4px !important;
-    padding-left: 8px !important;
+    padding: 6px 10px !important;
     box-sizing: border-box !important;
     -webkit-overflow-scrolling: touch !important;
+    border-bottom: 1.5px solid var(--border-color) !important;
+    gap: 6px !important;
+    background-color: var(--card-bg) !important;
   }
 
   .workspace-tab-btn {
-    padding: 8px 12px !important;
+    padding: 8px 14px !important;
     font-size: 12.5px !important;
+    font-weight: 700 !important;
     white-space: nowrap !important;
+    border-radius: 20px !important;
+    flex-shrink: 0 !important;
   }
 
-  .workspace-tab-contents {
-    padding: 12px !important;
+  /* Área Principal de Contenido del Trabajo */
+  .workspace-main {
+    padding: 14px 14px 110px 14px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    flex-grow: 1 !important;
   }
 
+  /* Reducción de grillas a 1 columna en móvil */
+  .client-details-grid,
+  .quote-editor-footer-grid,
+  .ot-columns-container,
+  div[style*="grid-template-columns"]:not(.calendar-weekdays):not(.calendar-days):not(#calendar-days-grid):not(#agenda-calendar-days-grid) {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    padding-left: 0 !important;
+    border-left: none !important;
+  }
+
+  .quote-editor-footer-grid > div {
+    padding-left: 0 !important;
+    border-left: none !important;
+  }
+
+  /* Footer Fijo Sticky al pie del celular */
   .workspace-global-footer {
-    padding: 0 12px !important;
-    height: 60px !important;
-    gap: 8px !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    padding: 10px 14px max(24px, calc(env(safe-area-inset-bottom) + 10px)) !important;
+    box-sizing: border-box !important;
+    background: var(--card-bg) !important;
+    border-top: 1.5px solid var(--border-color) !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.16) !important;
   }
 
   .workspace-global-footer button {
-    width: auto !important;
-    flex-grow: 1 !important;
-    font-size: 11px !important;
-    padding: 0 8px !important;
+    height: 46px !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    border-radius: var(--radius-md) !important;
+    margin: 0 !important;
   }
 
-  /* Colapsar formularios y grillas de múltiples columnas en móvil, excluyendo calendarios */
-  div[style*="grid-template-columns"]:not(.calendar-weekdays):not(.calendar-days):not(#calendar-days-grid):not(#agenda-calendar-days-grid) {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
+  #btn-accept-global-footer {
+    flex: 1 !important;
+    max-width: none !important;
+  }
+
+  #btn-approve-quote-ot {
+    padding: 6px 10px !important;
+  }
+
+  #label-approve-quote-switch {
+    font-size: 11px !important;
   }
 }
 
