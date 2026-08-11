@@ -5669,9 +5669,9 @@ aside.sidebar.collapsed .sidebar-user-container {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background-color: var(--bg-app);
-  z-index: 2500;
+  z-index: 99999;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -6283,13 +6283,14 @@ aside.sidebar.collapsed .sidebar-user-container {
 
 /* Footer Fijo del Asistente */
 .wizard-footer {
-  padding: 14px 16px max(20px, env(safe-area-inset-bottom));
+  padding: 16px 16px max(34px, calc(env(safe-area-inset-bottom) + 16px));
   background: var(--card-bg);
   border-top: 1.5px solid var(--border-color);
   flex-shrink: 0;
-  position: relative;
+  position: sticky;
+  bottom: 0;
   z-index: 10000 !important;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.16);
 }
 
 .wizard-btn-next {

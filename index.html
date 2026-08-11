@@ -4370,24 +4370,33 @@
           <span class="wizard-input-hint">Campo obligatorio para identificar el vehículo</span>
         </div>
 
-        <div class="wizard-form-group">
-          <label class="wizard-label required">MARCA Y MODELO DEL AUTO *</label>
-          <input type="text" id="mob-wiz-model" class="wizard-input-lg" placeholder="Ej: Volkswagen Gol Trend" required autocomplete="off">
-          <span class="wizard-input-hint">Campo obligatorio (Marca y Modelo)</span>
+        <div class="wizard-form-row">
+          <div class="wizard-form-group flex-1">
+            <label class="wizard-label required">MARCA *</label>
+            <input type="text" id="mob-wiz-brand" class="wizard-input-md" placeholder="Ej: Volkswagen" required autocomplete="off">
+          </div>
+          <div class="wizard-form-group flex-1">
+            <label class="wizard-label required">MODELO *</label>
+            <input type="text" id="mob-wiz-model" class="wizard-input-md" placeholder="Ej: Gol Trend" required autocomplete="off">
+          </div>
         </div>
 
         <div class="wizard-form-row">
           <div class="wizard-form-group flex-1">
             <label class="wizard-label">NOMBRE DEL CLIENTE</label>
             <input type="text" id="mob-wiz-first-name" class="wizard-input-md" placeholder="Ej: Juan" autocomplete="off">
-            <span class="wizard-input-hint">Opcional</span>
           </div>
 
           <div class="wizard-form-group flex-1">
             <label class="wizard-label">APELLIDO DEL CLIENTE</label>
             <input type="text" id="mob-wiz-last-name" class="wizard-input-md" placeholder="Ej: Pérez" autocomplete="off">
-            <span class="wizard-input-hint">Opcional</span>
           </div>
+        </div>
+
+        <div class="wizard-form-group">
+          <label class="wizard-label">TELÉFONO / WHATSAPP DEL CLIENTE</label>
+          <input type="tel" id="mob-wiz-phone" class="wizard-input-lg" placeholder="Ej: +549 11 1234-5678" autocomplete="off">
+          <span class="wizard-input-hint">Opcional — para contacto y envío de mensajes</span>
         </div>
       </div>
 
@@ -4420,18 +4429,18 @@
               <span class="slot-title">1. ADELANTE</span>
               <span class="slot-status-badge pending" id="slot-badge-adelante">Pendiente</span>
             </div>
-            <div class="slot-preview-box" id="preview-box-adelante">
+            <div class="slot-preview-box" id="preview-box-adelante" onclick="onMobilePhotoSlotClick('adelante')" style="cursor: pointer;">
               <div class="slot-placeholder" id="placeholder-adelante">
                 <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
                 <span>Foto frontal</span>
               </div>
               <img id="img-preview-adelante" src="" alt="Adelante" class="slot-preview-img" style="display: none;">
             </div>
-            <label class="slot-action-btn" id="btn-label-adelante">
+            <button type="button" class="slot-action-btn" id="btn-label-adelante" onclick="onMobilePhotoSlotClick('adelante')">
               <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
               <span id="btn-text-adelante">Tomar foto</span>
-              <input type="file" id="mob-file-adelante" accept="image/*" capture="environment" class="hidden-file-input" onchange="handleMobilePhotoUpload('adelante', this)">
-            </label>
+            </button>
+            <input type="file" id="mob-file-adelante" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('adelante', this)" onclick="event.stopPropagation()">
           </div>
 
           <!-- 2. DERECHA -->
@@ -4440,18 +4449,18 @@
               <span class="slot-title">2. DERECHA</span>
               <span class="slot-status-badge pending" id="slot-badge-derecha">Pendiente</span>
             </div>
-            <div class="slot-preview-box" id="preview-box-derecha">
+            <div class="slot-preview-box" id="preview-box-derecha" onclick="onMobilePhotoSlotClick('derecha')" style="cursor: pointer;">
               <div class="slot-placeholder" id="placeholder-derecha">
                 <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
                 <span>Lateral derecho</span>
               </div>
               <img id="img-preview-derecha" src="" alt="Derecha" class="slot-preview-img" style="display: none;">
             </div>
-            <label class="slot-action-btn" id="btn-label-derecha">
+            <button type="button" class="slot-action-btn" id="btn-label-derecha" onclick="onMobilePhotoSlotClick('derecha')">
               <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
               <span id="btn-text-derecha">Tomar foto</span>
-              <input type="file" id="mob-file-derecha" accept="image/*" capture="environment" class="hidden-file-input" onchange="handleMobilePhotoUpload('derecha', this)">
-            </label>
+            </button>
+            <input type="file" id="mob-file-derecha" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('derecha', this)" onclick="event.stopPropagation()">
           </div>
 
           <!-- 3. ATRÁS -->
@@ -4460,18 +4469,18 @@
               <span class="slot-title">3. ATRÁS</span>
               <span class="slot-status-badge pending" id="slot-badge-atras">Pendiente</span>
             </div>
-            <div class="slot-preview-box" id="preview-box-atras">
+            <div class="slot-preview-box" id="preview-box-atras" onclick="onMobilePhotoSlotClick('atras')" style="cursor: pointer;">
               <div class="slot-placeholder" id="placeholder-atras">
                 <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
                 <span>Foto trasera</span>
               </div>
               <img id="img-preview-atras" src="" alt="Atrás" class="slot-preview-img" style="display: none;">
             </div>
-            <label class="slot-action-btn" id="btn-label-atras">
+            <button type="button" class="slot-action-btn" id="btn-label-atras" onclick="onMobilePhotoSlotClick('atras')">
               <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
               <span id="btn-text-atras">Tomar foto</span>
-              <input type="file" id="mob-file-atras" accept="image/*" capture="environment" class="hidden-file-input" onchange="handleMobilePhotoUpload('atras', this)">
-            </label>
+            </button>
+            <input type="file" id="mob-file-atras" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('atras', this)" onclick="event.stopPropagation()">
           </div>
 
           <!-- 4. IZQUIERDA -->
@@ -4480,18 +4489,18 @@
               <span class="slot-title">4. IZQUIERDA</span>
               <span class="slot-status-badge pending" id="slot-badge-izquierda">Pendiente</span>
             </div>
-            <div class="slot-preview-box" id="preview-box-izquierda">
+            <div class="slot-preview-box" id="preview-box-izquierda" onclick="onMobilePhotoSlotClick('izquierda')" style="cursor: pointer;">
               <div class="slot-placeholder" id="placeholder-izquierda">
                 <i data-lucide="camera" style="width: 24px; height: 24px;"></i>
                 <span>Lateral izquierdo</span>
               </div>
               <img id="img-preview-izquierda" src="" alt="Izquierda" class="slot-preview-img" style="display: none;">
             </div>
-            <label class="slot-action-btn" id="btn-label-izquierda">
+            <button type="button" class="slot-action-btn" id="btn-label-izquierda" onclick="onMobilePhotoSlotClick('izquierda')">
               <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
               <span id="btn-text-izquierda">Tomar foto</span>
-              <input type="file" id="mob-file-izquierda" accept="image/*" capture="environment" class="hidden-file-input" onchange="handleMobilePhotoUpload('izquierda', this)">
-            </label>
+            </button>
+            <input type="file" id="mob-file-izquierda" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('izquierda', this)" onclick="event.stopPropagation()">
           </div>
 
           <!-- 5. TABLERO -->
@@ -4500,18 +4509,18 @@
               <span class="slot-title">5. TABLERO</span>
               <span class="slot-status-badge pending" id="slot-badge-tablero">Pendiente</span>
             </div>
-            <div class="slot-preview-box" id="preview-box-tablero">
+            <div class="slot-preview-box" id="preview-box-tablero" onclick="onMobilePhotoSlotClick('tablero')" style="cursor: pointer;">
               <div class="slot-placeholder" id="placeholder-tablero">
                 <i data-lucide="gauge" style="width: 24px; height: 24px;"></i>
                 <span>Tablero / Luces testigo</span>
               </div>
               <img id="img-preview-tablero" src="" alt="Tablero" class="slot-preview-img" style="display: none;">
             </div>
-            <label class="slot-action-btn" id="btn-label-tablero">
+            <button type="button" class="slot-action-btn" id="btn-label-tablero" onclick="onMobilePhotoSlotClick('tablero')">
               <i data-lucide="camera" style="width: 14px; height: 14px;"></i>
               <span id="btn-text-tablero">Tomar foto</span>
-              <input type="file" id="mob-file-tablero" accept="image/*" capture="environment" class="hidden-file-input" onchange="handleMobilePhotoUpload('tablero', this)">
-            </label>
+            </button>
+            <input type="file" id="mob-file-tablero" accept="image/*" capture="environment" class="hidden-file-input" style="display: none;" onchange="handleMobilePhotoUpload('tablero', this)" onclick="event.stopPropagation()">
           </div>
 
         </div>
@@ -4560,11 +4569,35 @@
 
 
   <!-- MODAL LIGHTBOX PARA VER FOTOS EN TAMAÑO COMPLETO -->
-  <div class="modal-overlay" id="photo-lightbox-modal" style="display: none; z-index: 99999; background: rgba(0,0,0,0.92); flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);" onclick="closePhotoLightbox()">
+  <div class="modal-overlay" id="photo-lightbox-modal" style="display: none; z-index: 999999; background: rgba(0,0,0,0.92); flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);" onclick="closePhotoLightbox()">
     <div style="position: relative; max-width: 92vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center;" onclick="event.stopPropagation()">
       <button type="button" onclick="closePhotoLightbox()" style="position: absolute; top: -45px; right: 0; background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
       <img id="lightbox-img" src="" alt="Foto en tamaño completo" style="max-width: 90vw; max-height: 80vh; object-fit: contain; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1.5px solid rgba(255,255,255,0.15);">
       <span id="lightbox-caption" style="color: white; font-weight: 700; font-size: 15px; margin-top: 14px; font-family: var(--font-display); background: rgba(0,0,0,0.6); padding: 6px 16px; border-radius: 20px;"></span>
+    </div>
+  </div>
+
+  <!-- MODAL ACCIONES DE FOTO EN MÓVIL (TOMAR NUEVAMENTE / VER FOTO) -->
+  <div class="modal-overlay" id="photo-action-modal" style="display: none; z-index: 999995; background: rgba(0,0,0,0.65); align-items: flex-end; justify-content: center;" onclick="closePhotoActionModal()">
+    <div style="width: 100%; max-width: 500px; background: var(--card-bg); border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 20px 20px max(24px, env(safe-area-inset-bottom)); border-top: 1.5px solid var(--border-color); box-shadow: 0 -10px 30px rgba(0,0,0,0.4);" onclick="event.stopPropagation()">
+      <div style="width: 40px; height: 4px; background: var(--border-color); border-radius: 2px; margin: 0 auto 16px auto;"></div>
+      <h4 id="photo-action-title" style="font-family: var(--font-display); font-size: 16px; font-weight: 800; color: var(--text-primary); margin-bottom: 18px; text-align: center;">Opciones de Fotografía</h4>
+      
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button type="button" onclick="executePhotoAction('retake')" style="width: 100%; height: 52px; background: var(--color-accent); color: white; border: none; border-radius: var(--radius-md); font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 12px rgba(var(--color-accent-rgb),0.3); cursor: pointer;">
+          <i data-lucide="camera" style="width: 18px; height: 18px;"></i>
+          Opción 1 — Tomar foto nuevamente
+        </button>
+        
+        <button type="button" onclick="executePhotoAction('view')" style="width: 100%; height: 52px; background: var(--card-bg-hover); color: var(--text-primary); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;">
+          <i data-lucide="maximize-2" style="width: 18px; height: 18px;"></i>
+          Opción 2 — Ver foto (ampliarla)
+        </button>
+        
+        <button type="button" onclick="closePhotoActionModal()" style="width: 100%; height: 44px; background: transparent; color: var(--text-muted); border: none; font-weight: 600; font-size: 14px; margin-top: 4px; cursor: pointer;">
+          Cancelar
+        </button>
+      </div>
     </div>
   </div>
 

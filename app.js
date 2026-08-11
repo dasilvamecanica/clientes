@@ -10660,6 +10660,11 @@ window.openEditVehicleModal = function(vehicleId) {
   const v = vehicles.find(veh => String(veh.id) === String(vehicleId));
   if (!v) return;
 
+  if (window.innerWidth <= 768 && typeof window.openMobileEntryWizard === 'function') {
+    window.openMobileEntryWizard(v);
+    return;
+  }
+
   // Fill vehicle modal form
   document.getElementById('form-vehicle-id').value = v.id;
   document.getElementById('form-plate').value = v.plate;
@@ -13970,45 +13975,56 @@ window.addQuickDetailText = function(text) {
   }
 };
 
-window.openMobileEntryWizard = function() {
+window.activePhotoSlot = null;
+
+window.openMobileEntryWizard = function(vehicleToEdit = null) {
   mobileWizardData = {
+    editingId: vehicleToEdit ? vehicleToEdit.id : null,
     step: 1,
-    plate: '',
-    model: '',
-    firstName: '',
-    lastName: '',
-    hasDetails: false,
-    detailsNotes: '',
-    photos: {
+    plate: vehicleToEdit ? (vehicleToEdit.plate || '') : '',
+    brand: vehicleToEdit ? (vehicleToEdit.brand || '') : '',
+    model: vehicleToEdit ? (vehicleToEdit.model || '') : '',
+    firstName: vehicleToEdit ? (vehicleToEdit.clientFirstName || (vehicleToEdit.client ? vehicleToEdit.client.split(' ')[0] : '')) : '',
+    lastName: vehicleToEdit ? (vehicleToEdit.clientLastName || (vehicleToEdit.client ? vehicleToEdit.client.split(' ').slice(1).join(' ') : '')) : '',
+    phone: vehicleToEdit ? (vehicleToEdit.clientPhone || '') : '',
+    hasDetails: vehicleToEdit ? Boolean(vehicleToEdit.detailsNotes || vehicleToEdit.services) : false,
+    detailsNotes: vehicleToEdit ? (vehicleToEdit.detailsNotes || vehicleToEdit.services || '') : '',
+    photos: vehicleToEdit ? { ...(vehicleToEdit.photos || vehicleToEdit.receptionPhotos || {}) } : {
       adelante: null,
       derecha: null,
       atras: null,
       izquierda: null,
       tablero: null
     },
-    km: ''
+    km: vehicleToEdit ? (vehicleToEdit.kilometers || vehicleToEdit.km || '') : ''
   };
 
-  // Reset inputs
+  // Reset / Fill inputs
   const pEl = document.getElementById('mob-wiz-plate');
+  const bEl = document.getElementById('mob-wiz-brand');
   const mEl = document.getElementById('mob-wiz-model');
   const fnEl = document.getElementById('mob-wiz-first-name');
   const lnEl = document.getElementById('mob-wiz-last-name');
+  const phEl = document.getElementById('mob-wiz-phone');
   const kmEl = document.getElementById('mob-wiz-km');
-  const detailsToggle = document.getElementById('mob-wiz-details-toggle');
   const detailsNotes = document.getElementById('mob-wiz-details-notes');
-  const detailsGroup = document.getElementById('mob-wiz-details-group');
 
-  if (pEl) pEl.value = '';
-  if (mEl) mEl.value = '';
-  if (fnEl) fnEl.value = '';
-  if (lnEl) lnEl.value = '';
-  if (kmEl) kmEl.value = '';
-  if (detailsToggle) detailsToggle.checked = false;
-  if (detailsNotes) detailsNotes.value = '';
-  if (detailsGroup) detailsGroup.style.display = 'none';
+  if (pEl) pEl.value = mobileWizardData.plate;
+  if (bEl) bEl.value = mobileWizardData.brand;
+  if (mEl) mEl.value = mobileWizardData.model;
+  if (fnEl) fnEl.value = mobileWizardData.firstName;
+  if (lnEl) lnEl.value = mobileWizardData.lastName;
+  if (phEl) phEl.value = mobileWizardData.phone;
+  if (kmEl) kmEl.value = mobileWizardData.km;
+  if (detailsNotes) detailsNotes.value = mobileWizardData.detailsNotes;
 
-  // Reset photos UI
+  // Header Title
+  const headerTitle = document.getElementById('wizard-header-title');
+  if (headerTitle) {
+    headerTitle.textContent = vehicleToEdit ? 'Editar Vehículo' : 'Ingreso de Vehículo';
+  }
+
+  // Reset / Fill photos UI
   const slots = ['adelante', 'derecha', 'atras', 'izquierda', 'tablero'];
   slots.forEach(slot => {
     const fileEl = document.getElementById(`mob-file-${slot}`);
@@ -14019,15 +14035,25 @@ window.openMobileEntryWizard = function() {
     const cardEl = document.getElementById(`slot-card-${slot}`);
 
     if (fileEl) fileEl.value = '';
-    if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
-    if (placeholderEl) placeholderEl.style.display = 'flex';
-    if (badgeEl) { badgeEl.textContent = 'Pendiente'; badgeEl.className = 'slot-status-badge pending'; }
-    if (textEl) textEl.textContent = 'Tomar foto';
-    if (cardEl) cardEl.classList.remove('completed');
+
+    const photoUrl = mobileWizardData.photos[slot];
+    if (photoUrl) {
+      if (imgEl) { imgEl.src = photoUrl; imgEl.style.display = 'block'; }
+      if (placeholderEl) placeholderEl.style.display = 'none';
+      if (badgeEl) { badgeEl.textContent = '✓ Lista'; badgeEl.className = 'slot-status-badge ready'; }
+      if (textEl) textEl.textContent = 'Opciones de foto';
+      if (cardEl) cardEl.classList.add('completed');
+    } else {
+      if (imgEl) { imgEl.src = ''; imgEl.style.display = 'none'; }
+      if (placeholderEl) placeholderEl.style.display = 'flex';
+      if (badgeEl) { badgeEl.textContent = 'Pendiente'; badgeEl.className = 'slot-status-badge pending'; }
+      if (textEl) textEl.textContent = 'Tomar foto';
+      if (cardEl) cardEl.classList.remove('completed');
+    }
   });
 
   const tabRefImg = document.getElementById('tablero-reference-img');
-  if (tabRefImg) tabRefImg.src = '';
+  if (tabRefImg) tabRefImg.src = mobileWizardData.photos.tablero || '';
 
   // Ocultar barra de navegación inferior para evitar solapamientos
   const mobNav = document.getElementById('mobile-bottom-nav');
@@ -14095,7 +14121,7 @@ window.updateMobileWizardStepUI = function(step) {
   const nextBtn = document.getElementById('mob-wiz-next-btn');
 
   if (step === 4) {
-    if (nextBtnText) nextBtnText.textContent = 'Confirmar ingreso';
+    if (nextBtnText) nextBtnText.textContent = mobileWizardData.editingId ? 'Guardar cambios' : 'Confirmar ingreso';
     if (nextBtnIcon) nextBtnIcon.setAttribute('data-lucide', 'check-circle-2');
     if (nextBtn) nextBtn.className = 'wizard-btn-next confirm';
   } else {
@@ -14111,27 +14137,36 @@ window.nextMobileWizardStep = function() {
   const currentStep = mobileWizardData.step;
 
   if (currentStep === 1) {
-    // Validar Paso 1: Patente y Modelo
+    // Validar Paso 1: Patente, Marca y Modelo
     const plateVal = (document.getElementById('mob-wiz-plate')?.value || '').trim().toUpperCase();
+    const brandVal = (document.getElementById('mob-wiz-brand')?.value || '').trim();
     const modelVal = (document.getElementById('mob-wiz-model')?.value || '').trim();
     const firstNameVal = (document.getElementById('mob-wiz-first-name')?.value || '').trim();
     const lastNameVal = (document.getElementById('mob-wiz-last-name')?.value || '').trim();
+    const phoneVal = (document.getElementById('mob-wiz-phone')?.value || '').trim();
 
     if (!plateVal) {
       alert('Por favor ingresa la PATENTE del vehículo.');
       document.getElementById('mob-wiz-plate')?.focus();
       return;
     }
+    if (!brandVal) {
+      alert('Por favor ingresa la MARCA del vehículo.');
+      document.getElementById('mob-wiz-brand')?.focus();
+      return;
+    }
     if (!modelVal) {
-      alert('Por favor ingresa la MARCA Y MODELO del auto.');
+      alert('Por favor ingresa el MODELO del vehículo.');
       document.getElementById('mob-wiz-model')?.focus();
       return;
     }
 
     mobileWizardData.plate = plateVal;
+    mobileWizardData.brand = brandVal;
     mobileWizardData.model = modelVal;
     mobileWizardData.firstName = firstNameVal;
     mobileWizardData.lastName = lastNameVal;
+    mobileWizardData.phone = phoneVal;
 
     updateMobileWizardStepUI(2);
     return;
@@ -14187,6 +14222,59 @@ window.prevMobileWizardStep = function() {
   }
 };
 
+window.onMobilePhotoSlotClick = function(slotName) {
+  window.activePhotoSlot = slotName;
+  
+  const existingPhoto = mobileWizardData.photos ? mobileWizardData.photos[slotName] : null;
+  if (existingPhoto) {
+    // Abrir Modal de Opciones (Tomar foto nuevamente / Ver foto)
+    const slotNamesAR = {
+      adelante: 'Foto 1: Adelante',
+      derecha: 'Foto 2: Derecha',
+      atras: 'Foto 3: Atrás',
+      izquierda: 'Foto 4: Izquierda',
+      tablero: 'Foto 5: Tablero'
+    };
+    const actionTitle = document.getElementById('photo-action-title');
+    if (actionTitle) actionTitle.textContent = slotNamesAR[slotName] || 'Opciones de Fotografía';
+    
+    const actionModal = document.getElementById('photo-action-modal');
+    if (actionModal) actionModal.style.display = 'flex';
+  } else {
+    // Abrir cámara / selector directamente
+    const fileInput = document.getElementById(`mob-file-${slotName}`);
+    if (fileInput) fileInput.click();
+  }
+};
+
+window.closePhotoActionModal = function() {
+  const actionModal = document.getElementById('photo-action-modal');
+  if (actionModal) actionModal.style.display = 'none';
+};
+
+window.executePhotoAction = function(actionType) {
+  const slotName = window.activePhotoSlot;
+  closePhotoActionModal();
+  if (!slotName) return;
+
+  if (actionType === 'retake') {
+    const fileInput = document.getElementById(`mob-file-${slotName}`);
+    if (fileInput) fileInput.click();
+  } else if (actionType === 'view') {
+    const photoUrl = mobileWizardData.photos ? mobileWizardData.photos[slotName] : null;
+    const slotNamesAR = {
+      adelante: '1. ADELANTE',
+      derecha: '2. DERECHA',
+      atras: '3. ATRÁS',
+      izquierda: '4. IZQUIERDA',
+      tablero: '5. TABLERO'
+    };
+    if (photoUrl) {
+      openPhotoLightbox(photoUrl, slotNamesAR[slotName] || 'Fotografía de Recepción');
+    }
+  }
+};
+
 function compressImageDataUrl(dataUrl, maxWidth = 1000, quality = 0.7) {
   return new Promise((resolve) => {
     const img = new Image();
@@ -14225,7 +14313,7 @@ window.handleMobilePhotoUpload = function(slotName, inputEl) {
   reader.onload = async function(e) {
     const rawDataUrl = e.target.result;
     
-    // Compresión automática de imagen para evitar desbordar el Quota de localStorage (QuotaExceededError)
+    // Compresión automática de imagen para evitar desbordar el Quota de localStorage
     const compressedDataUrl = await compressImageDataUrl(rawDataUrl, 1000, 0.7);
     mobileWizardData.photos[slotName] = compressedDataUrl;
 
@@ -14248,7 +14336,7 @@ window.handleMobilePhotoUpload = function(slotName, inputEl) {
       badgeEl.className = 'slot-status-badge ready';
     }
     if (textEl) {
-      textEl.textContent = 'Volver a sacar foto';
+      textEl.textContent = 'Opciones de foto';
     }
     if (cardEl) {
       cardEl.classList.add('completed');
@@ -14269,10 +14357,48 @@ window.confirmMobileVehicleEntry = function() {
 
     mobileWizardData.km = kmVal;
 
-    // Nombre completo combinado
     const fullNameArr = [mobileWizardData.firstName, mobileWizardData.lastName].filter(Boolean);
     const clientFullName = fullNameArr.length > 0 ? fullNameArr.join(' ') : 'Sin cliente asignado';
+    const brandVal = mobileWizardData.brand || '';
+    const modelVal = mobileWizardData.model || '';
+    const vehicleName = `${brandVal} ${modelVal}`.trim() || 'Vehículo';
 
+    if (mobileWizardData.editingId) {
+      // EDITAR VEHÍCULO EXISTENTE
+      const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(mobileWizardData.editingId));
+      if (vehicleIndex !== -1) {
+        const v = vehicles[vehicleIndex];
+        v.plate = mobileWizardData.plate.toUpperCase().trim();
+        v.brand = brandVal.trim();
+        v.model = modelVal.trim();
+        v.client = clientFullName;
+        v.clientFirstName = mobileWizardData.firstName.trim();
+        v.clientLastName = mobileWizardData.lastName.trim();
+        v.clientPhone = (mobileWizardData.phone || '').trim();
+        v.detailsNotes = mobileWizardData.detailsNotes || '';
+        v.services = mobileWizardData.detailsNotes || '';
+        v.hasDetails = Boolean(mobileWizardData.detailsNotes);
+        v.km = mobileWizardData.km;
+        v.kilometers = Number(mobileWizardData.km) || 0;
+        v.mileage = mobileWizardData.km;
+        v.photos = { ...mobileWizardData.photos };
+        v.receptionPhotos = { ...mobileWizardData.photos };
+
+        saveState();
+        closeMobileEntryWizard();
+        if (typeof renderApp === 'function') renderApp();
+        if (typeof renderWorkshopTables === 'function') renderWorkshopTables();
+
+        if (typeof showToastNotification === 'function') {
+          showToastNotification(`✓ Vehículo ${vehicleName} actualizado correctamente`, 'success');
+        } else {
+          alert(`Vehículo ${vehicleName} actualizado correctamente.`);
+        }
+        return;
+      }
+    }
+
+    // CREAR NUEVO VEHÍCULO
     const now = new Date();
     const entryDateFormatted = now.toLocaleDateString('es-AR');
     const newVehicleId = 'v_mob_' + Date.now();
@@ -14280,12 +14406,12 @@ window.confirmMobileVehicleEntry = function() {
     const newVehicle = {
       id: newVehicleId,
       plate: mobileWizardData.plate.toUpperCase().trim(),
-      brand: mobileWizardData.model.trim(),
-      model: mobileWizardData.model.trim(),
+      brand: brandVal.trim(),
+      model: modelVal.trim(),
       client: clientFullName,
       clientFirstName: mobileWizardData.firstName.trim(),
       clientLastName: mobileWizardData.lastName.trim(),
-      clientPhone: '',
+      clientPhone: (mobileWizardData.phone || '').trim(),
       clientEmail: '',
       services: mobileWizardData.detailsNotes || '',
       detailsNotes: mobileWizardData.detailsNotes || '',
@@ -14300,33 +14426,24 @@ window.confirmMobileVehicleEntry = function() {
       receptionPhotos: { ...mobileWizardData.photos }
     };
 
-    // Agregar al inicio del arreglo de vehículos
     vehicles.unshift(newVehicle);
     saveState();
 
-    // 1. Cambiar a la vista del panel operativo
-    if (typeof switchView === 'function') {
-      switchView('tablero');
-    }
+    if (typeof switchView === 'function') switchView('tablero');
+    if (typeof switchMobileSegment === 'function') switchMobileSegment('en-curso');
 
-    // 2. Asegurar que la vista móvil esté en la pestaña 'en-curso'
-    if (typeof switchMobileSegment === 'function') {
-      switchMobileSegment('en-curso');
-    }
-
-    // 3. Renderizar aplicación y tablas
     if (typeof renderApp === 'function') renderApp();
     if (typeof renderWorkshopTables === 'function') renderWorkshopTables();
     
     closeMobileEntryWizard();
 
     if (typeof showToastNotification === 'function') {
-      showToastNotification(`✓ Vehículo ${newVehicle.brand} (${newVehicle.plate}) ingresado correctamente en En curso`, 'success');
+      showToastNotification(`✓ Vehículo ${vehicleName} (${newVehicle.plate}) ingresado correctamente`, 'success');
     } else {
-      alert(`Vehículo ${newVehicle.brand} (${newVehicle.plate}) ingresado correctamente en En curso.`);
+      alert(`Vehículo ${vehicleName} (${newVehicle.plate}) ingresado correctamente.`);
     }
   } catch (error) {
-    console.error("Error al confirmar el ingreso del vehículo:", error);
+    console.error("Error al guardar el vehículo:", error);
     alert("Ocurrió un inconveniente al guardar el vehículo. Por favor reintenta.");
   }
 };
