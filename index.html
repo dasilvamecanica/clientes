@@ -2077,7 +2077,7 @@
           <!-- CONTENIDO DE TRABAJO -->
           <section class="workspace-main" style="flex-grow: 1; display: flex; flex-direction: column; height: 0; box-sizing: border-box; overflow: hidden; background-color: var(--card-bg); padding: 20px 24px;">
 
-            <!-- Barra de Pestañas (Recepción, Cotización, Orden de trabajo, Entrega) -->
+            <!-- Barra de Pestañas (Recepción, Trabajo y Presupuesto, Entrega) -->
             <div class="workspace-tabs-bar" style="display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 1.5px solid var(--border-color); padding-bottom: 0px; flex-shrink: 0;">
               <button class="workspace-tab-btn active" id="tab-reception-btn" onclick="setActiveTab('reception')">
                 <i data-lucide="search"></i>
@@ -2085,11 +2085,11 @@
                 <span class="stage-pending-badge" id="tab-badge-reception">Pendiente</span>
               </button>
               <button class="workspace-tab-btn" id="tab-quote-btn" onclick="setActiveTab('quote')">
-                <i data-lucide="file-text"></i>
-                Cotizaci&oacute;n
+                <i data-lucide="wrench"></i>
+                Trabajo y Presupuesto
                 <span class="stage-pending-badge" id="tab-badge-quote">Pendiente</span>
               </button>
-              <button class="workspace-tab-btn" id="tab-workorder-btn" onclick="setActiveTab('workorder')">
+              <button class="workspace-tab-btn" id="tab-workorder-btn" onclick="setActiveTab('workorder')" style="display: none !important;">
                 <i data-lucide="wrench"></i>
                 Orden de trabajo
                 <span class="stage-pending-badge" id="tab-badge-workorder">Pendiente</span>
@@ -2113,92 +2113,76 @@
                     
                     <div class="reception-meta-item" style="flex: 1; min-width: 160px; display: flex; align-items: center; gap: 10px;">
                       <div style="width: 36px; height: 36px; border-radius: 8px; background-color: rgba(var(--color-accent-rgb),0.12); color: var(--color-accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i data-lucide="calendar" style="width: 18px; height: 18px;"></i>
+                        <i data-lucide="calendar-clock" style="width: 18px; height: 18px;"></i>
                       </div>
-                      <div>
-                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; text-transform: uppercase;">Fecha de Ingreso</span>
-                        <span style="font-size: 13.5px; font-weight: 800; color: var(--text-primary);" id="det-reception-date-text">—</span>
+                      <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Fecha de Ingreso</span>
+                        <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);" id="det-reception-date-text">Cargando...</span>
                       </div>
                     </div>
 
-                    <div class="reception-meta-item" style="flex: 1; min-width: 160px; display: flex; align-items: center; gap: 10px;">
-                      <div style="width: 36px; height: 36px; border-radius: 8px; background-color: rgba(16, 185, 129, 0.12); color: #059669; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <div class="reception-meta-item" style="flex: 1; min-width: 160px; display: flex; align-items: center; gap: 10px; border-left: 1px solid var(--border-color); padding-left: 16px;">
+                      <div style="width: 36px; height: 36px; border-radius: 8px; background-color: rgba(var(--color-accent-rgb),0.12); color: var(--color-accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <i data-lucide="gauge" style="width: 18px; height: 18px;"></i>
                       </div>
-                      <div>
-                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; text-transform: uppercase;">Kilometraje</span>
-                        <span style="font-size: 13.5px; font-weight: 800; color: var(--text-primary);" id="det-reception-km-text">—</span>
+                      <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Kilometraje</span>
+                        <span style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);" id="det-reception-km-text">Sin registrar</span>
                       </div>
                     </div>
 
-
                   </div>
 
-                  <!-- SECCIÓN: REGISTRO FOTOGRÁFICO DE RECEPCIÓN (5 FOTOS) -->
-                  <div class="reception-photos-section" style="margin-bottom: 22px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                      <h4 style="font-family: var(--font-display); font-weight: 800; font-size: 14px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-                        <i data-lucide="camera" style="color: var(--color-accent); width: 16px; height: 16px;"></i>
-                        Fotografías de Recepción del Vehículo
-                      </h4>
-                      <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Haz clic en cualquier foto para ampliarla</span>
-                    </div>
-
-                    <div class="reception-photos-grid" id="det-reception-photos-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
-                      <!-- Renderizado dinámico de las 5 fotos desde JS -->
-                    </div>
+                  <!-- 1. Formulario de Kilometraje -->
+                  <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label" style="font-size: 12px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                      <i data-lucide="gauge" style="width: 14px; height: 14px; color: var(--color-accent);"></i> Kilometraje al ingresar
+                    </label>
+                    <input type="number" id="det-km" class="form-input" placeholder="Ej: 145000" style="width: 100%; max-width: 280px; font-size: 14px; font-weight: 700; padding: 8px 12px;" oninput="updateSidebarOdometer(this.value)">
                   </div>
 
-                  <!-- EDICIÓN RÁPIDA DE KILOMETRAJE -->
-                  <div style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;">
-                    <div class="form-group" style="flex: 1; min-width: 180px;">
-                      <label class="form-label">Kilometraje</label>
-                      <div class="input-icon-group" style="width: 100%;">
-                        <i data-lucide="gauge"></i>
-                        <input type="number" class="form-input" id="det-km" placeholder="Ej: 45000" min="0" oninput="updateSidebarOdometer(this.value)" style="width: 100%;">
-                      </div>
+                  <!-- 2. Galería de Fotografías de Recepción -->
+                  <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label" style="font-size: 12px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                      <i data-lucide="camera" style="width: 14px; height: 14px; color: var(--color-accent);"></i> Fotograf&iacute;as de Recepci&oacute;n (5 Puntos Clave)
+                    </label>
+                    
+                    <div id="det-reception-photos-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; width: 100%;">
+                      <!-- 5 Ranuras desplegadas dinámicamente desde app.js -->
                     </div>
                   </div>
 
-                  <!-- Descripción (Explicación del cliente y problemas del auto) -->
-                  <div class="form-group">
-                    <label class="form-label">Descripción / Motivo de Ingreso</label>
-                    <textarea class="form-input" id="det-service-description" rows="5" placeholder="Explicación del cliente y problemas reportados del auto" style="resize: vertical; min-height: 140px; font-size: 13.5px; line-height: 1.5;"></textarea>
-                  </div>
+                  <!-- 3. Estado Estético / Detalles -->
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="form-label" style="font-size: 12px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                      <i data-lucide="sparkles" style="width: 14px; height: 14px; color: var(--color-accent);"></i> Estado est&eacute;tico del veh&iacute;culo
+                    </label>
 
-                  <!-- Contenedor de Daños y Detalles Físicos -->
-                  <div id="reception-aesthetics-container" style="display: block; margin-top: 14px;">
-                    <div class="switch-row" style="margin-bottom: 14px;">
-                      <div class="switch-label-wrapper">
-                        <i data-lucide="alert-triangle" style="color: #f59e0b;"></i>
-                        <span>¿El vehículo presenta detalles / daños estéticos?</span>
-                      </div>
-                      <label class="ios-switch">
-                        <input type="checkbox" id="det-details-toggle" onchange="toggleDetailsArea()">
-                        <span class="switch-slider"></span>
+                    <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 10px;">
+                      <label class="checkbox-container" style="font-weight: 600; color: var(--text-primary); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <input type="radio" name="det-has-details-radio" value="no" checked onchange="toggleDetailsNotesField(false)">
+                        <span class="custom-radio"></span>
+                        <span>Sin detalles est&eacute;ticos visiblemente destacables</span>
+                      </label>
+                      <label class="checkbox-container" style="font-weight: 600; color: var(--text-primary); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <input type="radio" name="det-has-details-radio" value="yes" onchange="toggleDetailsNotesField(true)">
+                        <span class="custom-radio"></span>
+                        <span>Posee rayones, abolladuras o detalles</span>
                       </label>
                     </div>
-                    
-                    <!-- Textarea oculto condicional -->
-                    <div class="form-group" id="det-details-notes-group" style="display: none; animation: slide-down 0.2s ease; margin-bottom: 14px;">
-                      <label class="form-label" for="det-details-notes">Descripción de detalles estéticos (rayones, bollos, etc.)</label>
-                      <textarea class="form-input" id="det-details-notes" rows="2" placeholder="Ej. Pequeño rayón en puerta trasera izquierda, óptica delantera derecha opaca..." style="resize: none;"></textarea>
+
+                    <div id="det-details-container" style="display: none; animation: slide-down 0.2s ease;">
+                      <textarea id="det-details-notes" class="form-input" rows="3" placeholder="Ingresa los detalles sobre por qué entra el vehículo (rayón en puerta derecha, paragolpes desprendido...)" style="width: 100%; font-size: 13px; line-height: 1.5; padding: 10px 12px; min-height: 80px; resize: vertical; box-sizing: border-box;"></textarea>
                     </div>
                   </div>
 
-                  <!-- Barra de Acciones Oculta (Mapeada al footer global) -->
-                  <div class="ficha-actions-bar" style="display: none !important;">
-                    <button class="btn-recepcionar-confirm" onclick="confirmReception()">
-                      Aceptar
-                    </button>
-                  </div>
                 </section>
               </div>
 
-              <!-- PESTAÑA B: COTIZACIÓN -->
-              <div class="tab-content-wrapper" id="tab-content-quote" style="display: none;">
+              <!-- PESTAÑA B: TRABAJO Y PRESUPUESTO -->
+              <div class="tab-content-wrapper" id="tab-content-quote" style="display: none; animation: slide-down 0.25s ease;">
                 
-                <!-- SUB-VISTA B1: EDITOR DE COTIZACIÓN (Formulario) -->
+                <!-- SUB-VISTA B1: EDITOR DE TRABAJO Y PRESUPUESTO -->
                 <div id="quote-editor-view">
                   <!-- Contenedores ocultos para preservar compatibilidad con actualizaciones JS en app.js -->
                   <div style="display: none !important;">
@@ -2223,12 +2207,47 @@
                       </div>
                     </div>
 
+                    <!-- Observaciones y Adjuntos de Trabajo -->
+                    <div style="display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 12px;">
+                      <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">Observaciones del Trabajo</span>
+                      
+                      <div style="display: flex; flex-direction: column; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--card-bg-hover); overflow: hidden; min-height: 140px; box-sizing: border-box; width: 100%;">
+                        <textarea
+                          id="ot-observations"
+                          class="form-input"
+                          placeholder="Notas técnicas, hallazgos, recomendaciones al cliente..."
+                          style="resize: none; font-size: 13px; line-height: 1.5; padding: 12px 14px; flex-grow: 1; border: none; background: transparent; min-height: 80px; width: 100%; box-sizing: border-box; outline: none; box-shadow: none;"
+                          onblur="saveOTObservations()"
+                        ></textarea>
+                        
+                        <!-- Grid de miniaturas -->
+                        <div id="ot-images-grid" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 0 14px 10px 14px;">
+                          <!-- Renderizado dinámico desde JS -->
+                        </div>
+                        
+                        <div id="ot-images-empty" style="display: none !important;"></div>
+                        
+                        <!-- Barra de acciones inferior -->
+                        <div style="display: flex; justify-content: flex-end; gap: 14px; padding: 8px 14px; border-top: 1px solid var(--border-color-light); background-color: var(--card-bg); align-items: center;">
+                          <span style="font-size: 11px; color: var(--text-muted); flex-grow: 1; font-weight: 500;">Adjuntar fotos del trabajo:</span>
+                          <label for="ot-camera-capture" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; color: var(--color-accent); cursor: pointer; transition: all 0.2s; background: var(--card-bg-hover); border: 1px solid var(--border-color);" title="Tomar Foto">
+                            <i data-lucide="camera" style="width: 16px; height: 16px;"></i>
+                            <input type="file" id="ot-camera-capture" accept="image/*" capture="environment" style="display: none;" onchange="addOTImages(event)">
+                          </label>
+                          <label for="ot-image-upload" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; color: var(--color-accent); cursor: pointer; transition: all 0.2s; background: var(--card-bg-hover); border: 1px solid var(--border-color);" title="Subir de Galería">
+                            <i data-lucide="image" style="width: 16px; height: 16px;"></i>
+                            <input type="file" id="ot-image-upload" accept="image/*" multiple style="display: none;" onchange="addOTImages(event)">
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
                     <!-- Elementos ocultos para preservar compatibilidad de estado de app.js -->
                     <input type="hidden" id="quote-notes" value="">
                     <input type="hidden" id="quote-send-email" value="">
 
                     <!-- Panel de Footer: Grilla Resumen Financiero y Entrega -->
-                    <div class="quote-editor-footer-grid">
+                    <div class="quote-editor-footer-grid" style="margin-top: 12px;">
 
                       <!-- Columna 1: Fecha y hora de entrega comprometida -->
                       <div style="display: flex; flex-direction: column; gap: 8px;">

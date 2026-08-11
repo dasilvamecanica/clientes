@@ -6329,27 +6329,54 @@ window.removeQuotePart = function(index) {
   updateCalculatedTotals();
 };
 
+window.toggleQuoteItemCompleted = function(type, index) {
+  if (type === 'service' && activeQuoteServices[index]) {
+    activeQuoteServices[index].completed = !activeQuoteServices[index].completed;
+  } else if (type === 'part' && activeQuoteParts[index]) {
+    activeQuoteParts[index].completed = !activeQuoteParts[index].completed;
+  }
+  const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(activeReceptionVehicleId));
+  if (vehicleIndex !== -1) {
+    vehicles[vehicleIndex].quoteServices = [...activeQuoteServices];
+    vehicles[vehicleIndex].quoteParts = [...activeQuoteParts];
+    saveState();
+  }
+  renderQuoteTab();
+};
+
 function renderQuoteTab() {
   const servList = document.getElementById('quote-services-list');
   const partsList = document.getElementById('quote-parts-list');
 
-  // Cargar fecha y hora comprometida de entrega en el editor de cotización
-  const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+  // Cargar datos del vehículo activo
+  const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
   if (vehicle) {
     const dateInput = document.getElementById('quote-delivery-date');
     const timeInput = document.getElementById('quote-delivery-time');
     if (dateInput) dateInput.value = vehicle.deliveryDate || '';
     if (timeInput) timeInput.value = vehicle.deliveryTime || '';
+
+    const obsField = document.getElementById('ot-observations');
+    if (obsField) obsField.value = vehicle.otObservations || '';
   }
   
   // Conteo e importes de cabecera
   const servSum = activeQuoteServices.reduce((s, item) => s + item.value, 0);
   const partsSum = activeQuoteParts.reduce((s, item) => s + item.value, 0);
   
-  document.getElementById('label-serv-count').textContent = `(${activeQuoteServices.length})`;
-  document.getElementById('label-parts-count').textContent = `(${activeQuoteParts.length})`;
-  document.getElementById('quote-services-sum').textContent = formatCurrency(servSum);
-  document.getElementById('quote-parts-sum').textContent = formatCurrency(partsSum);
+  const servCountEl = document.getElementById('label-serv-count');
+  if (servCountEl) servCountEl.textContent = `(${activeQuoteServices.length})`;
+  const partsCountEl = document.getElementById('label-parts-count');
+  if (partsCountEl) partsCountEl.textContent = `(${activeQuoteParts.length})`;
+  const servSumEl = document.getElementById('quote-services-sum');
+  if (servSumEl) servSumEl.textContent = formatCurrency(servSum);
+  const partsSumEl = document.getElementById('quote-parts-sum');
+  if (partsSumEl) partsSumEl.textContent = formatCurrency(partsSum);
+
+  // Calcular avance total de tareas (Servicios + Repuestos)
+  const totalItems = activeQuoteServices.length + activeQuoteParts.length;
+  const completedItems = activeQuoteServices.filter(i => i.completed).length + activeQuoteParts.filter(i => i.completed).length;
+  const progressPercent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
   
   // Dibujar lista de servicios
   let servHTML = `
@@ -6359,22 +6386,34 @@ function renderQuoteTab() {
         <span style="font-weight: normal; font-size: 12px; color: var(--text-muted);">(${activeQuoteServices.length})</span>
         <span style="background-color: rgba(var(--color-accent-rgb), 0.08); color: var(--color-accent); font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 12px; display: inline-block; margin-left: 4px;">${formatCurrency(servSum)}</span>
       </div>
-      <span>Precio</span>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        ${totalItems > 0 ? `<span style="font-size: 11px; font-weight: 700; color: var(--color-accent); font-family: var(--font-sans);">${completedItems}/${totalItems} listas (${progressPercent}%)</span>` : ''}
+        <span>Precio</span>
+      </div>
     </div>
   `;
   
   if (activeQuoteServices.length > 0) {
-    servHTML += activeQuoteServices.map((item, index) => `
-      <div class="compact-quote-row" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1.5px solid var(--border-color); min-height: 40px; box-sizing: border-box; transition: background-color 0.15s;" onmouseover="this.style.backgroundColor='var(--card-bg-hover)'" onmouseout="this.style.backgroundColor='transparent'">
-        <span style="font-weight: 600; font-size: 13.5px; color: var(--text-secondary); cursor: pointer;" onclick="editQuoteServicePrice(${index})">${item.name}</span>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="font-weight: 700; color: var(--color-accent); font-size: 13.5px; cursor: pointer;" onclick="editQuoteServicePrice(${index})">${formatCurrency(item.value)}</span>
-          <button onclick="removeQuoteService(${index})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px; display: flex; align-items: center; justify-content: center; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" title="Eliminar">
-            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
-          </button>
+    servHTML += activeQuoteServices.map((item, index) => {
+      const isDone = !!item.completed;
+      return `
+        <div class="compact-quote-row" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1.5px solid var(--border-color); min-height: 42px; box-sizing: border-box; transition: background-color 0.15s; ${isDone ? 'opacity: 0.75; background-color: rgba(16, 185, 129, 0.05);' : ''}" onmouseover="this.style.backgroundColor='var(--card-bg-hover)'" onmouseout="this.style.backgroundColor='${isDone ? 'rgba(16, 185, 129, 0.05)' : 'transparent'}'">
+          <div style="display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; margin-right: 12px;">
+            <label class="checkbox-container" style="margin: 0; cursor: pointer;" onclick="event.stopPropagation();">
+              <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleQuoteItemCompleted('service', ${index})">
+              <span class="custom-checkbox" style="width: 16px; height: 16px; border-radius: 4px;"></span>
+            </label>
+            <span style="font-weight: 600; font-size: 13.5px; color: var(--text-secondary); cursor: pointer; ${isDone ? 'text-decoration: line-through; color: var(--text-muted);' : ''}" onclick="editQuoteServicePrice(${index})">${item.name}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+            <span style="font-weight: 700; color: var(--color-accent); font-size: 13.5px; cursor: pointer;" onclick="editQuoteServicePrice(${index})">${formatCurrency(item.value)}</span>
+            <button onclick="removeQuoteService(${index})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px; display: flex; align-items: center; justify-content: center; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" title="Eliminar">
+              <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+            </button>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
   
   servHTML += `
@@ -6382,7 +6421,7 @@ function renderQuoteTab() {
       <i data-lucide="plus" style="width: 14px; height: 14px; margin-right: 2px;"></i> nuevo servicio...
     </div>
   `;
-  servList.innerHTML = servHTML;
+  if (servList) servList.innerHTML = servHTML;
 
   // Dibujar lista de repuestos
   let partsHTML = `
@@ -6397,17 +6436,26 @@ function renderQuoteTab() {
   `;
   
   if (activeQuoteParts.length > 0) {
-    partsHTML += activeQuoteParts.map((item, index) => `
-      <div class="compact-quote-row" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1.5px solid var(--border-color); min-height: 40px; box-sizing: border-box; transition: background-color 0.15s;" onmouseover="this.style.backgroundColor='var(--card-bg-hover)'" onmouseout="this.style.backgroundColor='transparent'">
-        <span style="font-weight: 600; font-size: 13.5px; color: var(--text-secondary); cursor: pointer;" onclick="editQuotePartPrice(${index})">${item.name}</span>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="font-weight: 700; color: var(--color-accent); font-size: 13.5px; cursor: pointer;" onclick="editQuotePartPrice(${index})">${formatCurrency(item.value)}</span>
-          <button onclick="removeQuotePart(${index})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px; display: flex; align-items: center; justify-content: center; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" title="Eliminar">
-            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
-          </button>
+    partsHTML += activeQuoteParts.map((item, index) => {
+      const isDone = !!item.completed;
+      return `
+        <div class="compact-quote-row" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1.5px solid var(--border-color); min-height: 42px; box-sizing: border-box; transition: background-color 0.15s; ${isDone ? 'opacity: 0.75; background-color: rgba(16, 185, 129, 0.05);' : ''}" onmouseover="this.style.backgroundColor='var(--card-bg-hover)'" onmouseout="this.style.backgroundColor='${isDone ? 'rgba(16, 185, 129, 0.05)' : 'transparent'}'">
+          <div style="display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; margin-right: 12px;">
+            <label class="checkbox-container" style="margin: 0; cursor: pointer;" onclick="event.stopPropagation();">
+              <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleQuoteItemCompleted('part', ${index})">
+              <span class="custom-checkbox" style="width: 16px; height: 16px; border-radius: 4px;"></span>
+            </label>
+            <span style="font-weight: 600; font-size: 13.5px; color: var(--text-secondary); cursor: pointer; ${isDone ? 'text-decoration: line-through; color: var(--text-muted);' : ''}" onclick="editQuotePartPrice(${index})">${item.name}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+            <span style="font-weight: 700; color: var(--color-accent); font-size: 13.5px; cursor: pointer;" onclick="editQuotePartPrice(${index})">${formatCurrency(item.value)}</span>
+            <button onclick="removeQuotePart(${index})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px; display: flex; align-items: center; justify-content: center; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" title="Eliminar">
+              <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+            </button>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
   
   partsHTML += `
@@ -6415,7 +6463,11 @@ function renderQuoteTab() {
       <i data-lucide="plus" style="width: 14px; height: 14px; margin-right: 2px;"></i> nuevo repuesto...
     </div>
   `;
-  partsList.innerHTML = partsHTML;
+  if (partsList) partsList.innerHTML = partsHTML;
+
+  if (typeof renderOTImages === 'function') {
+    renderOTImages();
+  }
   
   initLucide();
 }
