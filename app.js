@@ -14046,10 +14046,8 @@ window.nextMobileWizardStep = function() {
   }
 
   if (currentStep === 2) {
-    // Guardar Paso 2: Detalles y Observaciones estéticas
-    const detailsToggle = document.getElementById('mob-wiz-details-toggle');
+    // Guardar Paso 2: Motivo de ingreso / descripción
     const detailsNotes = document.getElementById('mob-wiz-details-notes');
-    mobileWizardData.hasDetails = detailsToggle ? detailsToggle.checked : false;
     mobileWizardData.detailsNotes = detailsNotes ? detailsNotes.value.trim() : '';
 
     updateMobileWizardStepUI(3);
@@ -14196,7 +14194,8 @@ window.confirmMobileVehicleEntry = function() {
       clientFirstName: mobileWizardData.firstName.trim(),
       clientLastName: mobileWizardData.lastName.trim(),
       clientPhone: '',
-      hasDetails: mobileWizardData.hasDetails || false,
+      clientEmail: '',
+      services: mobileWizardData.detailsNotes || '',
       detailsNotes: mobileWizardData.detailsNotes || '',
       km: mobileWizardData.km,
       kilometers: Number(mobileWizardData.km) || 0,

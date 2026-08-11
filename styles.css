@@ -224,6 +224,206 @@ body, .card, .metric-card, .reception-form-card, .kanban-column, .dropdown-menu,
 .dark .metric-card.delivered .metric-icon-wrapper { background-color: hsla(142, 69%, 45%, 0.15) !important; color: var(--color-listo) !important; }
 .dark .add-card-btn { background-color: transparent !important; }
 
+/* === DARK MODE: Asistente Móvil de Ingreso (Wizard) === */
+.dark .mobile-wizard-overlay {
+  background-color: var(--bg-app) !important;
+}
+.dark .wizard-header {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+.dark .wizard-header-title {
+  color: var(--text-primary) !important;
+}
+.dark .wizard-header-sub {
+  color: var(--text-secondary) !important;
+}
+.dark .wizard-header-btn {
+  color: var(--text-secondary) !important;
+}
+.dark .wizard-progress-bar {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+.dark .progress-step-item .step-circle {
+  background-color: var(--card-bg-hover) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+.dark .progress-step-item.active .step-circle {
+  background-color: var(--color-accent) !important;
+  color: white !important;
+  border-color: var(--color-accent) !important;
+}
+.dark .progress-step-item.done .step-circle {
+  background-color: #059669 !important;
+  color: white !important;
+  border-color: #059669 !important;
+}
+.dark .progress-step-item .step-title {
+  color: var(--text-muted) !important;
+}
+.dark .progress-step-item.active .step-title {
+  color: var(--color-accent) !important;
+}
+.dark .progress-step-item.done .step-title {
+  color: #34d399 !important;
+}
+.dark .progress-line {
+  background-color: var(--border-color) !important;
+}
+.dark .progress-line.done {
+  background-color: #059669 !important;
+}
+.dark .wizard-body-content {
+  background-color: var(--bg-app) !important;
+}
+.dark .wizard-step-panel {
+  color: var(--text-primary) !important;
+}
+.dark .step-heading {
+  color: var(--text-primary) !important;
+}
+.dark .step-subheading {
+  color: var(--text-secondary) !important;
+}
+.dark .wizard-label {
+  color: var(--text-secondary) !important;
+}
+.dark .wizard-input-lg,
+.dark .wizard-input-md {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+.dark .wizard-input-lg::placeholder,
+.dark .wizard-input-md::placeholder {
+  color: var(--text-muted) !important;
+}
+.dark .wizard-input-hint {
+  color: var(--text-muted) !important;
+}
+.dark .wizard-footer {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+.dark .wizard-btn-next {
+  background-color: var(--color-accent) !important;
+  color: white !important;
+}
+.dark .wizard-btn-next.confirm {
+  background-color: #059669 !important;
+}
+
+/* Casilleros de fotos en modo oscuro */
+.dark .photo-slot-card {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+.dark .photo-slot-card.completed {
+  border-color: #059669 !important;
+}
+.dark .photo-slot-card.Highlight-tablero {
+  border-left-color: var(--color-accent) !important;
+}
+.dark .slot-header {
+  color: var(--text-primary) !important;
+}
+.dark .slot-title {
+  color: var(--text-primary) !important;
+}
+.dark .slot-status-badge.pending {
+  background-color: var(--card-bg-hover) !important;
+  color: var(--text-muted) !important;
+}
+.dark .slot-status-badge.ready {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+}
+.dark .slot-preview-box {
+  background-color: var(--card-bg-hover) !important;
+  border-color: var(--border-color) !important;
+}
+.dark .slot-placeholder {
+  color: var(--text-muted) !important;
+}
+.dark .slot-action-btn {
+  background-color: var(--card-bg-hover) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Referencia del tablero en paso 4 */
+.dark .tablero-reference-card {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+.dark .km-input {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+.dark .km-unit-badge {
+  color: var(--text-secondary) !important;
+}
+
+/* Botón móvil de ingreso */
+.dark .btn-mobile-add-vehicle {
+  background-color: var(--color-accent) !important;
+  color: white !important;
+}
+
+/* === DARK MODE: Banner de Recepción y Galería de Fotos === */
+.dark .reception-summary-banner {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+.dark .reception-summary-banner .reception-meta-item span {
+  color: var(--text-primary) !important;
+}
+.dark .reception-summary-banner .reception-meta-item span[style*="text-transform"] {
+  color: var(--text-muted) !important;
+}
+.dark .reception-photo-card {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+.dark .reception-photo-card.empty {
+  background-color: var(--card-bg-hover) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-muted) !important;
+}
+
+/* === DARK MODE: Tarjetas de taller móviles === */
+.dark .mobile-workshop-card {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+.dark .mobile-workshop-card .mobile-vehicle-name {
+  color: var(--text-primary) !important;
+}
+.dark .mobile-workshop-card .mobile-client-name,
+.dark .mobile-workshop-card .mobile-date-text {
+  color: var(--text-secondary) !important;
+}
+.dark .mobile-card-actions {
+  border-color: var(--border-color) !important;
+}
+.dark .mobile-action-btn {
+  background-color: var(--card-bg-hover) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Píldoras rápidas (si se usan en otros contextos) */
+.dark .wiz-pill-btn {
+  background-color: var(--card-bg-hover) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
+}
+
+
 /* Color Badge Utility Classes for Light & Dark Modes */
 .badge-blue {
   background-color: hsl(217, 91%, 95%) !important;

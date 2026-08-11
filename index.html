@@ -4388,39 +4388,17 @@
         </div>
       </div>
 
-      <!-- PASO 2: DETALLES Y DAÑOS PREVIOS -->
+      <!-- PASO 2: DETALLES / MOTIVO DE INGRESO -->
       <div class="wizard-step-panel" id="mobile-wizard-step-2" style="display: none;">
         <div class="wizard-step-intro">
-          <h3 class="step-heading">Paso 2 — Detalles y observaciones</h3>
-          <p class="step-subheading">Registra el estado general, rayones, bollos o faltantes de ingreso (Opcional)</p>
+          <h3 class="step-heading">Paso 2 — Detalles del ingreso</h3>
+          <p class="step-subheading">Describí brevemente por qué ingresa el vehículo al taller (Opcional)</p>
         </div>
 
         <div class="wizard-form-group">
-          <label class="wizard-label">¿PRESENTA DETALLES O DAÑOS ESTÉTICOS PREVIOS?</label>
-          <div class="wizard-switch-row" style="display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); border: 1.5px solid var(--border-color); padding: 12px 16px; border-radius: var(--radius-md);">
-            <span style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-              <i data-lucide="alert-triangle" style="color: #f59e0b; width: 16px; height: 16px;"></i>
-              Detalles / Rayones / Faltantes
-            </span>
-            <label class="ios-switch">
-              <input type="checkbox" id="mob-wiz-details-toggle" onchange="toggleMobileWizardDetailsArea()">
-              <span class="switch-slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <div class="wizard-form-group" id="mob-wiz-details-group" style="display: none;">
-          <label class="wizard-label">DESCRIPCIÓN DE DETALLES / DAÑOS PREVIOS</label>
-          <textarea id="mob-wiz-details-notes" class="wizard-input-lg" rows="4" placeholder="Ej: Pequeño rayón en puerta trasera izquierda, óptica derecha opaca, sin auxilio..." style="resize: vertical; min-height: 100px; font-size: 14px;"></textarea>
-          
-          <!-- Píldoras de selección rápida -->
-          <div class="wizard-quick-pills" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
-            <button type="button" class="wiz-pill-btn" onclick="addQuickDetailText('Rayón puerta')">+ Rayón puerta</button>
-            <button type="button" class="wiz-pill-btn" onclick="addQuickDetailText('Bollo paragolpes')">+ Bollo paragolpes</button>
-            <button type="button" class="wiz-pill-btn" onclick="addQuickDetailText('Óptica opaca')">+ Óptica opaca</button>
-            <button type="button" class="wiz-pill-btn" onclick="addQuickDetailText('Sin auxilio')">+ Sin auxilio</button>
-            <button type="button" class="wiz-pill-btn" onclick="addQuickDetailText('Taza faltante')">+ Taza faltante</button>
-          </div>
+          <label class="wizard-label">MOTIVO DE INGRESO / DESCRIPCIÓN</label>
+          <textarea id="mob-wiz-details-notes" class="wizard-input-lg" rows="6" placeholder="Ej: El cliente trae el auto porque hace un ruido en la suspensión delantera, necesita service de 30.000 km, revisar frenos..." style="resize: vertical; min-height: 160px; font-size: 14px; line-height: 1.6;"></textarea>
+          <span class="wizard-input-hint">Podés dejarlo vacío y completarlo después desde la ficha</span>
         </div>
       </div>
 
