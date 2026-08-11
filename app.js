@@ -5691,9 +5691,9 @@ window.setActiveTab = function(tabName) {
       acceptBtn.style.border = 'none';
     } else if (tabName === 'delivery') {
       acceptBtn.textContent = 'Cancelar';
-      acceptBtn.style.backgroundColor = 'var(--card-bg-hover)';
-      acceptBtn.style.color = 'var(--text-primary)';
-      acceptBtn.style.border = '1.5px solid var(--border-color)';
+      acceptBtn.style.backgroundColor = 'var(--color-accent)';
+      acceptBtn.style.color = 'white';
+      acceptBtn.style.border = 'none';
     } else {
       acceptBtn.textContent = 'Aceptar';
       acceptBtn.style.backgroundColor = 'var(--color-accent)';
