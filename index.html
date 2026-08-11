@@ -2131,15 +2131,6 @@
                       </div>
                     </div>
 
-                    <div class="reception-meta-item" style="flex: 1; min-width: 160px; display: flex; align-items: center; gap: 10px;">
-                      <div style="width: 36px; height: 36px; border-radius: 8px; background-color: rgba(99, 102, 241, 0.12); color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i data-lucide="fuel" style="width: 18px; height: 18px;"></i>
-                      </div>
-                      <div>
-                        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; text-transform: uppercase;">Combustible</span>
-                        <span style="font-size: 13.5px; font-weight: 800; color: var(--text-primary);" id="det-reception-fuel-text">—</span>
-                      </div>
-                    </div>
 
                   </div>
 
@@ -2158,27 +2149,13 @@
                     </div>
                   </div>
 
-                  <!-- EDICIÓN RÁPIDA DE KILOMETRAJE Y COMBUSTIBLE -->
+                  <!-- EDICIÓN RÁPIDA DE KILOMETRAJE -->
                   <div style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;">
                     <div class="form-group" style="flex: 1; min-width: 180px;">
                       <label class="form-label">Kilometraje</label>
                       <div class="input-icon-group" style="width: 100%;">
                         <i data-lucide="gauge"></i>
                         <input type="number" class="form-input" id="det-km" placeholder="Ej: 45000" min="0" oninput="updateSidebarOdometer(this.value)" style="width: 100%;">
-                      </div>
-                    </div>
-
-                    <div class="form-group" style="flex: 1; min-width: 180px;">
-                      <label class="form-label">Nivel de Combustible</label>
-                      <div class="input-icon-group" style="width: 100%;">
-                        <i data-lucide="fuel"></i>
-                        <select id="det-fuel" class="form-input" style="width: 100%; cursor: pointer;">
-                          <option value="Reserva">Reserva (Muy bajo)</option>
-                          <option value="1/4">1/4 de Tanque</option>
-                          <option value="1/2" selected>1/2 de Tanque (Medio)</option>
-                          <option value="3/4">3/4 de Tanque</option>
-                          <option value="Lleno">Tanque Lleno</option>
-                        </select>
                       </div>
                     </div>
                   </div>
@@ -3290,21 +3267,10 @@
           <span class="client-info-title" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
             <i data-lucide="log-in" style="width: 14px; height: 14px;"></i> Condiciones de Recepción e Ingreso
           </span>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div style="display: flex; flex-direction: column; gap: 4px;">
               <span style="font-size: 11px; color: var(--text-secondary); font-weight: 500;">Kilometraje de Ingreso:</span>
               <strong id="otd-mileage" style="color: var(--text-primary); font-size: 14.5px;">—</strong>
-            </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <span style="font-size: 11px; color: var(--text-secondary); font-weight: 500;">Nivel de Combustible:</span>
-              <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
-                <i data-lucide="fuel" style="width: 16px; height: 16px; color: #3b82f6;" id="otd-fuel-icon"></i>
-                <div style="flex-grow: 1; height: 8px; background-color: var(--border-color); border-radius: 4px; overflow: hidden; max-width: 100px; display: inline-block;">
-                  <div id="otd-fuel-bar" style="height: 100%; width: 50%; background-color: #3b82f6; border-radius: 4px; transition: width 0.3s ease, background-color 0.3s ease;"></div>
-                </div>
-                <strong id="otd-fuel-label" style="color: var(--text-primary); font-size: 13px;">—</strong>
-              </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px;">

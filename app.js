@@ -4692,13 +4692,10 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
       detVehicleKmSidebar.textContent = vehicle.kilometers ? `${vehicle.kilometers.toLocaleString('es-AR')} km` : 'Sin registrar';
     }
 
-    // Opciones de Odometer & Fuel
+    // Opciones de Odometer
     const detKm = document.getElementById('det-km');
     const kmNum = vehicle.km || vehicle.kilometers || vehicle.mileage;
     if (detKm) detKm.value = kmNum || '';
-    
-    const detFuel = document.getElementById('det-fuel');
-    if (detFuel) detFuel.value = vehicle.fuelLevel || '1/2';
 
     // --- Poblar Banner y Resumen de Recepción ---
     const dateText = vehicle.entryDate ? (vehicle.entryTime ? `${vehicle.entryDate} · ${new Date(vehicle.entryTime).toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})} hs` : vehicle.entryDate) : '—';
@@ -4707,9 +4704,6 @@ window.openDetailedReception = function(vehicleId, isReadOnly = false) {
 
     const recKmEl = document.getElementById('det-reception-km-text');
     if (recKmEl) recKmEl.textContent = kmNum ? `${Number(kmNum).toLocaleString('es-AR')} km` : 'Sin registrar';
-
-    const recFuelEl = document.getElementById('det-reception-fuel-text');
-    if (recFuelEl) recFuelEl.textContent = vehicle.fuelLevel || '1/2 (Tanque)';
 
     // --- Poblar Galería de 5 Fotografías de Recepción ---
     const photosGrid = document.getElementById('det-reception-photos-grid');
@@ -5117,21 +5111,8 @@ window.confirmReception = function() {
     const kmEl = document.getElementById('det-km');
     const kmVal = kmEl ? parseFloat(kmEl.value) || 0 : 0;
 
-    const fuelEl = document.getElementById('det-fuel');
-    const fuelVal = fuelEl ? fuelEl.value : '1/2';
-
-    const toggleEl = document.getElementById('det-details-toggle');
-    const detailsToggle = toggleEl ? toggleEl.checked : false;
-
-    const notesEl = document.getElementById('det-details-notes');
-    const detailsNotes = notesEl ? notesEl.value.trim() : '';
-
-    const descEl = document.getElementById('det-service-description');
-    const serviceDesc = descEl ? descEl.value.trim() : '';
-
     // Guardar datos técnicos en el estado
     vehicles[vehicleIndex].kilometers = kmVal;
-    vehicles[vehicleIndex].fuelLevel = fuelVal;
     vehicles[vehicleIndex].services = serviceDesc;
     vehicles[vehicleIndex].hasDetails = detailsToggle;
     vehicles[vehicleIndex].detailsNotes = detailsToggle ? detailsNotes : '';
@@ -5151,7 +5132,7 @@ window.confirmReception = function() {
     
     // Notificación de éxito
     const name = `${vehicles[vehicleIndex].brand} ${vehicles[vehicleIndex].model}`;
-    alert(`Vehículo "${name}" recepcionado con éxito.\nKilometraje: ${kmVal} km.\nNivel Combustible: ${fuelVal}.`);
+    alert(`Vehículo "${name}" recepcionado con éxito.\nKilometraje: ${kmVal} km.`);
   } catch (err) {
     console.error("Error en confirmReception:", err);
     alert("Error al confirmar recepción: " + err.message);
@@ -10065,30 +10046,9 @@ window.viewOTDetails = function(vehicleId) {
     };
   }
 
-  // 6. Condiciones e Ingreso (Kilometraje, Combustible, Estética)
-  document.getElementById('otd-mileage').textContent = v.kilometers ? `${parseInt(v.kilometers).toLocaleString('es-ES')} km` : '—';
-  
-  // Combustible Gauge
-  let fuelPct = 50;
-  let fuelColor = '#3b82f6';
-  const fuelLower = (v.fuelLevel || '1/2').toLowerCase();
-  if (fuelLower.includes('vac') || fuelLower.includes('0')) { fuelPct = 5; fuelColor = '#ef4444'; }
-  else if (fuelLower.includes('reser')) { fuelPct = 12; fuelColor = '#ef4444'; }
-  else if (fuelLower.includes('1/4')) { fuelPct = 25; fuelColor = '#f97316'; }
-  else if (fuelLower.includes('1/2')) { fuelPct = 50; fuelColor = '#3b82f6'; }
-  else if (fuelLower.includes('3/4')) { fuelPct = 75; fuelColor = '#10b981'; }
-  else if (fuelLower.includes('llen') || fuelLower.includes('1/1') || fuelLower.includes('full')) { fuelPct = 100; fuelColor = '#10b981'; }
-  
-  document.getElementById('otd-fuel-label').textContent = v.fuelLevel || '1/2';
-  const fuelBar = document.getElementById('otd-fuel-bar');
-  if (fuelBar) {
-    fuelBar.style.width = `${fuelPct}%`;
-    fuelBar.style.backgroundColor = fuelColor;
-  }
-  const fuelIcon = document.getElementById('otd-fuel-icon');
-  if (fuelIcon) {
-    fuelIcon.style.color = fuelColor;
-  }
+  // 6. Condiciones e Ingreso (Kilometraje, Estética)
+  const otdMileageEl = document.getElementById('otd-mileage');
+  if (otdMileageEl) otdMileageEl.textContent = v.kilometers ? `${parseInt(v.kilometers).toLocaleString('es-ES')} km` : '—';
 
   // Estética
   const aestheticText = document.getElementById('otd-aesthetic-text');
