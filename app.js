@@ -13735,11 +13735,8 @@ function renderCajaView() {
   // 1. Calcular Balances
   const efectivoBalance = getAccountBalance('efectivo');
 
-  const bancoIn = cajaOperations.filter(op => op.method === 'banco' && op.type === 'ingreso').reduce((s, op) => s + op.amount, 0);
-  const bancoOut = cajaOperations.filter(op => op.method === 'banco' && op.type === 'retiro').reduce((s, op) => s + op.amount, 0);
-  const bancoTransfersIn = cajaOperations.filter(op => op.type === 'transferencia' && op.toAccountId !== 'efectivo').reduce((s, op) => s + op.amount, 0);
-  const bancoTransfersOut = cajaOperations.filter(op => op.type === 'transferencia' && op.fromAccountId !== 'efectivo').reduce((s, op) => s + op.amount, 0);
-  const bancoBalance = bancoIn - bancoOut + bancoTransfersIn - bancoTransfersOut;
+  // Calcular total en bancos únicamente de las cuentas bancarias existentes en cajaAccounts (excluyendo bancos desconocidos/eliminados)
+  const bancoBalance = cajaAccounts.reduce((sum, acc) => sum + getAccountBalance(acc.id), 0);
 
   const totalBalance = efectivoBalance + bancoBalance;
 
