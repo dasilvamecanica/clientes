@@ -14227,7 +14227,6 @@ window.onMobilePhotoSlotClick = function(slotName) {
   
   const existingPhoto = mobileWizardData.photos ? mobileWizardData.photos[slotName] : null;
   if (existingPhoto) {
-    // Abrir Modal de Opciones (Tomar foto nuevamente / Ver foto)
     const slotNamesAR = {
       adelante: 'Foto 1: Adelante',
       derecha: 'Foto 2: Derecha',
@@ -14239,9 +14238,12 @@ window.onMobilePhotoSlotClick = function(slotName) {
     if (actionTitle) actionTitle.textContent = slotNamesAR[slotName] || 'Opciones de Fotografía';
     
     const actionModal = document.getElementById('photo-action-modal');
-    if (actionModal) actionModal.style.display = 'flex';
+    if (actionModal) {
+      actionModal.classList.add('open');
+      actionModal.style.display = 'flex';
+      if (typeof initLucide === 'function') initLucide();
+    }
   } else {
-    // Abrir cámara / selector directamente
     const fileInput = document.getElementById(`mob-file-${slotName}`);
     if (fileInput) fileInput.click();
   }
@@ -14249,7 +14251,10 @@ window.onMobilePhotoSlotClick = function(slotName) {
 
 window.closePhotoActionModal = function() {
   const actionModal = document.getElementById('photo-action-modal');
-  if (actionModal) actionModal.style.display = 'none';
+  if (actionModal) {
+    actionModal.classList.remove('open');
+    actionModal.style.display = 'none';
+  }
 };
 
 window.executePhotoAction = function(actionType) {
@@ -14258,8 +14263,10 @@ window.executePhotoAction = function(actionType) {
   if (!slotName) return;
 
   if (actionType === 'retake') {
-    const fileInput = document.getElementById(`mob-file-${slotName}`);
-    if (fileInput) fileInput.click();
+    setTimeout(() => {
+      const fileInput = document.getElementById(`mob-file-${slotName}`);
+      if (fileInput) fileInput.click();
+    }, 100);
   } else if (actionType === 'view') {
     const photoUrl = mobileWizardData.photos ? mobileWizardData.photos[slotName] : null;
     const slotNamesAR = {
@@ -14456,12 +14463,16 @@ window.openPhotoLightbox = function(src, title) {
 
   img.src = src;
   if (caption) caption.textContent = title || 'Fotografía de Recepción';
+  modal.classList.add('open');
   modal.style.display = 'flex';
 };
 
 window.closePhotoLightbox = function() {
   const modal = document.getElementById('photo-lightbox-modal');
-  if (modal) modal.style.display = 'none';
+  if (modal) {
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+  }
 };
 
 

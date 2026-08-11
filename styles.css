@@ -6333,3 +6333,12 @@ aside.sidebar.collapsed .sidebar-user-container {
   background-color: rgba(var(--color-accent-rgb), 0.15);
   color: var(--color-accent);
 }
+
+/* Modales de foto e inspección lightbox */
+#photo-lightbox-modal.open,
+#photo-action-modal.open {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: all !important;
+}
+
