@@ -4490,7 +4490,10 @@ window.updateDesktopWizStepUI = function(step) {
   if (btnPrev) btnPrev.style.display = step > 1 ? 'inline-block' : 'none';
 
   if (btnNext) {
-    if (step === 3) {
+    if (window.currentAddVehicleStage === 'cotizacion') {
+      btnNext.innerHTML = `Crear Cotización <i data-lucide="check" style="width: 16px;"></i>`;
+      btnNext.style.backgroundColor = 'var(--color-accent)';
+    } else if (step === 3) {
       btnNext.innerHTML = `Confirmar Ingreso <i data-lucide="check" style="width: 16px;"></i>`;
       btnNext.style.backgroundColor = '#059669';
     } else {
@@ -4515,6 +4518,11 @@ window.nextDesktopWizardStep = function() {
     if (!modelVal) {
       alert('Por favor, ingresa el modelo del vehículo.');
       document.getElementById('form-model')?.focus();
+      return;
+    }
+
+    if (window.currentAddVehicleStage === 'cotizacion') {
+      handleVehicleFormSubmit(new Event('submit'));
       return;
     }
 
@@ -4548,7 +4556,9 @@ window.prevDesktopWizardStep = function() {
 
 window.onDesktopWizFormSubmit = function(e) {
   e.preventDefault();
-  if (window.desktopWizCurrentStep < 3) {
+  if (window.currentAddVehicleStage === 'cotizacion') {
+    handleVehicleFormSubmit(e);
+  } else if (window.desktopWizCurrentStep < 3) {
     nextDesktopWizardStep();
   } else {
     handleVehicleFormSubmit(e);
@@ -4578,6 +4588,12 @@ window.openAddVehicleModal = function(defaultStage = 'recepcion') {
   
   // Resetear a Paso 1
   updateDesktopWizStepUI(1);
+
+  // Ocultar barra de pasos si es cotización
+  const progressEl = document.querySelector('.desktop-wizard-progress');
+  if (progressEl) {
+    progressEl.style.display = defaultStage === 'cotizacion' ? 'none' : 'flex';
+  }
 
   // Actualizar el título del modal dinámicamente
   const titleEl = document.getElementById('vehicle-modal-title');
