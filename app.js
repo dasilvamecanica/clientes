@@ -1059,35 +1059,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  try {
-    loadState();
-    loadWorkshopConfig();
-    initEventListeners();
-    startGlobalTimer();
-    renderApp();
-    initDarkMode();
-    
-    // Iniciar carga en segundo plano de Supabase
-    loadStateFromSupabase();
-  } catch(err) {
-    console.error('Error crítico en la inicialización:', err);
-    // Si algo falla, limpiar el estado y recargar una sola vez
-    if (!sessionStorage.getItem('taller_recovery_attempted')) {
-      sessionStorage.setItem('taller_recovery_attempted', '1');
-      keysToCheck.forEach(k => localStorage.removeItem(k));
-      localStorage.removeItem('taller_vehicle_registry');
-      location.reload();
-    } else {
-      sessionStorage.removeItem('taller_recovery_attempted');
-      document.body.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#0f172a;color:#e2e8f0;gap:20px;">
-          <h2 style="font-size:22px;font-weight:800;">⚠️ Error de inicialización</h2>
-          <p style="color:#94a3b8;font-size:14px;text-align:center;max-width:400px;">Se encontró un error al cargar la aplicación. Por favor, limpia el almacenamiento del navegador y recarga la página.</p>
-          <button onclick="localStorage.clear();location.reload();" style="background:#3b82f6;color:white;border:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">Limpiar y Recargar</button>
-        </div>`;
-    }
-    return;
-  }
+  try { loadState(); } catch(e) { console.error('Error en loadState:', e); }
+  try { loadWorkshopConfig(); } catch(e) { console.error('Error en loadWorkshopConfig:', e); }
+  try { initEventListeners(); } catch(e) { console.error('Error en initEventListeners:', e); }
+  try { startGlobalTimer(); } catch(e) { console.error('Error en startGlobalTimer:', e); }
+  try { renderApp(); } catch(e) { console.error('Error en renderApp:', e); }
+  try { initDarkMode(); } catch(e) { console.error('Error en initDarkMode:', e); }
+
+  // Iniciar carga en segundo plano de Supabase
+  try { loadStateFromSupabase(); } catch(e) { console.error('Error en loadStateFromSupabase:', e); }
   
   const formDateEl = document.getElementById('form-date');
   if (formDateEl) {
