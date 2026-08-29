@@ -4219,8 +4219,13 @@ window.useTypedPlate = function(plate) {
 window.openVehicleDropdown = function() {
   const dropdown = document.getElementById('vehicle-dropdown');
   if (!dropdown) return;
-  renderVehicleDropdown(document.getElementById('form-plate').value);
-  dropdown.style.display = 'block';
+  const plateVal = document.getElementById('form-plate')?.value || '';
+  if (plateVal.trim().length > 0) {
+    renderVehicleDropdown(plateVal);
+    dropdown.style.display = 'block';
+  } else {
+    dropdown.style.display = 'none';
+  }
 };
 
 window.handlePlateInput = function(inputEl) {
@@ -4616,6 +4621,7 @@ window.openAddVehicleModal = function(defaultStage = 'recepcion') {
   populateAutocompleteDatalists();
   
   // Abrir Modal
+  closeVehicleDropdown();
   document.getElementById('vehicle-modal').classList.add('open');
   document.getElementById('form-plate').focus();
 };
