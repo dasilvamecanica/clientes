@@ -13737,65 +13737,217 @@ function handleCreateAccountSubmit(e) {
 window.handleCreateAccountSubmit = handleCreateAccountSubmit;
 
 // Modales Operaciones
-function openCajaModal(type) {
-  document.getElementById('caja-operation-type').value = type;
-  document.getElementById('caja-op-concept').value = '';
-  document.getElementById('caja-op-amount').value = '';
-  document.getElementById('caja-op-method').value = 'efectivo';
-  document.getElementById('caja-op-payment-type').value = 'efectivo';
+// --- LÓGICA POR PASOS DEL MODAL DE CAJA (WIZARD 3 PASOS) ---
+window.cajaWizCurrentStep = 1;
+
+window.openCajaModal = function(type) {
+  const typeEl = document.getElementById('caja-operation-type');
+  if (typeEl) typeEl.value = type;
+
+  const conceptEl = document.getElementById('caja-op-concept');
+  if (conceptEl) conceptEl.value = '';
+
+  const amountEl = document.getElementById('caja-op-amount');
+  if (amountEl) amountEl.value = '';
+
+  const methodEl = document.getElementById('caja-op-method');
+  if (methodEl) methodEl.value = 'efectivo';
+
+  const accIdEl = document.getElementById('caja-op-account-id');
+  if (accIdEl) accIdEl.value = '';
+
+  const paymentTypeEl = document.getElementById('caja-op-payment-type');
+  if (paymentTypeEl) paymentTypeEl.value = 'efectivo';
 
   const titleEl = document.getElementById('caja-operation-modal-title');
   const submitBtn = document.getElementById('caja-op-submit-btn');
+  const paymentContainer = document.getElementById('caja-op-payment-type-container');
 
   if (type === 'ingreso') {
     if (titleEl) titleEl.innerHTML = '<i data-lucide="plus-circle" style="color: var(--color-listo);"></i> Ingresar Dinero';
     if (submitBtn) {
-      submitBtn.textContent = 'Ingresar Dinero';
+      submitBtn.textContent = 'Confirmar Ingreso';
       submitBtn.style.backgroundColor = 'var(--color-listo)';
     }
-    document.getElementById('caja-op-payment-type-container').style.display = 'flex';
+    if (paymentContainer) paymentContainer.style.display = 'flex';
   } else {
     if (titleEl) titleEl.innerHTML = '<i data-lucide="minus-circle" style="color: var(--color-reparacion);"></i> Retirar Dinero';
     if (submitBtn) {
-      submitBtn.textContent = 'Retirar Dinero';
+      submitBtn.textContent = 'Confirmar Retiro';
       submitBtn.style.backgroundColor = 'var(--color-reparacion)';
     }
-    document.getElementById('caja-op-payment-type-container').style.display = 'none';
+    if (paymentContainer) paymentContainer.style.display = 'none';
   }
 
-  // Cargar selector de cuentas
-  const accSelect = document.getElementById('caja-op-account-id');
-  if (accSelect) {
-    accSelect.innerHTML = cajaAccounts.map(acc => `<option value="${acc.id}">${acc.name}</option>`).join('');
-    if (cajaAccounts.length === 0) {
-      accSelect.innerHTML = '<option value="">(No hay cuentas creadas)</option>';
+  // Resetear selección inicial de Paso 1
+  resetCajaWizMethodSelection();
+  setCajaWizStep(1);
+
+  document.getElementById('caja-operation-modal').classList.add('open');
+  if (typeof initLucide === 'function') initLucide();
+};
+
+window.closeCajaModal = function() {
+  const modal = document.getElementById('caja-operation-modal');
+  if (modal) modal.classList.remove('open');
+};
+
+window.setCajaWizStep = function(step) {
+  window.cajaWizCurrentStep = step;
+  
+  const step1El = document.getElementById('caja-wiz-step-1');
+  const step2El = document.getElementById('caja-wiz-step-2');
+  const step3El = document.getElementById('caja-wiz-step-3');
+  const badgeEl = document.getElementById('caja-wiz-step-badge');
+  const summaryBarEl = document.getElementById('caja-wiz-summary-bar');
+  const sumAccountEl = document.getElementById('caja-sum-account');
+  const sumAmountBadge = document.getElementById('caja-sum-amount-badge');
+  const opType = document.getElementById('caja-operation-type')?.value || 'ingreso';
+
+  if (badgeEl) badgeEl.textContent = `Paso ${step} de 3`;
+
+  if (step1El) step1El.style.display = step === 1 ? 'flex' : 'none';
+  if (step2El) step2El.style.display = step === 2 ? 'flex' : 'none';
+  if (step3El) step3El.style.display = step === 3 ? 'flex' : 'none';
+
+  // Mostrar resumen acumulado a partir del Paso 2
+  if (summaryBarEl) {
+    summaryBarEl.style.display = step > 1 ? 'block' : 'none';
+  }
+
+  const method = document.getElementById('caja-op-method')?.value || 'efectivo';
+  const accountId = document.getElementById('caja-op-account-id')?.value;
+  let accountText = '💵 Efectivo (Caja del taller)';
+  if (method === 'banco') {
+    const acc = (typeof cajaAccounts !== 'undefined' ? cajaAccounts : []).find(a => String(a.id) === String(accountId));
+    accountText = acc ? `🏦 ${acc.name}` : '🏦 Cuenta de Banco';
+  }
+  if (sumAccountEl) sumAccountEl.innerHTML = accountText;
+
+  const rawAmount = parseFloat(document.getElementById('caja-op-amount')?.value) || 0;
+  if (sumAmountBadge) {
+    if (step === 3 && rawAmount > 0) {
+      sumAmountBadge.style.display = 'inline-block';
+      sumAmountBadge.style.color = opType === 'ingreso' ? 'var(--color-listo)' : 'var(--color-reparacion)';
+      sumAmountBadge.textContent = typeof formatCurrency === 'function' ? formatCurrency(rawAmount) : `$ ${rawAmount}`;
+    } else {
+      sumAmountBadge.style.display = 'none';
     }
   }
 
-  handleCajaOpMethodChange();
-  
-  document.getElementById('caja-operation-modal').classList.add('open');
-  if (typeof initLucide === 'function') initLucide();
-}
-window.openCajaModal = openCajaModal;
-
-function closeCajaModal() {
-  document.getElementById('caja-operation-modal').classList.remove('open');
-}
-window.closeCajaModal = closeCajaModal;
-
-function handleCajaOpMethodChange() {
-  const method = document.getElementById('caja-op-method').value;
-  const container = document.getElementById('caja-op-account-selector-container');
-  if (container) {
-    container.style.display = (method === 'banco') ? 'flex' : 'none';
+  if (step === 2) {
+    setTimeout(() => document.getElementById('caja-op-amount')?.focus(), 80);
+  } else if (step === 3) {
+    setTimeout(() => document.getElementById('caja-op-concept')?.focus(), 80);
   }
-}
-window.handleCajaOpMethodChange = handleCajaOpMethodChange;
+};
 
+window.selectCajaWizMethod = function(method) {
+  document.getElementById('caja-op-method').value = method;
+  const initialButtons = document.getElementById('caja-wiz-initial-buttons');
+  const bankPicker = document.getElementById('caja-wiz-bank-account-picker');
+  const promptEl = document.getElementById('caja-wiz-step1-prompt');
+
+  if (method === 'efectivo') {
+    document.getElementById('caja-op-account-id').value = '';
+    setCajaWizStep(2);
+  } else {
+    // Si elige Banco, desaparecen los 2 botones iniciales y aparece el selector de cuentas
+    if (initialButtons) initialButtons.style.display = 'none';
+    if (promptEl) promptEl.textContent = 'Selecciona la cuenta de banco a utilizar:';
+    if (bankPicker) bankPicker.style.display = 'flex';
+    renderCajaWizAccountCards();
+  }
+};
+
+window.resetCajaWizMethodSelection = function() {
+  const initialButtons = document.getElementById('caja-wiz-initial-buttons');
+  const bankPicker = document.getElementById('caja-wiz-bank-account-picker');
+  const promptEl = document.getElementById('caja-wiz-step1-prompt');
+  
+  if (initialButtons) initialButtons.style.display = 'grid';
+  if (bankPicker) bankPicker.style.display = 'none';
+  if (promptEl) promptEl.textContent = '¿Dónde se registra esta operación?';
+};
+
+window.renderCajaWizAccountCards = function() {
+  const container = document.getElementById('caja-wiz-account-cards-list');
+  if (!container) return;
+
+  const accounts = typeof cajaAccounts !== 'undefined' ? cajaAccounts : [];
+  if (accounts.length === 0) {
+    container.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:13px; padding:16px;">No hay cuentas creadas.<br><button type="button" onclick="closeCajaModal(); openCreateAccountModal();" style="margin-top:10px; background:var(--color-accent); color:white; border:none; padding:8px 14px; border-radius:6px; font-weight:700; cursor:pointer;">+ Crear Nueva Cuenta</button></div>`;
+    const btnConfirm = document.getElementById('btn-confirm-wiz-account');
+    if (btnConfirm) btnConfirm.style.display = 'none';
+    return;
+  }
+
+  const btnConfirm = document.getElementById('btn-confirm-wiz-account');
+  if (btnConfirm) btnConfirm.style.display = 'flex';
+
+  let currentAccId = document.getElementById('caja-op-account-id').value;
+  if (!currentAccId || !accounts.find(a => String(a.id) === String(currentAccId))) {
+    currentAccId = accounts[0].id;
+    document.getElementById('caja-op-account-id').value = currentAccId;
+  }
+
+  container.innerHTML = accounts.map(acc => {
+    const isSelected = String(acc.id) === String(currentAccId);
+    return `
+      <div onclick="selectCajaWizAccountCard('${acc.id}')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-radius:var(--radius-md); border: 2px solid ${isSelected ? 'var(--color-accent)' : 'var(--border-color)'}; background: ${isSelected ? 'rgba(var(--color-accent-rgb, 59, 130, 246), 0.1)' : 'var(--card-bg)'}; cursor:pointer; transition:all 0.15s;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:22px;">🏦</span>
+          <span style="font-weight:700; font-size:14px; color:var(--text-primary);">${acc.name}</span>
+        </div>
+        ${isSelected ? '<span style="color:var(--color-accent); font-weight:900; font-size:16px;">✓</span>' : ''}
+      </div>
+    `;
+  }).join('');
+};
+
+window.selectCajaWizAccountCard = function(accId) {
+  document.getElementById('caja-op-account-id').value = accId;
+  renderCajaWizAccountCards();
+};
+
+window.confirmWizAccountSelection = function() {
+  const accId = document.getElementById('caja-op-account-id').value;
+  if (!accId) {
+    alert('Por favor selecciona una cuenta de banco.');
+    return;
+  }
+  setCajaWizStep(2);
+};
+
+window.typeCajaKeypad = function(val) {
+  const amountInput = document.getElementById('caja-op-amount');
+  if (!amountInput) return;
+  
+  let current = amountInput.value || '';
+  if (val === 'backspace') {
+    current = current.slice(0, -1);
+  } else {
+    if (val === '.' && current.includes('.')) return;
+    current += val;
+  }
+  amountInput.value = current;
+};
+
+window.proceedToCajaWizStep3 = function() {
+  const rawAmount = parseFloat(document.getElementById('caja-op-amount')?.value) || 0;
+  if (rawAmount <= 0) {
+    alert('Por favor ingresa un monto válido mayor a 0.');
+    document.getElementById('caja-op-amount')?.focus();
+    return;
+  }
+  setCajaWizStep(3);
+};
+
+window.handleCajaOpMethodChange = function() {};
 
 function handleCajaOperationSubmit(e) {
-  e.preventDefault();
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  
   const type = document.getElementById('caja-operation-type').value;
   const concept = document.getElementById('caja-op-concept').value.trim();
   const amount = parseFloat(document.getElementById('caja-op-amount').value) || 0;
@@ -13805,11 +13957,19 @@ function handleCajaOperationSubmit(e) {
 
   if (amount <= 0) {
     alert('El monto debe ser mayor a cero.');
+    setCajaWizStep(2);
+    return;
+  }
+
+  if (!concept) {
+    alert('Por favor ingrese un concepto o descripción para la transacción.');
+    document.getElementById('caja-op-concept')?.focus();
     return;
   }
 
   if (method === 'banco' && !accountId) {
-    alert('Por favor seleccione una cuenta bancaria. Si no tiene una, créela primero en "Crear Nueva Cuenta".');
+    alert('Por favor seleccione una cuenta bancaria.');
+    setCajaWizStep(1);
     return;
   }
 
