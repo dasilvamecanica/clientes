@@ -3543,6 +3543,33 @@ window.reenterVehicleFromTable = function(vehicleId) {
   }
 };
 
+window.ingresarVehiculoDesdeCotizacion = function(id) {
+  const vehicle = vehicles.find(v => String(v.id) === String(id));
+  if (!vehicle) return;
+  
+  if (confirm(`¿Desea confirmar el ingreso del vehículo ${vehicle.brand} ${vehicle.model} (${vehicle.plate || 'Sin patente'}) al taller?`)) {
+    vehicle.stage = 'recepcion';
+    vehicle.entryTime = Date.now();
+    if (typeof formatDateToSlash === 'function') {
+      vehicle.entryDate = formatDateToSlash(new Date());
+    }
+    saveState();
+    renderApp();
+    openDetailedReception(vehicle.id);
+    if (typeof switchView === 'function') switchView('kanban');
+  }
+};
+
+window.renderMobileCards = function() {
+  const container = document.getElementById('mobile-cards-list-container');
+  if (!container) return;
+  
+  const activeSegment = window.activeMobileSegment || 'en-curso';
+  const searchInput = document.getElementById('sidebar-search-input');
+  const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+  const activeVehicles = vehicles.filter(v => !v.delivered && v.stage !== 'cotizacion');
+
 window.renderWorkshopTables = function() {
   const tbodyEnCurso = document.getElementById('tbody-vehiculos-en-curso');
   const tbodyHistoria = document.getElementById('tbody-vehiculos-historia');
@@ -3550,7 +3577,7 @@ window.renderWorkshopTables = function() {
   const searchInput = document.getElementById('sidebar-search-input');
   const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-  let activeVehicles = vehicles.filter(v => !v.delivered);
+  let activeVehicles = vehicles.filter(v => !v.delivered && v.stage !== 'cotizacion');
   let historyVehicles = vehicles.filter(v => v.delivered);
 
   if (searchVal) {
@@ -7892,7 +7919,7 @@ window.renderVehiclesListTable = function() {
   const filterStage = stageSelect ? stageSelect.value : 'Todos';
 
   // Contadores Celestes
-  const activeVehicles = vehicles.filter(v => !v.delivered);
+  const activeVehicles = vehicles.filter(v => !v.delivered && v.stage !== 'cotizacion');
   document.getElementById('badge-total-count').textContent = `Total: ${activeVehicles.length}`;
   document.getElementById('badge-quoted-count').textContent = `Con cotización: ${activeVehicles.filter(v => v.quoteCompleted).length}`;
   document.getElementById('badge-ot-count').textContent = `Con OT: ${activeVehicles.filter(v => v.stage === 'reparacion' || v.stage === 'listo').length}`;
@@ -8140,7 +8167,7 @@ window.renderCotizacionesTable = function() {
         </button>
       `
       : `
-        <button class="table-action-btn-text green-outline" onclick="openDetailedReception('${v.id}')">
+        <button class="table-action-btn-text green-outline" onclick="ingresarVehiculoDesdeCotizacion('${v.id}')">
           <i data-lucide="car"></i> Ingresar vehículo
         </button>
         <button class="table-action-btn-text blue-outline" onclick="openDetailedQuoteView('${v.id}')">
