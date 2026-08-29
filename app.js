@@ -3558,7 +3558,7 @@ window.renderMobileCards = function() {
   const searchInput = document.getElementById('sidebar-search-input');
   const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-  const activeVehicles = vehicles.filter(v => !v.delivered && v.stage !== 'cotizacion');
+  const activeVehicles = vehicles.filter(v => !v.delivered);
 
 window.renderWorkshopTables = function() {
   const tbodyEnCurso = document.getElementById('tbody-vehiculos-en-curso');
@@ -3567,7 +3567,7 @@ window.renderWorkshopTables = function() {
   const searchInput = document.getElementById('sidebar-search-input');
   const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-  let activeVehicles = vehicles.filter(v => !v.delivered && v.stage !== 'cotizacion');
+  let activeVehicles = vehicles.filter(v => !v.delivered);
   let historyVehicles = vehicles.filter(v => v.delivered);
 
   if (searchVal) {
@@ -7911,7 +7911,7 @@ window.renderVehiclesListTable = function() {
   const filterStage = stageSelect ? stageSelect.value : 'Todos';
 
   // Contadores Celestes
-  const activeVehicles = vehicles.filter(v => !v.delivered && v.stage !== 'cotizacion');
+  const activeVehicles = vehicles.filter(v => !v.delivered);
   document.getElementById('badge-total-count').textContent = `Total: ${activeVehicles.length}`;
   document.getElementById('badge-quoted-count').textContent = `Con cotización: ${activeVehicles.filter(v => v.quoteCompleted).length}`;
   document.getElementById('badge-ot-count').textContent = `Con OT: ${activeVehicles.filter(v => v.stage === 'reparacion' || v.stage === 'listo').length}`;
