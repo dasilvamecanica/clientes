@@ -1081,7 +1081,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const formDateEl = document.getElementById('form-date');
   if (formDateEl) {
-    formDateEl.value = today.toISOString().split('T')[0];
+    try { formDateEl.value = new Date().toISOString().split('T')[0]; } catch(e){}
   }
 
   // Atajo Global "T" para abrir la paleta de búsqueda global
@@ -1183,9 +1183,11 @@ window.updateInterfaceColor = function(hexColor) {
   const hsl = hexToHsl(hexColor);
   const hslStr = hsl ? `${hsl.h}, ${hsl.s}%, ${hsl.l}%` : '24, 90%, 50%';
   
-  document.documentElement.style.setProperty('--color-accent', hexColor);
-  document.documentElement.style.setProperty('--color-accent-rgb', rgbStr);
-  document.documentElement.style.setProperty('--color-accent-hsl', hslStr);
+  if (document.documentElement && document.documentElement.style) {
+    document.documentElement.style.setProperty('--color-accent', hexColor);
+    document.documentElement.style.setProperty('--color-accent-rgb', rgbStr);
+    document.documentElement.style.setProperty('--color-accent-hsl', hslStr);
+  }
 };
 
 window.changeInterfaceColor = function(colorHex, buttonEl) {
@@ -1847,13 +1849,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- MODO OSCURO ---
 function initDarkMode() {
-  const saved = localStorage.getItem('taller_dark_mode');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = saved !== null ? saved === 'true' : prefersDark;
-  if (isDark) {
-    document.documentElement.classList.add('dark');
-  }
-  updateDarkModeIcon(isDark);
+  try {
+    const saved = localStorage.getItem('taller_dark_mode');
+    const prefersDark = (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)')) ? window.matchMedia('(prefers-color-scheme: dark)').matches : false;
+    const isDark = saved !== null ? saved === 'true' : prefersDark;
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    }
+    if (typeof updateDarkModeIcon === 'function') updateDarkModeIcon(isDark);
+  } catch(e) {}
 }
 
 window.toggleDarkMode = function() {
@@ -3477,39 +3481,41 @@ window.handleSidebarSearch = function() {
 // --- 3. RENDERIZADO DEL TABLERO KANBAN ---
 
 function renderApp() {
-  populateClientSelector();
-  populateDatalists();
-  renderKanban();
-  renderMobileVehicleList();
+  try { if (typeof populateClientSelector === 'function') populateClientSelector(); else if (typeof window.populateClientSelector === 'function') window.populateClientSelector(); } catch(e){}
+  try { if (typeof populateDatalists === 'function') populateDatalists(); else if (typeof window.populateDatalists === 'function') window.populateDatalists(); } catch(e){}
+  try { if (typeof renderKanban === 'function') renderKanban(); else if (typeof window.renderKanban === 'function') window.renderKanban(); } catch(e){}
+  try { if (typeof renderMobileVehicleList === 'function') renderMobileVehicleList(); else if (typeof window.renderMobileVehicleList === 'function') window.renderMobileVehicleList(); } catch(e){}
+
   if (currentView === 'calendario') {
-    renderCalendar();
+    try { if (typeof renderCalendar === 'function') renderCalendar(); } catch(e){}
   } else if (currentView === 'reportes') {
-    renderReportesView();
+    try { if (typeof renderReportesView === 'function') renderReportesView(); } catch(e){}
   } else if (currentView === 'vehiculos-ingresados') {
-    renderVehiclesListTable();
+    try { if (typeof renderVehiclesListTable === 'function') renderVehiclesListTable(); } catch(e){}
   } else if (currentView === 'cotizaciones') {
-    renderCotizacionesTable();
+    try { if (typeof renderCotizacionesTable === 'function') renderCotizacionesTable(); } catch(e){}
   } else if (currentView === 'agenda') {
-    renderAgendaCalendar();
+    try { if (typeof renderAgendaCalendar === 'function') renderAgendaCalendar(); } catch(e){}
   } else if (currentView === 'ordenes-trabajo') {
-    renderOrdenesTrabajoView();
+    try { if (typeof renderOrdenesTrabajoView === 'function') renderOrdenesTrabajoView(); } catch(e){}
   } else if (currentView === 'servicios-catalogo') {
-    renderServiciosCatalogView();
+    try { if (typeof renderServiciosCatalogView === 'function') renderServiciosCatalogView(); } catch(e){}
   } else if (currentView === 'repuestos-catalogo') {
-    renderRepuestosCatalogView();
+    try { if (typeof renderRepuestosCatalogView === 'function') renderRepuestosCatalogView(); } catch(e){}
   } else if (currentView === 'equipo-lista') {
-    renderEquipoListaView();
+    try { if (typeof renderEquipoListaView === 'function') renderEquipoListaView(); } catch(e){}
   } else if (currentView === 'clientes-lista') {
-    renderClientesListaView();
+    try { if (typeof renderClientesListaView === 'function') renderClientesListaView(); } catch(e){}
   } else if (currentView === 'cuentas-cobrar') {
-    renderCuentasCobrarView();
+    try { if (typeof renderCuentasCobrarView === 'function') renderCuentasCobrarView(); } catch(e){}
   } else if (currentView === 'vehiculos-lista') {
-    renderVehiculosView();
+    try { if (typeof renderVehiculosView === 'function') renderVehiculosView(); } catch(e){}
   } else if (currentView === 'caja') {
-    renderCajaView();
+    try { if (typeof renderCajaView === 'function') renderCajaView(); } catch(e){}
   }
-  updateMetrics();
-  initLucide();
+
+  try { if (typeof updateMetrics === 'function') updateMetrics(); else if (typeof window.updateMetrics === 'function') window.updateMetrics(); } catch(e){}
+  try { if (typeof initLucide === 'function') initLucide(); else if (typeof window.initLucide === 'function') window.initLucide(); } catch(e){}
 }
 
 
