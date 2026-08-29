@@ -7968,7 +7968,14 @@ window.renderCotizacionesTable = function() {
   const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
   const filterStage = stageSelect ? stageSelect.value : 'Todos';
 
-  let list = vehicles.filter(v => v.quoteCompleted);
+  let list = vehicles.filter(v => v.quoteCompleted || v.stage === 'cotizacion' || (v.quoteServices && v.quoteServices.length > 0) || (v.quoteParts && v.quoteParts.length > 0));
+
+  // Ordenar de la más reciente a la más antigua
+  list.sort((a, b) => {
+    const timeA = Number(a.entryTime) || (typeof a.id === 'string' && a.id.startsWith('v-') ? Number(a.id.substring(2)) : 0);
+    const timeB = Number(b.entryTime) || (typeof b.id === 'string' && b.id.startsWith('v-') ? Number(b.id.substring(2)) : 0);
+    return timeB - timeA;
+  });
 
   if (searchVal) {
     list = list.filter(v => {
