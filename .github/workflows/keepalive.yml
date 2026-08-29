@@ -1,0 +1,25 @@
+name: Supabase 24/7 Keep-Alive Ping
+
+on:
+  schedule:
+    # Executed every 3 days at 00:00 UTC to prevent free tier auto-pausing
+    - cron: '0 0 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          echo "Sending keep-alive ping to Supabase..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkbnJkdm5xcXBmbWdhcmxvenp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMDQyOTEsImV4cCI6MjA5Njg4MDI5MX0.c8-LMWmbEelCBvUFZ4CG2XNz_Y49eEHw2GqSeeHHmMM" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkbnJkdm5xcXBmbWdhcmxvenp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMDQyOTEsImV4cCI6MjA5Njg4MDI5MX0.c8-LMWmbEelCBvUFZ4CG2XNz_Y49eEHw2GqSeeHHmMM" \
+            "https://tdnrdvnqqpfmgarlozzu.supabase.co/rest/v1/taller_config?select=id")
+          echo "Supabase Response HTTP Code: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 204 ]; then
+            echo "✅ Supabase project is active and healthy!"
+          else
+            echo "⚠️ Unexpected HTTP Status Code: $HTTP_STATUS"
+          fi
