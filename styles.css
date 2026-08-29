@@ -1424,6 +1424,38 @@ button {
   pointer-events: all;
 }
 
+/* --- Keypad táctil para operaciones de caja --- */
+.keypad-btn {
+  background: var(--card-bg-hover);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  height: 48px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.keypad-btn:hover {
+  border-color: var(--color-accent);
+  background: rgba(var(--color-accent-rgb, 59, 130, 246), 0.1);
+}
+.keypad-btn:active {
+  background: var(--color-accent);
+  color: white;
+  transform: scale(0.96);
+}
+.keypad-btn.action-key {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
 /* --- 11. Menú Contextual Dropdown --- */
 .dropdown-menu {
   position: absolute;
