@@ -4438,10 +4438,14 @@ window.handlePlateBlur = function(inputEl) {
   delayCloseVehicleDropdown();
 };
 
+window.closeVehicleDropdown = function() {
+  const d = document.getElementById('vehicle-dropdown');
+  if (d) d.style.display = 'none';
+};
+
 window.delayCloseVehicleDropdown = function() {
   setTimeout(() => {
-    const d = document.getElementById('vehicle-dropdown');
-    if (d) d.style.display = 'none';
+    window.closeVehicleDropdown();
   }, 180);
 };
 
@@ -4655,9 +4659,15 @@ window.openAddVehicleModal = function(defaultStage = 'recepcion') {
   window.currentAddVehicleStage = defaultStage || 'recepcion';
 
   // Resetear Formulario y Pasos
-  document.getElementById('vehicle-form').reset();
-  document.getElementById('form-vehicle-id').value = '';
-  document.getElementById('form-client-select').value = '';
+  const vehicleForm = document.getElementById('vehicle-form');
+  if (vehicleForm) vehicleForm.reset();
+  
+  const formVehicleId = document.getElementById('form-vehicle-id');
+  if (formVehicleId) formVehicleId.value = '';
+
+  const formClientSelect = document.getElementById('form-client-select');
+  if (formClientSelect) formClientSelect.value = '';
+
   if (document.getElementById('desk-wiz-details-notes')) {
     document.getElementById('desk-wiz-details-notes').value = '';
   }
@@ -4669,7 +4679,9 @@ window.openAddVehicleModal = function(defaultStage = 'recepcion') {
   }
   
   // Resetear a Paso 1
-  updateDesktopWizStepUI(1);
+  if (typeof updateDesktopWizStepUI === 'function') {
+    updateDesktopWizStepUI(1);
+  }
 
   // Ocultar barra de pasos si es cotización
   const progressEl = document.querySelector('.desktop-wizard-progress');
@@ -4695,12 +4707,25 @@ window.openAddVehicleModal = function(defaultStage = 'recepcion') {
   }
 
   // Poblar datalists
-  populateAutocompleteDatalists();
+  if (typeof populateAutocompleteDatalists === 'function') {
+    populateAutocompleteDatalists();
+  }
   
+  // Cerrar dropdown si existe
+  if (typeof closeVehicleDropdown === 'function') {
+    closeVehicleDropdown();
+  }
+
   // Abrir Modal
-  closeVehicleDropdown();
-  document.getElementById('vehicle-modal').classList.add('open');
-  document.getElementById('form-plate').focus();
+  const modalEl = document.getElementById('vehicle-modal');
+  if (modalEl) {
+    modalEl.classList.add('open');
+  }
+
+  const plateInput = document.getElementById('form-plate');
+  if (plateInput) {
+    plateInput.focus();
+  }
 };
 
 window.closeModal = function(modalId) {
