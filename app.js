@@ -1062,7 +1062,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try { loadState(); } catch(e) { console.error('Error en loadState:', e); }
   try { loadWorkshopConfig(); } catch(e) { console.error('Error en loadWorkshopConfig:', e); }
   try { initEventListeners(); } catch(e) { console.error('Error en initEventListeners:', e); }
-  try { startGlobalTimer(); } catch(e) { console.error('Error en startGlobalTimer:', e); }
+  try { if (typeof window.startGlobalTimer === 'function') window.startGlobalTimer(); } catch(e) { console.error('Error en startGlobalTimer:', e); }
   try { renderApp(); } catch(e) { console.error('Error en renderApp:', e); }
   try { initDarkMode(); } catch(e) { console.error('Error en initDarkMode:', e); }
 
@@ -3951,10 +3951,12 @@ window.handleDrop = function(e, targetStage) {
 
 // --- 5. TEMPORIZADORES EN VIVO ---
 
-function startGlobalTimer() {
-  updateAllElapsedTimes();
-  setInterval(updateAllElapsedTimes, 1000);
-}
+window.startGlobalTimer = function() {
+  if (typeof updateAllElapsedTimes === 'function') updateAllElapsedTimes();
+  setInterval(() => {
+    if (typeof updateAllElapsedTimes === 'function') updateAllElapsedTimes();
+  }, 1000);
+};
 
 function updateAllElapsedTimes() {
   const timerElements = document.querySelectorAll('.elapsed-time-value');
