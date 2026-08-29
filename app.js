@@ -3565,16 +3565,6 @@ window.ingresarVehiculoDesdeCotizacion = function(id) {
   }
 };
 
-window.renderMobileCards = function() {
-  const container = document.getElementById('mobile-cards-list-container');
-  if (!container) return;
-  
-  const activeSegment = window.activeMobileSegment || 'en-curso';
-  const searchInput = document.getElementById('sidebar-search-input');
-  const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
-
-  const activeVehicles = vehicles.filter(v => !v.delivered);
-
 window.renderWorkshopTables = function() {
   const tbodyEnCurso = document.getElementById('tbody-vehiculos-en-curso');
   const tbodyHistoria = document.getElementById('tbody-vehiculos-historia');
@@ -15003,6 +14993,5 @@ window.closePhotoLightbox = function() {
     modal.classList.remove('open');
     modal.style.display = 'none';
   }
-};
 };
 
