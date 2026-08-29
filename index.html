@@ -8,17 +8,27 @@
   <link rel="icon" type="image/png" href="logo2.png">
   <meta name="description" content="Panel operativo premium de gestión para talleres mecánicos. Gestión de flujos de trabajo, cotizaciones y entregas en tiempo real.">
   <link rel="stylesheet" href="styles.css?v=11.9">
-  <!-- Lucide Icons (CDN principal + fallback) -->
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+  <!-- Lucide Icons (Local + CDN fallback) -->
+  <script src="vendor/lucide.min.js"></script>
   <script>
     if (typeof lucide === 'undefined') {
-      document.write('<script src="https://unpkg.com/lucide@latest"><\/script>');
+      document.write('<script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"><\/script>');
     }
   </script>
-  <!-- Supabase JS Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- html2pdf JS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- Supabase JS Client (Local + CDN fallback) -->
+  <script src="vendor/supabase.js"></script>
+  <script>
+    if (typeof supabase === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');
+    }
+  </script>
+  <!-- html2pdf JS (Local + CDN fallback) -->
+  <script src="vendor/html2pdf.bundle.min.js"></script>
+  <script>
+    if (typeof html2pdf === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>');
+    }
+  </script>
 </head>
 <body>
   <!-- Filtro SVG para hacer transparente el fondo blanco de los logos PNG conservando sus colores originales -->
