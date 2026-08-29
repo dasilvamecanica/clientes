@@ -1841,10 +1841,19 @@ window.downloadDeliveryPDF = async function(vehicleId, returnBlob = false) {
 };
 
 function initLucide() {
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
+  if (typeof window.lucide !== 'undefined' && typeof window.lucide.createIcons === 'function') {
+    try {
+      window.lucide.createIcons();
+    } catch(e) {
+      console.warn('Error inicializando iconos Lucide:', e);
+    }
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  initLucide();
+  if (typeof startRealtimeClock === 'function') startRealtimeClock();
+});
 
 // --- MODO OSCURO ---
 function initDarkMode() {
@@ -14992,6 +15001,5 @@ window.closePhotoLightbox = function() {
     modal.style.display = 'none';
   }
 };
-
-
+};
 

@@ -8,6 +8,17 @@
   <link rel="icon" type="image/png" href="logo2.png">
   <meta name="description" content="Panel operativo premium de gestión para talleres mecánicos. Gestión de flujos de trabajo, cotizaciones y entregas en tiempo real.">
   <link rel="stylesheet" href="styles.css?v=11.9">
+  <!-- Lucide Icons (CDN principal + fallback) -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+  <script>
+    if (typeof lucide === 'undefined') {
+      document.write('<script src="https://unpkg.com/lucide@latest"><\/script>');
+    }
+  </script>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- html2pdf JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
   <!-- Filtro SVG para hacer transparente el fondo blanco de los logos PNG conservando sus colores originales -->
@@ -193,11 +204,14 @@
         <div class="header-title">
           <h1 id="page-title">Panel Operativo</h1>
         </div>
-        <div class="header-actions">
+        <div class="header-actions" style="display: flex; align-items: center; gap: 16px;">
           <div class="header-datetime-widget">
             <span class="header-time" id="header-realtime-clock">--:--:--</span>
             <span class="header-date" id="header-realtime-date">Cargando...</span>
           </div>
+          <button class="btn-primary" style="background-color: var(--color-accent); color: white; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; padding: 10px 18px; border-radius: var(--radius-md); border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(var(--color-accent-rgb),0.25);" onclick="openAddVehicleModal('recepcion')">
+            <i data-lucide="plus" style="width: 15px; height: 15px;"></i> Recepción de Vehículo
+          </button>
         </div>
       </header>
 
