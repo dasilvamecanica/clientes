@@ -4242,58 +4242,146 @@
     </div>
   </div>
 
-  <!-- MODAL: INGRESAR / RETIRAR DINERO (CAJA) -->
+  <!-- MODAL: INGRESAR / RETIRAR DINERO POR PASOS (CAJA WIZARD) -->
   <div class="modal-overlay" id="caja-operation-modal" style="z-index: 1200;">
-    <div class="modal-window" style="max-width: 460px; width: 90%; background: var(--card-bg); border-radius: var(--radius-lg); border: 1.5px solid var(--border-color); overflow: hidden;">
-      <header class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1.5px solid var(--border-color);">
-        <h2 id="caja-operation-modal-title" style="font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-          <i data-lucide="plus-circle" style="color: var(--color-listo);"></i> Ingresar Dinero
-        </h2>
-        <button class="close-modal-btn" onclick="closeCajaModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center;">
-          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
-        </button>
+    <div class="modal-window" style="max-width: 480px; width: 92vw; min-height: 540px; height: 540px; background: var(--card-bg); border-radius: var(--radius-lg); border: 1.5px solid var(--border-color); overflow: hidden; display: flex; flex-direction: column;">
+      
+      <!-- HEADER CON TÍTULO Y BADGE DE PASO -->
+      <header class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1.5px solid var(--border-color); background: var(--bg-app);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h2 id="caja-operation-modal-title" style="font-family: var(--font-display); font-weight: 800; font-size: 17px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="plus-circle" style="color: var(--color-listo);"></i> Ingresar Dinero
+          </h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="caja-wiz-step-badge" style="font-size: 11px; font-weight: 700; background: var(--card-bg-hover); color: var(--text-secondary); padding: 4px 10px; border-radius: 12px; border: 1px solid var(--border-color);">Paso 1 de 3</span>
+          <button type="button" class="close-modal-btn" onclick="closeCajaModal()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; display: flex; align-items: center;">
+            <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+          </button>
+        </div>
       </header>
-      <form id="caja-operation-form" onsubmit="handleCajaOperationSubmit(event)" style="display: flex; flex-direction: column; gap: 16px; padding: 24px;">
+
+      <!-- TARJETA RESUMEN DE PASOS ANTERIORES (INFORMACIÓN ACUMULADA) -->
+      <div id="caja-wiz-summary-bar" style="display: none; background: rgba(var(--color-accent-rgb, 59, 130, 246), 0.08); border-bottom: 1px solid var(--border-color); padding: 10px 20px; font-size: 13px; font-weight: 600;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span id="caja-sum-account" style="display: flex; align-items: center; gap: 6px; color: var(--text-primary); font-weight: 700;">
+              <!-- Se puebla dinámicamente: ej 💵 Efectivo -->
+            </span>
+            <span id="caja-sum-amount-badge" style="display: none; font-weight: 800; font-size: 15px; color: var(--color-listo); font-family: var(--font-display);">
+              <!-- Se puebla dinámicamente: ej $ 150.000 -->
+            </span>
+          </div>
+          <button type="button" onclick="setCajaWizStep(1)" style="background: none; border: none; color: var(--color-accent); font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <i data-lucide="edit-2" style="width: 12px; height: 12px;"></i> Cambiar
+          </button>
+        </div>
+      </div>
+
+      <!-- BODY CON ALTURA FIJA Y OVERFLOW -->
+      <form id="caja-operation-form" onsubmit="handleCajaOperationSubmit(event)" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box;">
         <input type="hidden" id="caja-operation-type" value="ingreso">
+        <input type="hidden" id="caja-op-method" value="efectivo">
+        <input type="hidden" id="caja-op-account-id" value="">
         
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Concepto *</label>
-          <input type="text" id="caja-op-concept" required placeholder="Concepto de la transacción" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
+        <!-- ── PASO 1: SELECCIONAR MEDIO (EFECTIVO O BANCO) ── -->
+        <div id="caja-wiz-step-1" style="display: flex; flex-direction: column; gap: 16px; flex: 1; justify-content: center;">
+          <p style="font-size: 14px; font-weight: 700; color: var(--text-secondary); text-align: center; margin: 0 0 8px 0;" id="caja-wiz-step1-prompt">
+            ¿Dónde se registra esta operación?
+          </p>
+
+          <!-- DOS BOTONES GRANDES INICIALES -->
+          <div id="caja-wiz-initial-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <button type="button" onclick="selectCajaWizMethod('efectivo')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px 16px; border-radius: var(--radius-lg); border: 2px solid var(--border-color); background: var(--card-bg-hover); color: var(--text-primary); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--color-listo)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='none';">
+              <span style="font-size: 36px;">💵</span>
+              <span style="font-weight: 800; font-size: 15px; font-family: var(--font-display);">Efectivo</span>
+              <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Caja del taller</span>
+            </button>
+
+            <button type="button" onclick="selectCajaWizMethod('banco')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px 16px; border-radius: var(--radius-lg); border: 2px solid var(--border-color); background: var(--card-bg-hover); color: var(--text-primary); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--color-accent)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.transform='none';">
+              <span style="font-size: 36px;">🏦</span>
+              <span style="font-weight: 800; font-size: 15px; font-family: var(--font-display);">Cuenta de Banco</span>
+              <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Bancos o cuentas</span>
+            </button>
+          </div>
+
+          <!-- BOTÓN / SELECTOR DE CUENTAS DE BANCO (APARECE AL ELEGIR BANCO) -->
+          <div id="caja-wiz-bank-account-picker" style="display: none; flex-direction: column; gap: 14px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Elige la cuenta de banco:</span>
+              <button type="button" onclick="resetCajaWizMethodSelection()" style="background: none; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; font-weight: 600;">← Volver</button>
+            </div>
+            
+            <div id="caja-wiz-account-cards-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto;">
+              <!-- Se puebla dinámicamente con tarjetas seleccionables para cada cuenta -->
+            </div>
+
+            <button type="button" id="btn-confirm-wiz-account" onclick="confirmWizAccountSelection()" style="width: 100%; height: 44px; background: var(--color-accent); color: white; border: none; border-radius: var(--radius-md); font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>Continuar con esta cuenta</span>
+              <i data-lucide="arrow-right" style="width: 16px;"></i>
+            </button>
+          </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Monto (ARS) *</label>
-          <input type="number" id="caja-op-amount" required min="0.01" step="0.01" placeholder="0.00" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
+        <!-- ── PASO 2: INGRESO DE MONTO CON TECLADO NUMÉRICO TÁCTIL ── -->
+        <div id="caja-wiz-step-2" style="display: none; flex-direction: column; gap: 14px; flex: 1;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Monto de la operación</label>
+            <div style="position: relative; width: 100%; max-width: 320px;">
+              <input type="number" id="caja-op-amount" step="any" placeholder="0" oninput="updateCajaWizAmountDisplay(this.value)" style="width: 100%; text-align: center; font-size: 28px; font-weight: 900; font-family: var(--font-display); padding: 8px 16px; border-radius: var(--radius-md); border: 2px solid var(--color-accent); background: var(--bg-app); color: var(--text-primary); outline: none; box-sizing: border-box;">
+            </div>
+          </div>
+
+          <!-- TECLADO NUMÉRICO TÁCTIL (KEYPAD) -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 320px; margin: 0 auto; width: 100%;">
+            <button type="button" class="keypad-btn" onclick="typeCajaKeypad('1')">1</button>
+            <button type="button" class="keypad-btn" onclick="typeCajaKeypad('2')">2</button>
+            <button type="button" class="keypad-btn" onclick="typeCajaKeypad('3')">3</button>
+            <button type="button" class="keypad-btn" onclick="typeCajaKeypad('4')">4</button>
+            <button type="button" class="keypad-btn" onclick="typeCajaKeypad('5')">5</button>
+            <button type="button" class="keypad-btn" onclick="typeCajaKeypad('6')">6</button>
+            <button type="button" class="keypad-btn" onclick="typeCajaKeypad('7')">7</button>
+            <button type="button" class="keypad-btn" onclick="typeCajaKeypad('8')">8</button>
+            <button type="button" class="keypad-btn" onclick="typeCajaKeypad('9')">9</button>
+            <button type="button" class="keypad-btn" onclick="typeCajaKeypad('00')">00</button>
+            <button type="button" class="keypad-btn" onclick="typeCajaKeypad('0')">0</button>
+            <button type="button" class="keypad-btn action-key" onclick="typeCajaKeypad('backspace')">⌫</button>
+          </div>
+
+          <!-- BOTONES DE NAVEGACIÓN PASO 2 -->
+          <div style="display: flex; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 10px;">
+            <button type="button" class="btn-secondary" onclick="setCajaWizStep(1)" style="border: 1px solid var(--border-color); padding: 10px 18px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary);">← Atrás</button>
+            <button type="button" class="btn-primary" onclick="proceedToCajaWizStep3()" style="background-color: var(--color-accent); color: white; border: none; padding: 10px 22px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <span>Siguiente</span>
+              <i data-lucide="arrow-right" style="width: 16px;"></i>
+            </button>
+          </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Destino / Origen del Dinero *</label>
-          <select id="caja-op-method" required onchange="handleCajaOpMethodChange()" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
-            <option value="efectivo">Efectivo (Caja del taller)</option>
-            <option value="banco">Banco / Cuenta creada</option>
-          </select>
-        </div>
+        <!-- ── PASO 3: DESCRIPCIÓN Y CONFIRMACIÓN ── -->
+        <div id="caja-wiz-step-3" style="display: none; flex-direction: column; gap: 16px; flex: 1;">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Descripción / Concepto *</label>
+            <input type="text" id="caja-op-concept" placeholder="Ej. Cobro de reparación, Pago de alquiler, Insumos..." style="width: 100%; padding: 12px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 14px; outline: none; box-sizing: border-box;" onfocus="this.style.borderColor='var(--color-accent)';" onblur="this.style.borderColor='var(--border-color)';">
+          </div>
 
-        <div id="caja-op-account-selector-container" style="display: none; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Seleccionar Cuenta *</label>
-          <select id="caja-op-account-id" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
-            <!-- Se puebla dinámicamente -->
-          </select>
-        </div>
+          <div id="caja-op-payment-type-container" style="display: flex; flex-direction: column; gap: 6px;">
+            <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Tipo de Pago *</label>
+            <select id="caja-op-payment-type" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="debito">Débito</option>
+              <option value="cuotas">Cuotas con tarjeta</option>
+            </select>
+          </div>
 
-        <div id="caja-op-payment-type-container" style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-size: 12.5px; font-weight: 700; color: var(--text-secondary);">Tipo de Pago *</label>
-          <select id="caja-op-payment-type" style="width: 100%; padding: 10px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 13px; outline: none; cursor: pointer;">
-            <option value="efectivo">Efectivo</option>
-            <option value="transferencia">Transferencia</option>
-            <option value="debito">Débito</option>
-            <option value="cuotas">Cuotas con tarjeta</option>
-          </select>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
-          <button type="button" class="btn-secondary" onclick="closeCajaModal()" style="border: 1px solid var(--border-color); padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary);">Cancelar</button>
-          <button type="submit" class="btn-primary" id="caja-op-submit-btn" style="background-color: var(--color-listo); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; cursor: pointer;">Ingresar Dinero</button>
+          <!-- BOTONES DE NAVEGACIÓN Y CONFIRMACIÓN PASO 3 -->
+          <div style="display: flex; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 10px;">
+            <button type="button" class="btn-secondary" onclick="setCajaWizStep(2)" style="border: 1px solid var(--border-color); padding: 10px 18px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-secondary);">← Atrás</button>
+            <button type="submit" class="btn-primary" id="caja-op-submit-btn" style="background-color: var(--color-listo); color: white; border: none; padding: 12px 24px; border-radius: var(--radius-md); font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+              Ingresar Dinero
+            </button>
+          </div>
         </div>
       </form>
     </div>
