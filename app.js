@@ -454,204 +454,10 @@ async function loadStateFromSupabase() {
     return;
   }
   console.log("AutoTech: Sincronizando datos desde la base de datos Supabase...");
+
+  // 1. VEHÍCULOS (Prioridad Máxima)
   try {
-    const { data: configData, error: configError } = await supabaseClient.from('taller_config').select('*').eq('id', 'workshop_config');
-    if (!configError && configData && configData.length > 0) {
-      const dbConfig = configData[0];
-      workshopConfig = {
-        ...workshopConfig,
-        name: dbConfig.name || workshopConfig.name,
-        phone1: dbConfig.phone1 || workshopConfig.phone1,
-        phone2: dbConfig.phone2 || workshopConfig.phone2,
-        address: dbConfig.address || workshopConfig.address,
-        rut: dbConfig.rut || workshopConfig.rut,
-        cuit: dbConfig.cuit || workshopConfig.cuit,
-        ivaCondition: dbConfig.iva_condition || workshopConfig.ivaCondition,
-        iibb: dbConfig.iibb || workshopConfig.iibb,
-        inicioAct: dbConfig.inicio_act || workshopConfig.inicioAct,
-        pv: dbConfig.pv || workshopConfig.pv,
-        waMethod: dbConfig.wa_method || workshopConfig.waMethod,
-        waToken: dbConfig.wa_token || workshopConfig.waToken,
-        waPhoneId: dbConfig.wa_phone_id || workshopConfig.waPhoneId,
-        waMsgType: dbConfig.wa_msg_type || workshopConfig.waMsgType,
-        waTemplateName: dbConfig.wa_template_name || workshopConfig.waTemplateName,
-        waTemplateLang: dbConfig.wa_template_lang || workshopConfig.waTemplateLang,
-        waBaseUrl: dbConfig.wa_base_url || workshopConfig.waBaseUrl,
-        waMsgQuote: dbConfig.wa_msg_quote || workshopConfig.waMsgQuote,
-        waMsgInvoice: dbConfig.wa_msg_invoice || workshopConfig.waMsgInvoice,
-        expMaster: dbConfig.exp_master !== undefined ? dbConfig.exp_master : false,
-        expHideCertificate: dbConfig.exp_hide_certificate !== undefined ? dbConfig.exp_hide_certificate : false,
-        expHideParts: dbConfig.exp_hide_parts !== undefined ? dbConfig.exp_hide_parts : false,
-        expHideExcel: dbConfig.exp_hide_excel !== undefined ? dbConfig.exp_hide_excel : false
-      };
-
-      // Cargar configuraciones experimentales adicionales
-      const { data: expData, error: expError } = await supabaseClient.from('taller_config').select('*').eq('id', 'experimental_configs');
-      if (!expError && expData && expData.length > 0) {
-        try {
-          const parsed = JSON.parse(expData[0].name);
-          workshopConfig.expShowAesthetics = parsed.expShowAesthetics !== undefined ? parsed.expShowAesthetics : false;
-          workshopConfig.expShowVIN = parsed.expShowVIN !== undefined ? parsed.expShowVIN : false;
-          workshopConfig.expShowColor = parsed.expShowColor !== undefined ? parsed.expShowColor : false;
-          workshopConfig.expShowVehiculosTaller = parsed.expShowVehiculosTaller !== undefined ? parsed.expShowVehiculosTaller : false;
-          workshopConfig.defaultDiscount = parsed.defaultDiscount !== undefined ? parsed.defaultDiscount : 0;
-        } catch (e) {
-          console.error("Error al parsear experimental_configs:", e);
-        }
-      }
-
-      // Rescatar logos de la base de datos si existen y guardarlos en localStorage
-      if (dbConfig.logo_wide !== undefined) {
-        if (dbConfig.logo_wide) {
-          localStorage.setItem('taller_logo_wide', dbConfig.logo_wide);
-        } else {
-          localStorage.removeItem('taller_logo_wide');
-        }
-      }
-      if (dbConfig.logo_square !== undefined) {
-        if (dbConfig.logo_square) {
-          localStorage.setItem('taller_logo_square', dbConfig.logo_square);
-        } else {
-          localStorage.removeItem('taller_logo_square');
-        }
-      }
-      if (typeof initLogos === 'function') initLogos();
-
-      localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
-      loadWorkshopConfig();
-    }
-
-    const { data: multData, error: multError } = await supabaseClient.from('taller_config').select('*').eq('id', 'category_multipliers');
-    if (!multError && multData && multData.length > 0) {
-      try {
-        workshopConfig.categoryMultipliers = JSON.parse(multData[0].name);
-        localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
-        if (typeof renderCategoryMultipliersConfig === 'function') {
-          renderCategoryMultipliersConfig();
-        }
-      } catch (e) {
-        console.error("Error parsing category multipliers from Supabase:", e);
-      }
-    }
-
-    // Cargar datos de Caja localmente
-    cajaAccounts = JSON.parse(localStorage.getItem('taller_caja_accounts') || '[]');
-    cajaOperations = JSON.parse(localStorage.getItem('taller_caja_operations') || '[]');
-    if (!Array.isArray(cajaAccounts)) cajaAccounts = [];
-    if (!Array.isArray(cajaOperations)) cajaOperations = [];
-
-    // Cargar datos de Caja desde la base de datos Supabase
-    try {
-      const { data: cajaAccData, error: cajaAccError } = await supabaseClient.from('taller_caja_accounts').select('*');
-      if (!cajaAccError && cajaAccData) {
-        cajaAccounts = cajaAccData.map(acc => ({
-          id: acc.id,
-          name: acc.name
-        }));
-        localStorage.setItem('taller_caja_accounts', JSON.stringify(cajaAccounts));
-      }
-      const { data: cajaOpData, error: cajaOpError } = await supabaseClient.from('taller_caja_operations').select('*');
-      if (!cajaOpError && cajaOpData) {
-        cajaOperations = cajaOpData.map(op => ({
-          id: op.id,
-          type: op.type,
-          concept: op.concept,
-          amount: op.amount,
-          method: op.method || null,
-          accountId: op.account_id || op.accountId || null,
-          fromAccountId: op.from_account_id || op.fromAccountId || null,
-          toAccountId: op.to_account_id || op.toAccountId || null,
-          paymentType: op.payment_type || op.paymentType || null,
-          installments: op.installments || null,
-          installmentAmount: op.installment_amount || op.installmentAmount || null,
-          date: op.date
-        }));
-        localStorage.setItem('taller_caja_operations', JSON.stringify(cajaOperations));
-      }
-    } catch (e) {
-      console.error("Error al cargar estado de caja desde Supabase:", e);
-    }
-
-    const { data: clientData, error: clientError } = await supabaseClient.from('taller_clients').select('*');
-    if (!clientError && clientData) {
-      clients = clientData.map(c => ({
-        id: c.id,
-        name: c.name,
-        phone: c.phone,
-        email: c.email,
-        createdAt: c.created_at || c.createdAt
-      }));
-      localStorage.setItem('taller_clients', JSON.stringify(clients));
-    }
-    const { data: serviceData, error: serviceError } = await supabaseClient.from('taller_services').select('*');
-    if (!serviceError && serviceData) {
-      servicesCatalog = serviceData.map(s => {
-        let desc = s.description || '';
-        let category = '';
-        let priceA = 0;
-        let priceB = 0;
-        let priceC = 0;
-        if (desc.includes(' ||| ')) {
-          const parts = desc.split(' ||| ');
-          desc = parts[0];
-          try {
-            const meta = JSON.parse(parts[1]);
-            category = meta.category || '';
-            priceA = Number(meta.priceA) || 0;
-            priceB = Number(meta.priceB) || 0;
-            priceC = Number(meta.priceC) || 0;
-          } catch (e) {
-            console.error("Error parsing service metadata:", e);
-          }
-        }
-        return {
-          id: s.id,
-          name: s.name,
-          category: category || 'GENERAL',
-          description: desc,
-          price: s.price,
-          priceA: priceA || s.price || 0,
-          priceB: priceB || s.price || 0,
-          priceC: priceC || s.price || 0,
-          date: s.date
-        };
-      });
-      localStorage.setItem('taller_services', JSON.stringify(servicesCatalog));
-      if (typeof renderCategoryMultipliersConfig === 'function') {
-        renderCategoryMultipliersConfig();
-      }
-    }
-    const { data: partData, error: partError } = await supabaseClient.from('taller_parts').select('*');
-    if (!partError && partData) {
-      partsCatalog = partData;
-      localStorage.setItem('taller_parts', JSON.stringify(partsCatalog));
-    }
-    const { data: teamData, error: teamError } = await supabaseClient.from('taller_team').select('*');
-    if (!teamError && teamData) {
-      teamMembers = teamData;
-      localStorage.setItem('taller_team', JSON.stringify(teamMembers));
-    }
-    const { data: reminderData, error: reminderError } = await supabaseClient.from('taller_reminders').select('*');
-    if (!reminderError && reminderData) {
-      reminders = reminderData.map(r => ({
-        id: r.id,
-        date: r.date,
-        title: r.title,
-        description: r.description,
-        createdAt: r.created_at || r.createdAt
-      }));
-      localStorage.setItem('taller_reminders', JSON.stringify(reminders));
-    }
-    const { data: regData, error: regError } = await supabaseClient.from('taller_vehicle_registry').select('*').eq('id', 'vehicle_registry');
-    if (!regError && regData && regData.length > 0) {
-      vehicleRegistry = {
-        brands: regData[0].brands || [],
-        models: regData[0].models || [],
-        engines: regData[0].engines || []
-      };
-      localStorage.setItem('taller_vehicle_registry', JSON.stringify(vehicleRegistry));
-    }
-    const { data: vehData, error: vehError } = await supabaseClient.from('taller_vehicles').select('*');
+    const { data: vehData, error: vehError } = await client.from('taller_vehicles').select('*');
     if (!vehError && vehData) {
       vehicles = vehData.map(item => {
         let otTasks = [];
@@ -684,7 +490,7 @@ async function loadStateFromSupabase() {
               } catch (e) {
                 console.error("Error parsing vehicle metadata:", e);
               }
-              return false; // filter out from services
+              return false;
             }
             return true;
           });
@@ -692,33 +498,33 @@ async function loadStateFromSupabase() {
 
         return {
           id: String(item.id),
-          plate: item.plate,
-          brand: item.brand,
-          model: item.model,
-          year: item.year,
-          color: item.color,
-          motor: item.motor,
-          client: item.client,
+          plate: item.plate || '',
+          brand: item.brand || '',
+          model: item.model || '',
+          year: item.year || '',
+          color: item.color || '',
+          motor: item.motor || '',
+          client: item.client || 'Consumidor Final',
           clientFirstName: clientFirstName,
           clientLastName: clientLastName,
-          clientPhone: item.client_phone,
-          clientEmail: item.client_email,
-          stage: item.stage,
-          value: Number(item.value),
-          entryDate: item.entry_date,
-          entryTime: Number(item.entry_time),
+          clientPhone: item.client_phone || '',
+          clientEmail: item.client_email || '',
+          stage: item.stage || 'recepcion',
+          value: Number(item.value) || 0,
+          entryDate: item.entry_date || '',
+          entryTime: Number(item.entry_time) || Date.now(),
           delivered: item.delivered || false,
           kilometers: Number(item.kilometers) || Number(km) || 0,
           km: km || item.kilometers || '',
-          fuelLevel: item.fuel_level,
+          fuelLevel: item.fuel_level || '1/2',
           services: services,
           hasDetails: item.has_details || false,
-          detailsNotes: item.details_notes,
+          detailsNotes: item.details_notes || '',
           quoteServices: item.quote_services || [],
           quoteParts: item.quote_parts || [],
           discountPercent: Number(item.discount_percent) || 0,
           vatInclusive: item.vat_inclusive !== false,
-          quoteNotes: item.quote_notes,
+          quoteNotes: item.quote_notes || '',
           quoteSendEmail: item.quote_send_email || false,
           quoteCompleted: item.quote_completed || false,
           otTasks: otTasks,
@@ -732,14 +538,201 @@ async function loadStateFromSupabase() {
       });
       normalizeAppDatabaseData();
       localStorage.setItem('taller_vehicles', JSON.stringify(vehicles));
+      if (typeof renderApp === 'function') renderApp();
+      if (typeof renderWorkshopTables === 'function') renderWorkshopTables();
     }
-    console.log("AutoTech: Datos de Supabase sincronizados localmente.");
-    if (typeof renderApp === 'function') renderApp();
-    if (typeof renderWorkshopTables === 'function') renderWorkshopTables();
-    setupSupabaseRealtime();
   } catch (err) {
-    console.error("Fallo al sincronizar desde Supabase:", err);
+    console.error("Error al cargar vehículos desde Supabase:", err);
   }
+
+  // 2. CONFIGURACIÓN DEL TALLER
+  try {
+    const { data: configData, error: configError } = await client.from('taller_config').select('*').eq('id', 'workshop_config');
+    if (!configError && configData && configData.length > 0) {
+      const dbConfig = configData[0];
+      workshopConfig = {
+        ...workshopConfig,
+        name: dbConfig.name || workshopConfig.name,
+        phone1: dbConfig.phone1 || workshopConfig.phone1,
+        phone2: dbConfig.phone2 || workshopConfig.phone2,
+        address: dbConfig.address || workshopConfig.address,
+        rut: dbConfig.rut || workshopConfig.rut,
+        cuit: dbConfig.cuit || workshopConfig.cuit,
+        ivaCondition: dbConfig.iva_condition || workshopConfig.ivaCondition,
+        iibb: dbConfig.iibb || workshopConfig.iibb,
+        inicioAct: dbConfig.inicio_act || workshopConfig.inicioAct,
+        pv: dbConfig.pv || workshopConfig.pv,
+        waMethod: dbConfig.wa_method || workshopConfig.waMethod,
+        waToken: dbConfig.wa_token || workshopConfig.waToken,
+        waPhoneId: dbConfig.wa_phone_id || workshopConfig.waPhoneId,
+        waMsgType: dbConfig.wa_msg_type || workshopConfig.waMsgType,
+        waTemplateName: dbConfig.wa_template_name || workshopConfig.waTemplateName,
+        waTemplateLang: dbConfig.wa_template_lang || workshopConfig.waTemplateLang,
+        waBaseUrl: dbConfig.wa_base_url || workshopConfig.waBaseUrl,
+        waMsgQuote: dbConfig.wa_msg_quote || workshopConfig.waMsgQuote,
+        waMsgInvoice: dbConfig.wa_msg_invoice || workshopConfig.waMsgInvoice,
+        expMaster: dbConfig.exp_master !== undefined ? dbConfig.exp_master : false,
+        expHideCertificate: dbConfig.exp_hide_certificate !== undefined ? dbConfig.exp_hide_certificate : false,
+        expHideParts: dbConfig.exp_hide_parts !== undefined ? dbConfig.exp_hide_parts : false,
+        expHideExcel: dbConfig.exp_hide_excel !== undefined ? dbConfig.exp_hide_excel : false
+      };
+
+      const { data: expData, error: expError } = await client.from('taller_config').select('*').eq('id', 'experimental_configs');
+      if (!expError && expData && expData.length > 0) {
+        try {
+          const parsed = JSON.parse(expData[0].name);
+          workshopConfig.expShowAesthetics = parsed.expShowAesthetics !== undefined ? parsed.expShowAesthetics : false;
+          workshopConfig.expShowVIN = parsed.expShowVIN !== undefined ? parsed.expShowVIN : false;
+          workshopConfig.expShowColor = parsed.expShowColor !== undefined ? parsed.expShowColor : false;
+          workshopConfig.expShowVehiculosTaller = parsed.expShowVehiculosTaller !== undefined ? parsed.expShowVehiculosTaller : false;
+          workshopConfig.defaultDiscount = parsed.defaultDiscount !== undefined ? parsed.defaultDiscount : 0;
+        } catch (e) {
+          console.error("Error al parsear experimental_configs:", e);
+        }
+      }
+
+      if (dbConfig.logo_wide !== undefined) {
+        if (dbConfig.logo_wide) localStorage.setItem('taller_logo_wide', dbConfig.logo_wide);
+        else localStorage.removeItem('taller_logo_wide');
+      }
+      if (dbConfig.logo_square !== undefined) {
+        if (dbConfig.logo_square) localStorage.setItem('taller_logo_square', dbConfig.logo_square);
+        else localStorage.removeItem('taller_logo_square');
+      }
+      if (typeof initLogos === 'function') initLogos();
+
+      localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
+      loadWorkshopConfig();
+    }
+  } catch (err) {
+    console.error("Error al cargar configuración desde Supabase:", err);
+  }
+
+  // 3. MULTIPLICADORES
+  try {
+    const { data: multData, error: multError } = await client.from('taller_config').select('*').eq('id', 'category_multipliers');
+    if (!multError && multData && multData.length > 0) {
+      workshopConfig.categoryMultipliers = JSON.parse(multData[0].name);
+      localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
+      if (typeof renderCategoryMultipliersConfig === 'function') renderCategoryMultipliersConfig();
+    }
+  } catch (err) {
+    console.error("Error cargando multiplicadores:", err);
+  }
+
+  // 4. CAJA
+  try {
+    const { data: cajaAccData, error: cajaAccError } = await client.from('taller_caja_accounts').select('*');
+    if (!cajaAccError && cajaAccData) {
+      cajaAccounts = cajaAccData.map(acc => ({ id: acc.id, name: acc.name }));
+      localStorage.setItem('taller_caja_accounts', JSON.stringify(cajaAccounts));
+    }
+    const { data: cajaOpData, error: cajaOpError } = await client.from('taller_caja_operations').select('*');
+    if (!cajaOpError && cajaOpData) {
+      cajaOperations = cajaOpData.map(op => ({
+        id: op.id,
+        type: op.type,
+        concept: op.concept,
+        amount: op.amount,
+        method: op.method || null,
+        accountId: op.account_id || op.accountId || null,
+        fromAccountId: op.from_account_id || op.fromAccountId || null,
+        toAccountId: op.to_account_id || op.toAccountId || null,
+        paymentType: op.payment_type || op.paymentType || null,
+        installments: op.installments || null,
+        installmentAmount: op.installment_amount || op.installmentAmount || null,
+        date: op.date
+      }));
+      localStorage.setItem('taller_caja_operations', JSON.stringify(cajaOperations));
+    }
+  } catch (e) {
+    console.error("Error al cargar estado de caja desde Supabase:", e);
+  }
+
+  // 5. CLIENTES
+  try {
+    const { data: clientData, error: clientError } = await client.from('taller_clients').select('*');
+    if (!clientError && clientData) {
+      clients = clientData.map(c => ({
+        id: c.id,
+        name: c.name,
+        phone: c.phone,
+        email: c.email,
+        createdAt: c.created_at || c.createdAt
+      }));
+      localStorage.setItem('taller_clients', JSON.stringify(clients));
+    }
+  } catch (err) {
+    console.error("Error cargando clientes:", err);
+  }
+
+  // 6. SERVICIOS
+  try {
+    const { data: serviceData, error: serviceError } = await client.from('taller_services').select('*');
+    if (!serviceError && serviceData) {
+      servicesCatalog = serviceData.map(s => {
+        let desc = s.description || '';
+        let category = '';
+        let priceA = 0, priceB = 0, priceC = 0;
+        if (desc.includes(' ||| ')) {
+          const parts = desc.split(' ||| ');
+          desc = parts[0];
+          try {
+            const meta = JSON.parse(parts[1]);
+            category = meta.category || '';
+            priceA = Number(meta.priceA) || 0;
+            priceB = Number(meta.priceB) || 0;
+            priceC = Number(meta.priceC) || 0;
+          } catch (e) {}
+        }
+        return {
+          id: s.id,
+          name: s.name,
+          category: category || 'GENERAL',
+          description: desc,
+          price: s.price,
+          priceA: priceA || s.price || 0,
+          priceB: priceB || s.price || 0,
+          priceC: priceC || s.price || 0,
+          date: s.date
+        };
+      });
+      localStorage.setItem('taller_services', JSON.stringify(servicesCatalog));
+    }
+  } catch (err) {
+    console.error("Error cargando servicios:", err);
+  }
+
+  // 7. REPUESTOS
+  try {
+    const { data: partData, error: partError } = await client.from('taller_parts').select('*');
+    if (!partError && partData) {
+      partsCatalog = partData;
+      localStorage.setItem('taller_parts', JSON.stringify(partsCatalog));
+    }
+  } catch (err) {
+    console.error("Error cargando repuestos:", err);
+  }
+
+  // 8. REGISTRO DE VEHÍCULOS (MARCAS, MODELOS, MOTORES)
+  try {
+    const { data: regData, error: regError } = await client.from('taller_vehicle_registry').select('*').eq('id', 'vehicle_registry');
+    if (!regError && regData && regData.length > 0) {
+      vehicleRegistry = {
+        brands: regData[0].brands || [],
+        models: regData[0].models || [],
+        engines: regData[0].engines || []
+      };
+      localStorage.setItem('taller_vehicle_registry', JSON.stringify(vehicleRegistry));
+    }
+  } catch (err) {
+    console.error("Error cargando registro:", err);
+  }
+
+  console.log("AutoTech: Datos de Supabase sincronizados localmente.");
+  if (typeof renderApp === 'function') renderApp();
+  if (typeof renderWorkshopTables === 'function') renderWorkshopTables();
+  setupSupabaseRealtime();
 }
 
 let isRealtimeSubscribed = false;
