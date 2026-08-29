@@ -61,6 +61,66 @@ let workshopConfig = {
   defaultDiscount: 0
 };
 
+// Helper unificado de fechas con formato de barra (DD/MM/YYYY)
+window.formatDateToSlash = function(val) {
+  if (!val || val === '—') return '—';
+  if (typeof val === 'number') {
+    const dObj = new Date(val);
+    if (!isNaN(dObj.getTime())) {
+      const day = String(dObj.getDate()).padStart(2, '0');
+      const month = String(dObj.getMonth() + 1).padStart(2, '0');
+      const year = dObj.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  }
+  if (typeof val === 'string') {
+    const trimmed = val.trim();
+    if (!trimmed) return '—';
+    if (trimmed.includes('/')) {
+      const parts = trimmed.split('/');
+      if (parts.length === 3) {
+        const d = parts[0].padStart(2, '0');
+        const m = parts[1].padStart(2, '0');
+        const y = parts[2].split(' ')[0].split('T')[0];
+        if (y.length === 4) return `${d}/${m}/${y}`;
+      }
+      return trimmed;
+    }
+    if (trimmed.includes('-')) {
+      const cleanDateStr = trimmed.split('T')[0];
+      const parts = cleanDateStr.split('-');
+      if (parts.length === 3 && parts[0].length === 4) {
+        const y = parts[0];
+        const m = parts[1].padStart(2, '0');
+        const d = parts[2].padStart(2, '0');
+        return `${d}/${m}/${y}`;
+      }
+    }
+    const dObj = new Date(trimmed);
+    if (!isNaN(dObj.getTime())) {
+      const day = String(dObj.getDate()).padStart(2, '0');
+      const month = String(dObj.getMonth() + 1).padStart(2, '0');
+      const year = dObj.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  }
+  return String(val);
+};
+
+// Normalizador global de datos para eliminar disparidades en la BD
+window.normalizeAppDatabaseData = function() {
+  if (Array.isArray(window.vehicles)) {
+    window.vehicles.forEach(v => {
+      if (!v.client || v.client === 'Sin cliente asignado' || v.client.trim() === '') {
+        v.client = 'Consumidor Final';
+      }
+      if (v.entryDate) v.entryDate = formatDateToSlash(v.entryDate);
+      if (v.deliveryDate) v.deliveryDate = formatDateToSlash(v.deliveryDate);
+      if (v.date) v.date = formatDateToSlash(v.date);
+    });
+  }
+};
+
 // Debounced auto-save helper
 let autoSaveTimeout = null;
 window.triggerAutoSave = function() {
@@ -598,6 +658,7 @@ async function loadStateFromSupabase() {
           receptionPhotos: receptionPhotos || photos || {}
         };
       });
+      normalizeAppDatabaseData();
       localStorage.setItem('taller_vehicles', JSON.stringify(vehicles));
     }
     console.log("AutoTech: Datos de Supabase sincronizados localmente.");
@@ -1783,6 +1844,7 @@ function loadState() {
         }
         return v;
       });
+      normalizeAppDatabaseData();
     } else {
       throw new Error('empty');
     }
@@ -3474,7 +3536,7 @@ window.renderWorkshopTables = function() {
     const fallbackExt = isPng ? 'svg' : 'png';
     const logoSrc = brandNormalized ? `brand-logos-main/${brandNormalized}-logo.${logoExt}` : '';
 
-    const entryDateStr = v.entryDate ? v.entryDate : (v.entryTime ? new Date(v.entryTime).toLocaleDateString('es-AR') : '—');
+    const entryDateStr = formatDateToSlash(v.entryDate || v.entryTime);
 
     return `
       <tr id="row-veh-${v.id}" onclick="openDetailedReception('${v.id}')" style="cursor: pointer;">
@@ -3513,7 +3575,7 @@ window.renderWorkshopTables = function() {
         <!-- 3. Cliente -->
         <td>
           <div class="client-cell-info">
-            <span class="client-name-text">${v.client || 'Sin cliente asignado'}</span>
+            <span class="client-name-text">${v.client || 'Consumidor Final'}</span>
             ${v.clientPhone ? `<span class="client-sub-text">${v.clientPhone}</span>` : ''}
           </div>
         </td>
@@ -3625,7 +3687,7 @@ window.renderWorkshopTables = function() {
         const fallbackExt = isPng ? 'svg' : 'png';
         const logoSrc = brandNormalized ? `brand-logos-main/${brandNormalized}-logo.${logoExt}` : '';
 
-        const entryDateStr = v.entryDate ? v.entryDate : (v.entryTime ? new Date(v.entryTime).toLocaleDateString('es-AR') : '—');
+        const entryDateStr = formatDateToSlash(v.entryDate || v.entryTime);
 
         return `
           <div class="mobile-workshop-card ${isEnCurso ? 'active-card' : 'history-card'}" id="mob-card-${v.id}" onclick="openDetailedReception('${v.id}')" style="cursor: pointer;">
@@ -3659,7 +3721,7 @@ window.renderWorkshopTables = function() {
               </div>
 
               <div class="mobile-card-meta-row">
-                <span class="mobile-client-name"><i data-lucide="user" style="width: 12px; height: 12px;"></i> ${v.client || 'Sin cliente'}</span>
+                <span class="mobile-client-name"><i data-lucide="user" style="width: 12px; height: 12px;"></i> ${v.client || 'Consumidor Final'}</span>
                 <span class="mobile-date-text"><i data-lucide="calendar" style="width: 12px; height: 12px;"></i> ${entryDateStr}</span>
               </div>
             </div>
@@ -7950,11 +8012,11 @@ window.renderCotizacionesTable = function() {
           </label>
         </td>
         <td style="font-weight: 700; color: var(--text-primary);">#${indexNum}</td>
-        <td style="font-weight: 600; color: var(--text-primary);">${v.client}</td>
+        <td style="font-weight: 600; color: var(--text-primary);">${v.client || 'Consumidor Final'}</td>
         <td style="font-family: var(--font-mono);">${v.clientPhone || 'Sin teléfono'}</td>
         <td style="font-weight: 600;">${v.brand} ${v.model} <span style="color: var(--text-muted); font-size: 11px;">(${v.plate})</span></td>
         <td><span class="stage-pending-badge ${badgeClass}" style="font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px;">${stateText}</span></td>
-        <td style="font-size: 12px; color: var(--text-secondary);">Ayer</td>
+        <td style="font-size: 12px; color: var(--text-secondary);">${formatDateToSlash(v.entryDate || v.date || v.entryTime)}</td>
         <td style="font-weight: 700; color: var(--text-primary);">${formatCurrency(v.value)}</td>
         <td style="white-space: nowrap;">
           <div style="display: flex; gap: 6px; align-items: center;">
