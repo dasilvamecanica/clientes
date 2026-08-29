@@ -1063,6 +1063,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try { loadWorkshopConfig(); } catch(e) { console.error('Error en loadWorkshopConfig:', e); }
   try { initEventListeners(); } catch(e) { console.error('Error en initEventListeners:', e); }
   try { if (typeof window.startGlobalTimer === 'function') window.startGlobalTimer(); } catch(e) { console.error('Error en startGlobalTimer:', e); }
+  try { if (typeof window.startRealtimeClock === 'function') window.startRealtimeClock(); } catch(e) { console.error('Error en startRealtimeClock:', e); }
   try { renderApp(); } catch(e) { console.error('Error en renderApp:', e); }
   try { initDarkMode(); } catch(e) { console.error('Error en initDarkMode:', e); }
 
@@ -12382,12 +12383,12 @@ window.deleteRegistryItem = function(type, val) {
 };
 
 // --- 18. RELOJ Y FECHA REALTIME MINIMALISTA ---
-function startRealtimeClock() {
-  const clockEl = document.getElementById('header-realtime-clock');
-  const dateEl = document.getElementById('header-realtime-date');
-  if (!clockEl || !dateEl) return;
-
+window.startRealtimeClock = function() {
   function update() {
+    const clockEl = document.getElementById('header-realtime-clock');
+    const dateEl = document.getElementById('header-realtime-date');
+    if (!clockEl || !dateEl) return;
+
     const now = new Date();
     
     // Formato de hora: hh:mm:ss
@@ -12396,7 +12397,7 @@ function startRealtimeClock() {
     const secs = String(now.getSeconds()).padStart(2, '0');
     clockEl.textContent = `${hrs}:${mins}:${secs}`;
     
-    // Formato de fecha: Lunes, 29 de Mayo de 2026
+    // Formato de fecha: Lunes, 29 de Agosto de 2026
     const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
     let dateStr = now.toLocaleDateString('es-ES', options);
     
@@ -12406,11 +12407,16 @@ function startRealtimeClock() {
   }
   
   update();
-  setInterval(update, 1000);
-}
+  if (!window._realtimeClockInterval) {
+    window._realtimeClockInterval = setInterval(update, 1000);
+  }
+};
 
-// Iniciar inmediatamente
-startRealtimeClock();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', window.startRealtimeClock);
+} else {
+  window.startRealtimeClock();
+}
 
 // --- 19. EXPANDIR / COLAPSAR MENU LATERAL ---
 window.toggleSidebarCollapse = function() {
