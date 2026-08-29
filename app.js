@@ -733,7 +733,7 @@ function setupSupabaseRealtime() {
   if (!supabaseClient || isRealtimeSubscribed) return;
   try {
     isRealtimeSubscribed = true;
-    console.log("⚡ AutoTech: Suscribiendo a eventos en Tiempo Real (Realtime) de Supabase...");
+    console.log("⚡ AutoTech: Suscribiendo a eventos en Tiempo Real (Realtime) de Supabase para todas las tablas...");
 
     supabaseClient
       .channel('public:taller_db_sync')
@@ -747,6 +747,26 @@ function setupSupabaseRealtime() {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'taller_caja_operations' }, (payload) => {
         console.log("⚡ Cambio detectado en Tiempo Real (taller_caja_operations):", payload);
+        loadStateFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'taller_services' }, (payload) => {
+        console.log("⚡ Cambio detectado en Tiempo Real (taller_services):", payload);
+        loadStateFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'taller_parts' }, (payload) => {
+        console.log("⚡ Cambio detectado en Tiempo Real (taller_parts):", payload);
+        loadStateFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'taller_reminders' }, (payload) => {
+        console.log("⚡ Cambio detectado en Tiempo Real (taller_reminders):", payload);
+        loadStateFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'taller_team' }, (payload) => {
+        console.log("⚡ Cambio detectado en Tiempo Real (taller_team):", payload);
+        loadStateFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'taller_config' }, (payload) => {
+        console.log("⚡ Cambio detectado en Tiempo Real (taller_config):", payload);
         loadStateFromSupabase();
       })
       .subscribe((status) => {
