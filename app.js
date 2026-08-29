@@ -1437,9 +1437,9 @@ window.togglePartialPaymentField = function(status) {
 };
 
 window.updateDeliveryBalance = function() {
-  const vehicle = vehicles.find(v => v.id === activeReceptionVehicleId);
+  const vehicle = vehicles.find(v => String(v.id) === String(activeReceptionVehicleId));
   if (!vehicle) return;
-  
+
   // Calculate total
   const services = [...(vehicle.quoteServices || [])];
   const parts = [...(vehicle.quoteParts || [])];
@@ -1470,7 +1470,7 @@ window.updateDeliveryBalance = function() {
 
 window.saveDeliveryDetails = function() {
   if (!activeReceptionVehicleId) return;
-  const vehicleIndex = vehicles.findIndex(v => v.id === activeReceptionVehicleId);
+  const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(activeReceptionVehicleId));
   if (vehicleIndex === -1) return;
 
   const vehicle = vehicles[vehicleIndex];
@@ -1508,7 +1508,7 @@ window.saveDeliveryDetails = function() {
 
 window.archiveVehicle = function() {
   if (!activeReceptionVehicleId) return;
-  const vehicleIndex = vehicles.findIndex(v => v.id === activeReceptionVehicleId);
+  const vehicleIndex = vehicles.findIndex(v => String(v.id) === String(activeReceptionVehicleId));
   if (vehicleIndex === -1) return;
 
   const vehicle = vehicles[vehicleIndex];
@@ -4677,7 +4677,17 @@ window.openAddVehicleModal = function(defaultStage = 'recepcion') {
   if (document.getElementById('form-category')) {
     document.getElementById('form-category').value = 'B';
   }
-  
+
+  // Ocultar campos secundarios no requeridos cuando se crea una cotización rápida
+  const yearInput = document.getElementById('form-year');
+  const motorInput = document.getElementById('form-motor');
+  if (yearInput && yearInput.closest('.form-group')) {
+    yearInput.closest('.form-group').style.display = defaultStage === 'cotizacion' ? 'none' : 'block';
+  }
+  if (motorInput && motorInput.closest('.form-group')) {
+    motorInput.closest('.form-group').style.display = defaultStage === 'cotizacion' ? 'none' : 'block';
+  }
+
   // Resetear a Paso 1
   if (typeof updateDesktopWizStepUI === 'function') {
     updateDesktopWizStepUI(1);
@@ -4978,9 +4988,10 @@ window.handleVehicleFormSubmit = function(e) {
   saveState();
   closeModal('vehicle-modal');
   renderApp();
-  openDetailedReception(newId);
   if (targetStage === 'cotizacion') {
-    setActiveTab('quote');
+    openDetailedQuoteView(newId);
+  } else {
+    openDetailedReception(newId);
   }
 };
 
@@ -7071,6 +7082,9 @@ window.confirmQuoteCreation = function() {
 window.openDetailedQuoteView = function(vehicleId) {
   openDetailedReception(vehicleId);
   setActiveTab('quote');
+  if (typeof toggleEditQuoteMode === 'function') {
+    toggleEditQuoteMode();
+  }
 };
 
 window.openDetailedWorkOrderView = function(vehicleId) {
