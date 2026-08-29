@@ -131,6 +131,63 @@ window.triggerAutoSave = function() {
   }, 1000);
 };
 
+// --- BORRADO Y REINICIO COMPLETO DE BASE DE DATOS ---
+window.resetEntireDatabase = async function(skipConfirm = false) {
+  if (!skipConfirm) {
+    const confirmReset = confirm('⚠️ ¿Estás COMPLETAMENTE seguro de que deseas borrar TODA la base de datos (vehículos, cotizaciones, clientes, caja, registros) y arrancar de 0?');
+    if (!confirmReset) return false;
+  }
+
+  // 1. Vaciar arreglos en memoria
+  window.vehicles = [];
+  window.clients = [];
+  window.cajaOperations = [];
+  window.servicesCatalog = [];
+  window.partsCatalog = [];
+  window.teamMembers = [];
+  window.reminders = [];
+  window.vehicleRegistry = { brands: [], models: [], engines: [] };
+
+  // 2. Limpiar LocalStorage
+  localStorage.removeItem('taller_vehicles');
+  localStorage.removeItem('taller_clients');
+  localStorage.removeItem('taller_services_catalog');
+  localStorage.removeItem('taller_parts_catalog');
+  localStorage.removeItem('taller_team');
+  localStorage.removeItem('taller_reminders');
+  localStorage.removeItem('taller_caja_accounts');
+  localStorage.removeItem('taller_caja_operations');
+  localStorage.removeItem('taller_vehicle_registry');
+
+  // 3. Purgar tablas en Supabase
+  if (supabaseClient) {
+    const tables = [
+      'taller_vehicles',
+      'taller_clients',
+      'taller_caja_operations',
+      'taller_services',
+      'taller_parts',
+      'taller_team',
+      'taller_reminders'
+    ];
+    for (const tbl of tables) {
+      try {
+        await supabaseClient.from(tbl).delete().neq('id', '___none___');
+      } catch (err) {
+        console.error(`Error purgando ${tbl}:`, err);
+      }
+    }
+  }
+
+  // 4. Renderizar vistas limpias
+  if (typeof renderApp === 'function') renderApp();
+  if (typeof renderWorkshopTables === 'function') renderWorkshopTables();
+  if (typeof renderCotizacionesTable === 'function') renderCotizacionesTable();
+
+  console.log('✅ Base de datos reiniciada a 0.');
+  return true;
+};
+
 // --- INICIALIZACIÓN DE SUPABASE ---
 let supabaseClient = null;
 const supabaseUrl = 'https://tdnrdvnqqpfmgarlozzu.supabase.co';
