@@ -4836,7 +4836,7 @@ window.handleVehicleFormSubmit = function(e) {
     ownerHistory: inheritedOwnerHistory,
     stage: targetStage,
     value: 0,
-    entryDate: new Date().toISOString().split('T')[0],
+    entryDate: formatDateToSlash(new Date()),
     entryTime: Date.now(),
     delivered: false,
     kilometers: mileageVal,
@@ -4846,7 +4846,8 @@ window.handleVehicleFormSubmit = function(e) {
     detailsNotes: detailsNotes,
     hasDetails: Boolean(detailsNotes),
     photos: {},
-    receptionPhotos: {}
+    receptionPhotos: {},
+    quoteCompleted: targetStage === 'cotizacion'
   };
 
   vehicles.push(newVehicle);
