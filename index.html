@@ -2201,27 +2201,29 @@
                   <section class="reception-form-card" style="flex-grow: 1; display: flex; flex-direction: column; height: 100%; gap: 0px; padding: 0px; border: none !important; background: transparent !important; box-shadow: none !important;">
                     
                     <!-- ÁREA CON SCROLL INDEPENDIENTE (Servicios, Repuestos y Observaciones) -->
-                    <div style="flex-grow: 1; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 4px;">
+                    <div style="flex-grow: 1; overflow-y: auto; padding-right: 6px; padding-left: 2px; display: flex; flex-direction: column; gap: 16px;">
                       
-                      <!-- Bloque Servicios -->
-                      <div class="form-group" style="margin-bottom: 0;">
+                      <!-- Bloque 1: Servicios -->
+                      <div class="quote-section-card" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.02); margin-bottom: 0;">
                         <div class="added-services-list" id="quote-services-list" onclick="handleListContainerClick(event, 'service')" style="display: flex; flex-direction: column; gap: 2px;">
                           <!-- Servicios listados aquí -->
                         </div>
                       </div>
 
-                      <!-- Bloque Repuestos e Insumos -->
-                      <div class="form-group" style="padding-top: 4px; margin-bottom: 0;">
+                      <!-- Bloque 2: Repuestos e Insumos -->
+                      <div class="quote-section-card" style="background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.02); margin-bottom: 0;">
                         <div class="added-services-list" id="quote-parts-list" onclick="handleListContainerClick(event, 'part')" style="display: flex; flex-direction: column; gap: 2px;">
                           <!-- Repuestos listados aquí -->
                         </div>
                       </div>
 
-                      <!-- Observaciones y Adjuntos de Trabajo -->
-                      <div style="display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 6px;">
-                        <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase;">Observaciones del Trabajo</span>
+                      <!-- Bloque 3: Observaciones y Adjuntos de Trabajo -->
+                      <div class="quote-section-card" style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 0; background-color: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: var(--radius-lg); padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.02); box-sizing: border-box;">
+                        <span style="font-size: 13px; font-weight: 800; color: var(--text-primary); font-family: var(--font-display); display: flex; align-items: center; gap: 8px;">
+                          <i data-lucide="file-text" style="width: 16px; height: 16px; color: var(--color-accent);"></i> Observaciones del Trabajo
+                        </span>
                         
-                        <div style="display: flex; flex-direction: column; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--card-bg-hover); overflow: hidden; min-height: 120px; box-sizing: border-box; width: 100%;">
+                        <div style="display: flex; flex-direction: column; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--card-bg-hover); overflow: hidden; min-height: 110px; box-sizing: border-box; width: 100%;">
                           <textarea
                             id="ot-observations"
                             class="form-input"
@@ -2259,7 +2261,7 @@
                     <input type="hidden" id="quote-send-email" value="">
 
                     <!-- Panel de Footer FIJO/STICKY: Grilla Resumen Financiero y Entrega -->
-                    <div class="quote-editor-footer-grid" style="flex-shrink: 0; margin-top: 8px; padding-top: 12px; border-top: 1.5px solid var(--border-color); background-color: var(--card-bg); z-index: 5;">
+                    <div class="quote-editor-footer-grid" style="flex-shrink: 0; margin-top: 14px; padding: 14px 20px; border: 1.5px solid var(--border-color); border-radius: var(--radius-lg); background-color: var(--card-bg); z-index: 5; box-shadow: 0 -2px 10px rgba(0,0,0,0.02);">
 
                       <!-- Columna 1: Fecha y hora de entrega comprometida -->
                       <div style="display: flex; flex-direction: column; gap: 8px;">

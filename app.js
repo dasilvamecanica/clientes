@@ -6489,15 +6489,16 @@ function renderQuoteTab() {
   
   // Dibujar lista de servicios
   let servHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background-color: var(--card-bg-hover); border-radius: var(--radius-md); font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--text-primary); margin-bottom: 8px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 12px 8px; border-bottom: 1.5px solid var(--border-color); font-family: var(--font-display); font-weight: 800; font-size: 14.5px; color: var(--text-primary); margin-bottom: 8px;">
       <div style="display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="wrench" style="width: 16px; height: 16px; color: var(--color-accent);"></i>
         <span>Servicios</span>
-        <span style="font-weight: normal; font-size: 12px; color: var(--text-muted);">(${activeQuoteServices.length})</span>
-        <span style="background-color: rgba(var(--color-accent-rgb), 0.08); color: var(--color-accent); font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 12px; display: inline-block; margin-left: 4px;">${formatCurrency(servSum)}</span>
+        <span style="font-weight: 700; font-size: 12px; color: var(--text-muted);">(${activeQuoteServices.length})</span>
+        <span style="background-color: rgba(var(--color-accent-rgb), 0.1); color: var(--color-accent); font-weight: 800; font-size: 12px; padding: 2px 10px; border-radius: 12px; display: inline-block; margin-left: 4px;">${formatCurrency(servSum)}</span>
       </div>
       <div style="display: flex; align-items: center; gap: 12px;">
         ${totalItems > 0 ? `<span style="font-size: 11px; font-weight: 700; color: var(--color-accent); font-family: var(--font-sans);">${completedItems}/${totalItems} listas (${progressPercent}%)</span>` : ''}
-        <span>Precio</span>
+        <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">Precio</span>
       </div>
     </div>
   `;
@@ -6534,13 +6535,14 @@ function renderQuoteTab() {
 
   // Dibujar lista de repuestos
   let partsHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background-color: var(--card-bg-hover); border-radius: var(--radius-md); font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--text-primary); margin-bottom: 8px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 12px 8px; border-bottom: 1.5px solid var(--border-color); font-family: var(--font-display); font-weight: 800; font-size: 14.5px; color: var(--text-primary); margin-bottom: 8px;">
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span>Repuestos</span>
-        <span style="font-weight: normal; font-size: 12px; color: var(--text-muted);">(${activeQuoteParts.length})</span>
-        <span style="background-color: rgba(var(--color-accent-rgb), 0.08); color: var(--color-accent); font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 12px; display: inline-block; margin-left: 4px;">${formatCurrency(partsSum)}</span>
+        <i data-lucide="package" style="width: 16px; height: 16px; color: var(--color-accent);"></i>
+        <span>Repuestos e Insumos</span>
+        <span style="font-weight: 700; font-size: 12px; color: var(--text-muted);">(${activeQuoteParts.length})</span>
+        <span style="background-color: rgba(var(--color-accent-rgb), 0.1); color: var(--color-accent); font-weight: 800; font-size: 12px; padding: 2px 10px; border-radius: 12px; display: inline-block; margin-left: 4px;">${formatCurrency(partsSum)}</span>
       </div>
-      <span>Precio</span>
+      <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">Precio</span>
     </div>
   `;
   
