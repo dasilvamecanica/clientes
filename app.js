@@ -193,14 +193,27 @@ let supabaseClient = null;
 const supabaseUrl = 'https://tdnrdvnqqpfmgarlozzu.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkbnJkdm5xcXBmbWdhcmxvenp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMDQyOTEsImV4cCI6MjA5Njg4MDI5MX0.c8-LMWmbEelCBvUFZ4CG2XNz_Y49eEHw2GqSeeHHmMM';
 
+function getSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    try {
+      supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    } catch (e) {
+      console.error("Error al instanciar cliente de Supabase:", e);
+    }
+  }
+  return supabaseClient;
+}
+
 if (window.supabase) {
-  supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+  getSupabaseClient();
 }
 
 // Sincronización en segundo plano con Supabase (Upsert)
 // Sincronización completa en segundo plano con Supabase (Upsert + Purga de eliminados)
 async function syncWithSupabase(tableName, data) {
-  if (!supabaseClient) return;
+  const client = getSupabaseClient();
+  if (!client) return;
   try {
     if (Array.isArray(data)) {
       if (data.length === 0) {
@@ -418,9 +431,10 @@ async function syncWithSupabase(tableName, data) {
 
 // Eliminar de Supabase
 async function deleteFromSupabase(tableName, id) {
-  if (!supabaseClient) return;
+  const client = getSupabaseClient();
+  if (!client) return;
   try {
-    const { error } = await supabaseClient.from(tableName).delete().eq('id', id);
+    const { error } = await client.from(tableName).delete().eq('id', id);
     if (error) console.error(`Error al eliminar en Supabase (${tableName}):`, error);
   } catch (err) {
     console.error("Error al eliminar:", err);
@@ -433,7 +447,8 @@ window.addEventListener('change', () => { lastUserInteractionTime = Date.now(); 
 
 // Cargar estado desde Supabase
 async function loadStateFromSupabase() {
-  if (!supabaseClient) return;
+  const client = getSupabaseClient();
+  if (!client) return;
   const isEditing = document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
   if (isEditing && (Date.now() - lastUserInteractionTime < 4000)) {
     return;
@@ -730,7 +745,8 @@ async function loadStateFromSupabase() {
 let isRealtimeSubscribed = false;
 
 function setupSupabaseRealtime() {
-  if (!supabaseClient || isRealtimeSubscribed) return;
+  const client = getSupabaseClient();
+  if (!client || isRealtimeSubscribed) return;
   try {
     isRealtimeSubscribed = true;
     console.log("⚡ AutoTech: Suscribiendo a eventos en Tiempo Real (Realtime) de Supabase para todas las tablas...");
