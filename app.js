@@ -12247,10 +12247,11 @@ window.downloadQuotePDF = async function(vehicleId, returnBlob = false) {
             <span>Total (IVA Incluido):</span>
             <span>${formatCurrency(Math.round(total))}</span>
           </div>
-        </div>
+      <div style="margin-top: 12px; padding: 8px 12px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid var(--color-accent); border-radius: 4px; font-size: 8.5px; color: #475569; line-height: 1.4;">
+        <strong>Nota:</strong> El precio de los repuestos es estimativo, es decir, puede variar a la hora de comprarlos dependiendo el proveedor y la marca del mismo.
       </div>
 
-      <div style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 6px; display: flex; justify-content: flex-end; font-size: 8px; color: #94a3b8;">
+      <div style="margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 6px; display: flex; justify-content: flex-end; font-size: 8px; color: #94a3b8;">
         <span>Página 1 de 1</span>
       </div>
     </div>
