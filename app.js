@@ -15417,7 +15417,29 @@ function buildServiceTitle(workInfo, isPerSide) {
   return title;
 }
 
+function extractSpecificItemName(text) {
+  if (!text) return '';
+  let clean = text.toLowerCase();
+  
+  clean = clean.replace(/\$?\(?\b\d+(?:[\.\,]\d+)?\s*(?:millon|millones|millón|lucas|luka|lukas|mil|k|\bm\b)?\)?/gi, '');
+  clean = clean.replace(/\b(agrega|agregale|sumale|suma|ponale|ponele|ponela|pone|poné|metele|cargale|incluye|incluir|añade|añadir)\b/gi, '');
+  clean = clean.replace(/\b(a los|a la|a el|en los|en la|en el|en|los|las|el|la|un|una|unos|unas|de|del|para)\b/gi, '');
+  clean = clean.replace(/\b(repuestos|repuesto|repues|repuest|insumo|insumos|servicios|servicio|mano de obra|mano|obra)\b/gi, '');
+  clean = clean.replace(/[\,\.\:\-\_]/g, ' ').trim();
+
+  if (clean.includes('aguya') || clean.includes('agua')) {
+    return 'Agua destilada';
+  }
+
+  if (clean.length >= 3) {
+    return clean.split(/\s+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
+
+  return '';
+}
+
 function buildPartTitle(tokenLower, workInfo) {
+  if (tokenLower.includes('agua') || tokenLower.includes('aguya') || tokenLower.includes('destilada')) return 'Agua destilada';
   if (tokenLower.includes('liquido') || tokenLower.includes('refrigerante')) return 'Líquido refrigerante';
   if (tokenLower.includes('bomba') || tokenLower.includes('bomva')) return 'Bomba de agua';
   if (tokenLower.includes('junta') || tokenLower.includes('tapa')) return 'Junta de tapa de válvulas';
@@ -15432,6 +15454,9 @@ function buildPartTitle(tokenLower, workInfo) {
   if (tokenLower.includes('paragolpe')) return 'Paragolpes';
   if (tokenLower.includes('cubierta')) return 'Cubiertas / Neumáticos';
   if (tokenLower.includes('bujia')) return 'Juego de bujías';
+
+  const extracted = extractSpecificItemName(tokenLower);
+  if (extracted) return extracted;
 
   if (workInfo) {
     if (workInfo.toLowerCase().includes('freno') || workInfo.toLowerCase().includes('feno')) return 'Juego de pastillas de freno delanteras';
@@ -15539,7 +15564,7 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
       const tokenLower = token.context.trim().toLowerCase();
 
       const isServiceToken = tokenLower.includes('mano') || tokenLower.includes('obra') || tokenLower.includes('trabajo') || tokenLower.includes('desarmar');
-      const isPartToken = !isServiceToken && (tokenLower.includes('repuesto') || tokenLower.includes('repuestos') || tokenLower.includes('repues') || tokenLower.includes('repuest') || tokenLower.includes('juego') || tokenLower.includes('pastilla') || tokenLower.includes('pastia') || tokenLower.includes('valvula') || tokenLower.includes('bomba') || tokenLower.includes('bomva') || tokenLower.includes('filtro') || tokenLower.includes('fitro') || tokenLower.includes('aceite') || tokenLower.includes('liquido') || tokenLower.includes('amortiguador') || tokenLower.includes('cubierta') || tokenLower.includes('bujia') || tokenLower.includes('parrila') || tokenLower.includes('parrilla') || tokenLower.includes('bieleta') || tokenLower.includes('extremo') || tokenLower.includes('extremos') || tokenLower.includes('paragolpe') || tokenLower.includes('paragolpes') || tokenLower.includes('disco') || tokenLower.includes('discos') || tokenLower.includes('delant') || tokenLower.includes('feno'));
+      const isPartToken = !isServiceToken && (tokenLower.includes('repuesto') || tokenLower.includes('repuestos') || tokenLower.includes('repues') || tokenLower.includes('repuest') || tokenLower.includes('juego') || tokenLower.includes('pastilla') || tokenLower.includes('pastia') || tokenLower.includes('valvula') || tokenLower.includes('bomba') || tokenLower.includes('bomva') || tokenLower.includes('filtro') || tokenLower.includes('fitro') || tokenLower.includes('aceite') || tokenLower.includes('liquido') || tokenLower.includes('amortiguador') || tokenLower.includes('cubierta') || tokenLower.includes('bujia') || tokenLower.includes('parrila') || tokenLower.includes('parrilla') || tokenLower.includes('bieleta') || tokenLower.includes('extremo') || tokenLower.includes('extremos') || tokenLower.includes('paragolpe') || tokenLower.includes('paragolpes') || tokenLower.includes('disco') || tokenLower.includes('discos') || tokenLower.includes('delant') || tokenLower.includes('feno') || tokenLower.includes('agua') || tokenLower.includes('aguya') || tokenLower.includes('destilada') || tokenLower.includes('termostato') || tokenLower.includes('correa') || tokenLower.includes('bateria'));
 
       if (isServiceToken) {
         const sTitle = buildServiceTitle(workInfo, isPerSide);
