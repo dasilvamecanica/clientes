@@ -15008,12 +15008,16 @@ window.openAiQuoteAssistantModal = function(vehicleId = null) {
   if (resBox) resBox.style.display = 'none';
 
   modal.style.display = 'flex';
+  modal.classList.add('open');
   if (typeof initLucide === 'function') initLucide();
 };
 
 window.closeAiQuoteModal = function() {
   const modal = document.getElementById('ai-quote-modal');
-  if (modal) modal.style.display = 'none';
+  if (modal) {
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+  }
 };
 
 window.setAiPromptText = function(text) {
