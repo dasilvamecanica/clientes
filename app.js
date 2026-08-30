@@ -15314,9 +15314,47 @@ function cleanServiceName(rawName, mainContext) {
   return capitalizeFirst(rawClean);
 }
 
+function parseArgentinePriceString(str) {
+  if (!str) return 0;
+  let clean = str.trim().toLowerCase();
+  
+  let multiplier = 1;
+  if (clean.includes('millon') || clean.includes('millones') || clean.includes('millón')) {
+    multiplier = 1000000;
+    clean = clean.replace(/millones|millón|millon/g, '');
+  } else if (clean.includes('lucas') || clean.includes('luka') || clean.includes('mil') || clean.endsWith('k') || /\bm\b/.test(clean)) {
+    multiplier = 1000;
+    clean = clean.replace(/lucas|lukas|luka|mil|k|\bm\b/g, '');
+  }
+
+  clean = clean.replace(/[\(\)\$\s]/g, '');
+
+  if (clean.includes('.')) {
+    const parts = clean.split('.');
+    if (parts.length > 1 && parts[parts.length - 1].length === 3) {
+      clean = clean.replace(/\./g, '');
+    }
+  }
+
+  clean = clean.replace(',', '.');
+  let val = parseFloat(clean);
+  if (isNaN(val)) return 0;
+
+  val = Math.round(val * multiplier);
+
+  if (val > 0 && val < 1000 && !str.includes('.')) {
+    val = val * 1000;
+  }
+
+  return val;
+}
+
 function extractExplicitQuantity(text) {
-  const textWithoutPrices = text.replace(/\$?\(?\d[\d\.\,]*\s*(?:lucas|luka|lukas|mil|k|millon|millones|m)?\)?/gi, '');
-  const qtyMatch = textWithoutPrices.toLowerCase().match(/\b(dos|tres|cuatro|cinco|\d{1,2})\s*(juegos|repuestos|piezas|kits|unidades|juego)?\b/);
+  const lower = text.toLowerCase();
+  if (lower.includes('los dos') || lower.includes('ambos')) return 1;
+
+  const textWithoutPrices = text.replace(/\$?\(?\d[\d\.\,]*\s*(?:lucas|luka|lukas|mil|k|millon|millones|millón|m)?\)?/gi, '');
+  const qtyMatch = textWithoutPrices.toLowerCase().match(/\b(dos|tres|cuatro|cinco|\d{1,2})\s*(juegos|repuestos|piezas|kits|unidades|juego|filtros|bujias|bujías|amortiguadores|bieletas|cubiertas|paragolpes|parrilas|parrillas|extremos)?\b/);
   if (!qtyMatch) return 1;
   const word = qtyMatch[1];
   if (word === 'dos' || word === '2') return 2;
@@ -15328,15 +15366,22 @@ function extractExplicitQuantity(text) {
 
 function extractAllArgentinePrices(text) {
   const results = [];
-  const clauses = text.split(/(?<=[a-zA-Z\s])\.\s+|[\,\;\n]+\s*|\s+y\s+/i).map(c => c.trim()).filter(Boolean);
+
+  let cleanTextForPrices = text.replace(/\b(peugeot\s+)?(208|308|408|508|207|206|307)\b/gi, '');
+
+  let normalizedText = cleanTextForPrices.replace(/(\b\d+(?:[\.\,]\d+)?\s*(?:millon|millones|millón|lucas|luka|lukas|mil|k|\bm\b)?\b)\s+(?=(?:repuest|repuesto|repuestos|repues|junta|bomba|pastillas)\b)/gi, '$1 | ');
+  normalizedText = normalizedText.replace(/(\b\d+(?:[\.\,]\d+)?\s*(?:millon|millones|millón|lucas|luka|lukas|mil|k|\bm\b)?\b)\s+(?=(?:la\s+|el\s+|de\s+)?(?:mano|obra)\s+\$?\(?\b\d+)/gi, '$1 | ');
+  normalizedText = normalizedText.replace(/(?<=\b(?:mano|obra))\s+(?=\b\d+k?\b)/gi, ' | ');
+
+  const clauses = normalizedText.split(/(?<=[a-zA-Z\s])\.\s+|[\|\,\;\n]+\s*|\s+y\s+/i).map(c => c.trim()).filter(Boolean);
 
   clauses.forEach(clause => {
-    const matches = [...clause.matchAll(/(\$?\(?\d[\d\.\,]*\s*(?:lucas|luka|lukas|mil|k|millon|millones|m)?\)?)/gi)];
+    const matches = [...clause.matchAll(/(\$?\(?\b\d+(?:[\.\,]\d+)?\s*(?:millon|millones|millón)\b|\$?\(?\b\d+(?:[\.\,]\d+)?\s*(?:lucas|luka|lukas|mil|k|\bm\b)\b|\$?\(?\b\d{2,3}(?:\.\d{3})+\b|\$?\(?\b\d{2,6}\b\)?)/gi)];
 
     matches.forEach(m => {
       const rawFull = m[1].trim();
       const finalVal = parseArgentinePriceString(rawFull);
-      if (finalVal > 0 && !results.some(r => r.raw === rawFull)) {
+      if (finalVal >= 1000 && !results.some(r => r.raw === rawFull)) {
         results.push({
           raw: rawFull,
           value: finalVal,
@@ -15352,13 +15397,13 @@ function extractAllArgentinePrices(text) {
 function buildServiceTitle(workInfo, isPerSide) {
   let title = 'Mano de obra';
   if (workInfo) {
-    if (workInfo.toLowerCase().includes('frenos')) {
+    if (workInfo.toLowerCase().includes('freno') || workInfo.toLowerCase().includes('feno')) {
       title = 'Mano de obra frenos delanteros';
-    } else if (workInfo.toLowerCase().includes('distribucion')) {
+    } else if (workInfo.toLowerCase().includes('distrib')) {
       title = 'Mano de obra distribución y puesta a punto';
-    } else if (workInfo.toLowerCase().includes('junta')) {
+    } else if (workInfo.toLowerCase().includes('junta') || workInfo.toLowerCase().includes('tapa')) {
       title = 'Mano de obra reemplazo de junta de tapa de válvulas';
-    } else if (workInfo.toLowerCase().includes('service')) {
+    } else if (workInfo.toLowerCase().includes('servic') || workInfo.toLowerCase().includes('servis')) {
       title = 'Servicio de mantenimiento general';
     } else {
       title = `Mano de obra ${workInfo.toLowerCase()}`;
@@ -15366,7 +15411,7 @@ function buildServiceTitle(workInfo, isPerSide) {
   }
   if (isPerSide) {
     title += ' (por lado)';
-  } else if (workInfo && workInfo.toLowerCase().includes('frenos')) {
+  } else if (workInfo && (workInfo.toLowerCase().includes('freno') || workInfo.toLowerCase().includes('feno'))) {
     title += ' (ambos lados)';
   }
   return title;
@@ -15374,18 +15419,25 @@ function buildServiceTitle(workInfo, isPerSide) {
 
 function buildPartTitle(tokenLower, workInfo) {
   if (tokenLower.includes('liquido') || tokenLower.includes('refrigerante')) return 'Líquido refrigerante';
-  if (tokenLower.includes('bomba')) return 'Bomba de agua';
-  if (tokenLower.includes('junta')) return 'Junta de tapa de válvulas';
-  if (tokenLower.includes('pastilla') || tokenLower.includes('juego')) return 'Juego de pastillas de freno delanteras';
-  if (tokenLower.includes('disco')) return 'Juego de discos de freno delanteros';
+  if (tokenLower.includes('bomba') || tokenLower.includes('bomva')) return 'Bomba de agua';
+  if (tokenLower.includes('junta') || tokenLower.includes('tapa')) return 'Junta de tapa de válvulas';
+  if (tokenLower.includes('pastilla') || tokenLower.includes('pastia') || tokenLower.includes('juego') || tokenLower.includes('freno') || tokenLower.includes('feno') || tokenLower.includes('delant')) return 'Juego de pastillas de freno delanteras';
+  if (tokenLower.includes('disco') || tokenLower.includes('discos')) return 'Juego de discos de freno delanteros';
   if (tokenLower.includes('aceite')) return 'Aceite de motor';
-  if (tokenLower.includes('filtro')) return 'Filtros (Aire, Aceite, Combustible)';
+  if (tokenLower.includes('filtro') || tokenLower.includes('fitro')) return 'Filtros (Aire, Aceite, Combustible)';
+  if (tokenLower.includes('amortiguador')) return 'Juego de amortiguadores';
+  if (tokenLower.includes('bieleta')) return 'Bieletas de suspensión';
+  if (tokenLower.includes('parrila') || tokenLower.includes('parrilla')) return 'Parrillas de suspensión';
+  if (tokenLower.includes('extremo')) return 'Extremos de dirección';
+  if (tokenLower.includes('paragolpe')) return 'Paragolpes';
+  if (tokenLower.includes('cubierta')) return 'Cubiertas / Neumáticos';
+  if (tokenLower.includes('bujia')) return 'Juego de bujías';
 
   if (workInfo) {
-    if (workInfo.toLowerCase().includes('frenos')) return 'Juego de pastillas de freno delanteras';
-    if (workInfo.toLowerCase().includes('distribucion')) return 'Kit de distribución';
+    if (workInfo.toLowerCase().includes('freno') || workInfo.toLowerCase().includes('feno')) return 'Juego de pastillas de freno delanteras';
+    if (workInfo.toLowerCase().includes('distrib')) return 'Kit de distribución';
     if (workInfo.toLowerCase().includes('junta')) return 'Junta de tapa de válvulas';
-    if (workInfo.toLowerCase().includes('service')) return 'Filtros y aceite para service';
+    if (workInfo.toLowerCase().includes('servic') || workInfo.toLowerCase().includes('servis')) return 'Filtros y aceite para service';
   }
   return 'Repuesto / Insumo';
 }
@@ -15401,93 +15453,93 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
   let discountPercent = Number(currentQuote.discountPercent) || 0;
 
   const carMatches = [
-    { key: 'nissan frontier', name: 'Nissan Frontier' },
-    { key: 'frontier', name: 'Nissan Frontier' },
-    { key: 'toyota hilux', name: 'Toyota Hilux' },
-    { key: 'hilux', name: 'Toyota Hilux' },
-    { key: 'aircross', name: 'Citroen C3 Aircross' },
-    { key: 'c3 aircross', name: 'Citroen C3 Aircross' },
-    { key: 'gol power', name: 'Volkswagen Gol Power 1.6' },
-    { key: 'gol trend', name: 'Volkswagen Gol Trend 1.6' },
-    { key: 'gol', name: 'Volkswagen Gol' },
-    { key: 'suran', name: 'Volkswagen Suran 1.6' },
-    { key: 'amarok', name: 'Volkswagen Amarok' },
-    { key: 'palio', name: 'Fiat Palio' },
-    { key: 'uno', name: 'Fiat Uno' },
-    { key: 'cronos', name: 'Fiat Cronos' },
-    { key: 'toro', name: 'Fiat Toro' },
-    { key: 'corsa', name: 'Chevrolet Corsa 1.6' },
-    { key: 'onix', name: 'Chevrolet Onix' },
-    { key: 'cruze', name: 'Chevrolet Cruze' },
-    { key: 'peugeot 208', name: 'Peugeot 208' },
-    { key: '208', name: 'Peugeot 208' },
-    { key: '308', name: 'Peugeot 308' },
-    { key: 'partner', name: 'Peugeot Partner' },
-    { key: 'berlingo', name: 'Citroen Berlingo' },
-    { key: 'kangoo', name: 'Renault Kangoo' },
-    { key: 'clio', name: 'Renault Clio' },
-    { key: 'sandero', name: 'Renault Sandero' },
-    { key: 'duster', name: 'Renault Duster' },
-    { key: 'ranger', name: 'Ford Ranger' },
-    { key: 'focus', name: 'Ford Focus' },
-    { key: 'fiesta', name: 'Ford Fiesta' },
-    { key: 'ka', name: 'Ford Ka' }
+    { regex: /\bnissan frontier\b|\bfrontier\b|\bnisa frintier\b|\bnisa\b|\bfrontie\b/i, name: 'Nissan Frontier' },
+    { regex: /\btoyota hilux\b|\bhilux\b|\bhilu\b/i, name: 'Toyota Hilux' },
+    { regex: /\bcitroen c3 aircross\b|\baircross\b|\bc3 aircross\b|\baircros\b|\bairc\b/i, name: 'Citroen C3 Aircross' },
+    { regex: /\bvolkswagen gol power\b|\bgol power\b|\bgol powr\b|\bgol pow\b/i, name: 'Volkswagen Gol Power 1.6' },
+    { regex: /\bvolkswagen gol trend\b|\bgol trend\b/i, name: 'Volkswagen Gol Trend 1.6' },
+    { regex: /\bvolkswagen gol\b|\bgol\b/i, name: 'Volkswagen Gol' },
+    { regex: /\bvolkswagen suran\b|\bsuran\b/i, name: 'Volkswagen Suran 1.6' },
+    { regex: /\bvolkswagen amarok\b|\bamarok\b|\bamaro\b/i, name: 'Volkswagen Amarok' },
+    { regex: /\bfiat palio\b|\bpalio\b/i, name: 'Fiat Palio' },
+    { regex: /\bfiat uno\b|\buno\b/i, name: 'Fiat Uno' },
+    { regex: /\bfiat cronos\b|\bcronos\b|\bcrono\b/i, name: 'Fiat Cronos' },
+    { regex: /\bfiat toro\b|\btoro\b/i, name: 'Fiat Toro' },
+    { regex: /\bchevrolet corsa\b|\bcorsa\b/i, name: 'Chevrolet Corsa 1.6' },
+    { regex: /\bchevrolet onix\b|\bonix\b/i, name: 'Chevrolet Onix' },
+    { regex: /\bchevrolet cruze\b|\bcruze\b/i, name: 'Chevrolet Cruze' },
+    { regex: /\bpeugeot 208\b|\b208\b/i, name: 'Peugeot 208' },
+    { regex: /\bpeugeot 308\b|\b308\b/i, name: 'Peugeot 308' },
+    { regex: /\bpeugeot partner\b|\bpartner\b/i, name: 'Peugeot Partner' },
+    { regex: /\bcitroen berlingo\b|\bberlingo\b/i, name: 'Citroen Berlingo' },
+    { regex: /\brenault kangoo\b|\bkangoo\b/i, name: 'Renault Kangoo' },
+    { regex: /\brenault clio\b|\bclio\b/i, name: 'Renault Clio' },
+    { regex: /\brenault sandero\b|\bsandero\b/i, name: 'Renault Sandero' },
+    { regex: /\brenault duster\b|\bduster\b/i, name: 'Renault Duster' },
+    { regex: /\bford ranger\b|\branger\b/i, name: 'Ford Ranger' },
+    { regex: /\bford focus\b|\bfocus\b/i, name: 'Ford Focus' },
+    { regex: /\bford fiesta\b|\bfiesta\b/i, name: 'Ford Fiesta' },
+    { regex: /\bford ka\b|\bka\b/i, name: 'Ford Ka' }
   ];
 
   for (const car of carMatches) {
-    if (lower.includes(car.key)) {
+    if (car.regex.test(lower)) {
+      if (car.name === 'Fiat Uno' && lower.includes('cada uno')) {
+        continue;
+      }
       vehicleInfo = car.name;
       break;
     }
   }
 
-  if (lower.includes('freno') || lower.includes('pastilla') || lower.includes('disco')) {
+  if (lower.includes('freno') || lower.includes('feno') || lower.includes('pastilla') || lower.includes('pastia') || lower.includes('disco') || lower.includes('delant')) {
     workInfo = 'Frenos delanteros';
-  } else if (lower.includes('distribucion') || lower.includes('correa') || lower.includes('bomba')) {
+  } else if (lower.includes('distribucion') || lower.includes('distri') || lower.includes('correa') || lower.includes('bomba') || lower.includes('bomva')) {
     workInfo = 'Distribución';
-  } else if (lower.includes('junta') || lower.includes('tapa de valvula')) {
+  } else if (lower.includes('junta') || lower.includes('tapa')) {
     workInfo = 'Junta de tapa de válvulas';
-  } else if (lower.includes('service') || lower.includes('aceite') || lower.includes('filtro')) {
+  } else if (lower.includes('service') || lower.includes('servis') || lower.includes('aceite') || lower.includes('filtro') || lower.includes('fitro')) {
     workInfo = 'Service de mantenimiento';
-  } else if (lower.includes('embrague') || lower.includes('placa')) {
+  } else if (lower.includes('embrague') || lower.includes('embrage') || lower.includes('placa')) {
     workInfo = 'Kit de embrague';
   }
 
   const isIncrement = lower.includes('subile') || lower.includes('sumale') || lower.includes('agregale') || lower.includes('mas');
   const isDecrement = lower.includes('bajale') || lower.includes('restale') || lower.includes('descuentale');
-  const isCorrection = lower.includes('no eran') || lower.includes('no,') || lower.includes('perdón') || lower.includes('perdon');
-  const isDelete = lower.includes('sacá') || lower.includes('saca') || lower.includes('quitá') || lower.includes('quita') || lower.includes('eliminá') || lower.includes('elimina');
+  const isCorrection = lower.includes('no eran') || lower.includes('no,') || lower.includes('perdón') || lower.includes('perdon') || lower.includes('perdon era');
+  const isDelete = lower.includes('sacá') || lower.includes('saca') || lower.includes('quitá') || lower.includes('quita') || lower.includes('eliminá') || lower.includes('elimina') || lower.includes('borrá') || lower.includes('borra');
 
   const isPerSide = lower.includes('por lado') || lower.includes('cada lado') || lower.includes('cada uno') || lower.includes('c/u');
-  const multiplier = isPerSide ? 2 : 1;
   const explicitQty = extractExplicitQuantity(text);
+  const totalMultiplier = Math.max(isPerSide ? 2 : 1, explicitQty);
 
   const monetaryTokens = extractAllArgentinePrices(text);
+  const tokensToProcess = (isCorrection && monetaryTokens.length > 1) ? [monetaryTokens[monetaryTokens.length - 1]] : monetaryTokens;
 
   if (isDelete) {
     if (lower.includes('mano') || lower.includes('obra')) {
       services = [];
-    } else if (lower.includes('repuesto') || lower.includes('juego') || lower.includes('pastilla')) {
+    } else if (lower.includes('repuesto') || lower.includes('repuestos') || lower.includes('juego') || lower.includes('pastilla') || lower.includes('pastillas')) {
       parts = [];
     }
-  } else if ((isIncrement || isDecrement) && monetaryTokens.length > 0) {
-    const delta = monetaryTokens[0].value * (isDecrement ? -1 : 1);
+  } else if ((isIncrement || isDecrement) && tokensToProcess.length > 0) {
+    const delta = tokensToProcess[0].value * (isDecrement ? -1 : 1);
     if (lower.includes('mano') || lower.includes('obra')) {
       if (services.length > 0) {
         services[0].value = Math.max(0, services[0].value + delta);
       }
-    } else if (lower.includes('repuesto') || lower.includes('juego') || lower.includes('pastilla')) {
+    } else if (lower.includes('repuesto') || lower.includes('repuestos') || lower.includes('juego') || lower.includes('pastilla')) {
       if (parts.length > 0) {
         parts[0].value = Math.max(0, parts[0].value + delta);
       }
     }
-  } else if (monetaryTokens.length > 0) {
-    monetaryTokens.forEach(token => {
-      const val = token.value * multiplier * explicitQty;
-      const tokenLower = token.context.toLowerCase();
+  } else if (tokensToProcess.length > 0) {
+    tokensToProcess.forEach(token => {
+      const val = token.value * totalMultiplier;
+      const tokenLower = token.context.trim().toLowerCase();
 
       const isServiceToken = tokenLower.includes('mano') || tokenLower.includes('obra') || tokenLower.includes('trabajo') || tokenLower.includes('desarmar');
-      const isPartToken = tokenLower.includes('repuesto') || tokenLower.includes('juego') || tokenLower.includes('pastilla') || tokenLower.includes('valvula') || tokenLower.includes('bomba') || tokenLower.includes('filtro') || tokenLower.includes('aceite') || tokenLower.includes('liquido');
+      const isPartToken = !isServiceToken && (tokenLower.includes('repuesto') || tokenLower.includes('repuestos') || tokenLower.includes('repues') || tokenLower.includes('repuest') || tokenLower.includes('juego') || tokenLower.includes('pastilla') || tokenLower.includes('pastia') || tokenLower.includes('valvula') || tokenLower.includes('bomba') || tokenLower.includes('bomva') || tokenLower.includes('filtro') || tokenLower.includes('fitro') || tokenLower.includes('aceite') || tokenLower.includes('liquido') || tokenLower.includes('amortiguador') || tokenLower.includes('cubierta') || tokenLower.includes('bujia') || tokenLower.includes('parrila') || tokenLower.includes('parrilla') || tokenLower.includes('bieleta') || tokenLower.includes('extremo') || tokenLower.includes('extremos') || tokenLower.includes('paragolpe') || tokenLower.includes('paragolpes') || tokenLower.includes('disco') || tokenLower.includes('discos') || tokenLower.includes('delant') || tokenLower.includes('feno'));
 
       if (isServiceToken) {
         const sTitle = buildServiceTitle(workInfo, isPerSide);
@@ -15507,8 +15559,13 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
         }
       } else {
         if (isCorrection) {
-          if (parts.length > 0) parts[parts.length - 1].value = val;
-          else if (services.length > 0) services[services.length - 1].value = val;
+          if (services.length > 0 && lower.includes('150')) {
+            services[0].value = val;
+          } else if (parts.length > 0) {
+            parts[parts.length - 1].value = val;
+          } else if (services.length > 0) {
+            services[services.length - 1].value = val;
+          }
         } else if (services.length === 0) {
           services.push({ name: buildServiceTitle(workInfo, isPerSide) || 'Mano de obra', value: val });
         } else if (parts.length === 0) {
@@ -15601,40 +15658,7 @@ function buildSmartServiceName(clause, mainTopic, hasHerramienta) {
   return capitalizeFirst(`Mano de obra ${clean}`);
 }
 
-function parseArgentinePriceString(str) {
-  if (!str) return 0;
-  let clean = str.trim().toLowerCase();
-  
-  let multiplier = 1;
-  if (clean.includes('mil') || clean.endsWith('k')) {
-    multiplier = 1000;
-    clean = clean.replace(/mil|k/g, '');
-  } else if (clean.includes('millon') || clean.includes('millones') || clean.endsWith('m')) {
-    multiplier = 1000000;
-    clean = clean.replace(/millones|millon|m/g, '');
-  }
 
-  clean = clean.replace(/[\(\)\$\s]/g, '');
-
-  if (clean.includes('.')) {
-    const parts = clean.split('.');
-    if (parts.length > 1 && parts[parts.length - 1].length === 3) {
-      clean = clean.replace(/\./g, '');
-    }
-  }
-
-  clean = clean.replace(',', '.');
-  let val = parseFloat(clean);
-  if (isNaN(val)) return 0;
-
-  val = Math.round(val * multiplier);
-
-  if (val > 0 && val < 1000 && !str.includes('.')) {
-    val = val * 1000;
-  }
-
-  return val;
-}
 
 function capitalizeFirst(str) {
   if (!str) return '';
