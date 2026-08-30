@@ -15034,32 +15034,54 @@ window.saveGeminiInstructionsFromConfig = function() {
   alert('✅ Instrucciones del Sistema para la IA guardadas exitosamente.');
 };
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 window.openAiQuoteAssistantModal = function(vehicleId = null) {
-  const modal = document.getElementById('ai-quote-modal');
-  if (!modal) return;
-
-  const vehSelect = document.getElementById('ai-quote-vehicle-select');
-  if (vehSelect) {
-    let optsHtml = '<option value="new">+ Crear nueva cotización en borrador</option>';
-    if (Array.isArray(vehicles)) {
-      vehicles.forEach(v => {
-        const idStr = String(v.id);
-        const indexNum = idStr.length >= 2 ? idStr.substring(idStr.length - 2) : '01';
-        optsHtml += `<option value="${v.id}" ${vehicleId && String(vehicleId) === String(v.id) ? 'selected' : ''}>#${indexNum} - ${v.brand || ''} ${v.model || ''} (${v.plate || 'Sin Patente'}) - ${v.client || 'Consumidor Final'}</option>`;
-      });
+  try {
+    const modal = document.getElementById('ai-quote-modal');
+    if (!modal) {
+      console.warn("Modal #ai-quote-modal no encontrado.");
+      return;
     }
-    vehSelect.innerHTML = optsHtml;
-  }
 
-  if (window.aiChatConversation.length === 0) {
-    resetAiChatConversation();
-  } else {
-    renderAiChatMessages();
-  }
+    const vehSelect = document.getElementById('ai-quote-vehicle-select');
+    if (vehSelect) {
+      let optsHtml = '<option value="new">+ Crear nueva cotización en borrador</option>';
+      if (Array.isArray(vehicles)) {
+        vehicles.forEach(v => {
+          const idStr = String(v.id);
+          const indexNum = idStr.length >= 2 ? idStr.substring(idStr.length - 2) : '01';
+          optsHtml += `<option value="${v.id}" ${vehicleId && String(vehicleId) === String(v.id) ? 'selected' : ''}>#${indexNum} - ${v.brand || ''} ${v.model || ''} (${v.plate || 'Sin Patente'}) - ${v.client || 'Consumidor Final'}</option>`;
+        });
+      }
+      vehSelect.innerHTML = optsHtml;
+    }
 
-  modal.style.display = 'flex';
-  modal.classList.add('open');
-  if (typeof initLucide === 'function') initLucide();
+    if (window.aiChatConversation.length === 0) {
+      resetAiChatConversation();
+    } else {
+      renderAiChatMessages();
+    }
+
+    modal.style.display = 'flex';
+    modal.classList.add('open');
+    if (typeof initLucide === 'function') initLucide();
+  } catch (err) {
+    console.error("Error en openAiQuoteAssistantModal:", err);
+    const modal = document.getElementById('ai-quote-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('open');
+    }
+  }
 };
 
 window.closeAiQuoteModal = function() {
