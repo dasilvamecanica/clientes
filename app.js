@@ -15196,13 +15196,20 @@ FORMATO DE RESPUESTA:
 }
 <<<JSON_END>>>`;
 
-      const geminiContents = window.aiChatConversation.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.text }]
-      }));
+      const recentHistory = window.aiChatConversation.slice(-10);
+      const geminiContents = recentHistory.map(msg => {
+        let cleanText = msg.text || '';
+        if (msg.role === 'model' && cleanText.includes('<<<JSON_START>>>')) {
+          cleanText = cleanText.split('<<<JSON_START>>>')[0].trim();
+        }
+        return {
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: cleanText }]
+        };
+      });
 
-      // 1. Probar con gemini-3.6-flash (Endpoint activo)
-      let resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+      // 1. Probar con gemini-3.5-flash-lite (Ultra rápido ~1.5s)
+      let resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -15211,9 +15218,9 @@ FORMATO DE RESPUESTA:
         })
       });
 
-      // 2. Fallbacks a modelos alternativos
+      // 2. Fallback a gemini-3.6-flash
       if (!resp.ok) {
-        resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+        resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -15223,8 +15230,9 @@ FORMATO DE RESPUESTA:
         });
       }
 
+      // 3. Fallback a gemini-3.5-flash
       if (!resp.ok) {
-        resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
