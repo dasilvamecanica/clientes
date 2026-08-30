@@ -15301,6 +15301,8 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
   const carMatches = [
     { key: 'toyota hilux', name: 'Toyota Hilux' },
     { key: 'hilux', name: 'Toyota Hilux' },
+    { key: 'aircross', name: 'Citroen C3 Aircross' },
+    { key: 'c3 aircross', name: 'Citroen C3 Aircross' },
     { key: 'gol power', name: 'Volkswagen Gol Power 1.6' },
     { key: 'gol trend', name: 'Volkswagen Gol Trend 1.6' },
     { key: 'gol', name: 'Volkswagen Gol' },
@@ -15317,7 +15319,6 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
     { key: '208', name: 'Peugeot 208' },
     { key: '308', name: 'Peugeot 308' },
     { key: 'partner', name: 'Peugeot Partner' },
-    { key: 'aircross', name: 'Citroen C3 Aircross' },
     { key: 'berlingo', name: 'Citroen Berlingo' },
     { key: 'kangoo', name: 'Renault Kangoo' },
     { key: 'clio', name: 'Renault Clio' },
@@ -15342,76 +15343,69 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
     else discountPercent = 10;
   }
 
-  const sentences = userText.split(/[\.\n\;\:]+/).map(s => s.trim()).filter(Boolean);
-  let mainContextItem = '';
+  // Extraer tema mecánico principal
+  let mainTopic = '';
+  if (lower.includes('distribucion') || lower.includes('correa') || lower.includes('puesta a punto')) {
+    mainTopic = 'distribucion';
+  } else if (lower.includes('junta') || lower.includes('tapa de valvula') || lower.includes('tapa de válvulas')) {
+    mainTopic = 'junta_tapa';
+  } else if (lower.includes('aceite') || lower.includes('service') || lower.includes('filtro')) {
+    mainTopic = 'service';
+  } else if (lower.includes('freno') || lower.includes('pastilla') || lower.includes('disco')) {
+    mainTopic = 'frenos';
+  } else if (lower.includes('embrague') || lower.includes('placa')) {
+    mainTopic = 'embrague';
+  }
 
-  sentences.forEach(sentence => {
-    const sentLower = sentence.toLowerCase();
+  const hasBombaAgua = lower.includes('bomba') || lower.includes('bomba de agua');
+  const hasHerramienta = lower.includes('herramienta') || lower.includes('puesta a punto');
 
-    if (carMatches.some(c => sentLower.includes(c.key)) && sentLower.length < 25) {
-      return;
-    }
+  const priceMatches = [...userText.matchAll(/(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/gi)];
 
-    const priceRegex = /(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/gi;
-    const priceTokens = [...sentence.matchAll(priceRegex)];
+  if (priceMatches.length > 0) {
+    const clauses = userText.split(/[\,\.\;\n]+\s*|\s+y\s+/i).map(c => c.trim()).filter(Boolean);
 
-    if (priceTokens.length > 0) {
-      const subPhrases = sentence.split(/\s+y\s+|\s*,\s*/i);
+    let foundPart = false;
+    let foundService = false;
 
-      subPhrases.forEach(sub => {
-        const subLower = sub.toLowerCase();
-        const subPriceMatch = sub.match(/(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/i);
+    clauses.forEach(clause => {
+      const clLower = clause.toLowerCase();
+      if (carMatches.some(c => clLower === c.key || clLower === c.name.toLowerCase())) return;
 
-        if (subPriceMatch) {
-          const rawPriceStr = subPriceMatch[1];
-          const val = parseArgentinePriceString(rawPriceStr);
+      const pMatch = clause.match(/(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/i);
+      if (pMatch) {
+        const val = parseArgentinePriceString(pMatch[1]);
+        if (val > 0) {
+          const isPartClause = clLower.includes('repuesto') || clLower.includes('insumo') || clLower.includes('pieza') || clLower.includes('material');
+          const isServiceClause = clLower.includes('mano') || clLower.includes('obra') || clLower.includes('trabajo') || clLower.includes('desarmar') || clLower.includes('colocacion') || clLower.includes('instalacion') || clLower.includes('servicio');
 
-          if (val > 0) {
-            let itemName = sub.replace(rawPriceStr, '').replace(/[\(\)\$\:\,\.]/g, '').trim();
-            const isService = subLower.includes('mano') || subLower.includes('obra') || subLower.includes('desarmar') || subLower.includes('colocacion') || subLower.includes('instalacion') || subLower.includes('servicio');
-
-            if (isService) {
-              services.push({ name: cleanServiceName(itemName, mainContextItem), value: val });
+          if (isPartClause) {
+            foundPart = true;
+            parts.push({ name: buildSmartPartName(clause, mainTopic, hasBombaAgua), value: val });
+          } else if (isServiceClause) {
+            foundService = true;
+            services.push({ name: buildSmartServiceName(clause, mainTopic, hasHerramienta), value: val });
+          } else {
+            if (!foundPart && val > 30000) {
+              foundPart = true;
+              parts.push({ name: buildSmartPartName(clause, mainTopic, hasBombaAgua), value: val });
             } else {
-              parts.push({ name: cleanRepuestoName(itemName, mainContextItem), value: val });
+              foundService = true;
+              services.push({ name: buildSmartServiceName(clause, mainTopic, hasHerramienta), value: val });
             }
           }
-        } else {
-          let textClean = sub.replace(/^(el|la|los|las|un|una)\s+/i, '').trim();
-          if (textClean.length > 4) {
-            mainContextItem = textClean;
-          }
         }
-      });
-
-    } else {
-      if (sentLower.length > 4) {
-        mainContextItem = sentence.trim();
       }
-    }
-  });
+    });
+  }
 
   if (services.length === 0 && parts.length === 0) {
-    if (lower.includes('distribucion') || lower.includes('correa') || lower.includes('bomba')) {
-      services.push({ name: 'Mano de obra kit de distribución y puesta a punto', value: 180000 });
-      parts.push({ name: 'Kit de distribución (Correa y Tensor)', value: 120000 });
-      parts.push({ name: 'Bomba de Agua', value: 65000 });
-      parts.push({ name: 'Líquido Refrigerante concentrado (2L)', value: 18000 });
-    } else if (lower.includes('junta') || lower.includes('tapa') || lower.includes('valvulas')) {
-      services.push({ name: 'Mano de obra desarmado y cambio de junta de tapa de válvulas', value: 230000 });
+    if (mainTopic === 'distribucion') {
+      services.push({ name: 'Mano de obra kit de distribución y puesta a punto', value: 270000 });
+      parts.push({ name: hasBombaAgua ? 'Kit de distribución con bomba de agua' : 'Kit de distribución', value: 150000 });
+    } else if (mainTopic === 'junta_tapa') {
+      services.push({ name: 'Mano de obra reemplazo de junta de tapa de válvulas', value: 230000 });
       parts.push({ name: 'Junta de tapa de válvulas', value: 150000 });
-    } else if (lower.includes('aceite') || lower.includes('service') || lower.includes('filtro')) {
-      services.push({ name: 'Servicio de mantenimiento: Cambio de aceite y filtros', value: 45000 });
-      parts.push({ name: 'Aceite Semisintético 10w40 (4 Litros)', value: 48000 });
-      parts.push({ name: 'Filtro de Aceite', value: 12000 });
-      parts.push({ name: 'Filtro de Aire', value: 15000 });
-    } else if (lower.includes('freno') || lower.includes('pastilla') || lower.includes('disco')) {
-      services.push({ name: 'Mano de obra cambio de pastillas y discos delanteros', value: 75000 });
-      parts.push({ name: 'Juego de Pastillas de Freno Delanteras', value: 38000 });
-      parts.push({ name: 'Juego de Discos de Freno Delanteros', value: 72000 });
-    } else if (lower.includes('embrague') || lower.includes('placa')) {
-      services.push({ name: 'Mano de obra sacar y poner caja / kit de embrague', value: 250000 });
-      parts.push({ name: 'Kit de Embrague (Placa, Disco y Crapodina)', value: 210000 });
     } else {
       services.push({ name: `Mano de obra: ${userText}`, value: 90000 });
     }
@@ -15430,6 +15424,54 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
       discountPercent: discountPercent
     }
   };
+}
+
+function buildSmartPartName(clause, mainTopic, hasBombaAgua) {
+  let clean = clause.replace(/(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/gi, '');
+  clean = clean.replace(/los|las|el|la|repuestos|repuesto|valen|salen|cuestan|son|precio|valor|un|una|unos|unas/gi, '').trim();
+  clean = clean.replace(/^[\,\.\:\-\s]+|[\,\.\:\-\s]+$/g, '');
+
+  if (!clean || clean.length < 3 || clean.toLowerCase() === 'valen' || clean.toLowerCase() === 'repuestos') {
+    if (mainTopic === 'distribucion') {
+      return hasBombaAgua ? 'Kit de distribución con bomba de agua' : 'Kit de distribución (Correa y Tensor)';
+    } else if (mainTopic === 'junta_tapa') {
+      return 'Junta de tapa de válvulas';
+    } else if (mainTopic === 'service') {
+      return 'Filtros y aceite para service';
+    } else if (mainTopic === 'frenos') {
+      return 'Juego de pastillas de freno';
+    } else if (mainTopic === 'embrague') {
+      return 'Kit de embrague (Placa y Disco)';
+    }
+    return 'Repuestos e insumos';
+  }
+  return capitalizeFirst(clean);
+}
+
+function buildSmartServiceName(clause, mainTopic, hasHerramienta) {
+  let clean = clause.replace(/(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/gi, '');
+  clean = clean.replace(/la|el|los|las|mano|de|obra|por|desarmar|valen|salen|cuestan|son|un|una/gi, '').trim();
+  clean = clean.replace(/^[\,\.\:\-\s]+|[\,\.\:\-\s]+$/g, '');
+
+  if (!clean || clean.length < 3 || clean.toLowerCase() === 'desarmar') {
+    if (mainTopic === 'distribucion') {
+      return hasHerramienta ? 'Mano de obra distribución y puesta a punto' : 'Mano de obra cambio de distribución';
+    } else if (mainTopic === 'junta_tapa') {
+      return 'Mano de obra reemplazo de junta de tapa de válvulas';
+    } else if (mainTopic === 'service') {
+      return 'Servicio de mantenimiento general';
+    } else if (mainTopic === 'frenos') {
+      return 'Mano de obra cambio de pastillas de freno';
+    } else if (mainTopic === 'embrague') {
+      return 'Mano de obra cambio de kit de embrague';
+    }
+    return 'Mano de obra y trabajo técnico';
+  }
+  
+  if (mainTopic === 'distribucion') {
+    return 'Mano de obra distribución y puesta a punto';
+  }
+  return capitalizeFirst(`Mano de obra ${clean}`);
 }
 
 function parseArgentinePriceString(str) {
