@@ -15722,8 +15722,15 @@ function buildPartTitle(tokenLower, workInfo) {
   return 'Repuesto / Insumo';
 }
 
+function extractVehicleYear(text) {
+  if (!text) return '';
+  const match = text.match(/\b(19[7-9]\d|20[0-2]\d)\b/);
+  return match ? match[1] : '';
+}
+
 function extractVehicleInfo(text) {
   const lower = text.toLowerCase();
+  const year = extractVehicleYear(text);
 
   const carMatches = [
     { regex: /\bnissan frontier\b|\bfrontier\b|\bnisa frintier\b|\bnisa\b|\bfrontie\b/i, name: 'Nissan Frontier' },
@@ -15777,7 +15784,7 @@ function extractVehicleInfo(text) {
       if (car.name === 'Fiat Uno' && lower.includes('cada uno')) {
         continue;
       }
-      return car.name;
+      return year ? `${car.name} (${year})` : car.name;
     }
   }
 
@@ -15786,10 +15793,10 @@ function extractVehicleInfo(text) {
   if (brandMatch) {
     const brand = capitalizeFirst(brandMatch[1].toLowerCase());
     const model = capitalizeFirst(brandMatch[2].toLowerCase());
-    return `${brand} ${model}`;
+    return year ? `${brand} ${model} (${year})` : `${brand} ${model}`;
   }
 
-  return '';
+  return year ? `Vehículo (${year})` : '';
 }
 
 function runLocalConversationalAiLogic(userText, currentQuote) {
@@ -16145,7 +16152,10 @@ window.applyAiChatQuoteState = function(msgIdx) {
 
   if (targetVehId === 'new') {
     const newId = 'v-' + Date.now();
-    const vehNameParts = (data.vehicleInfo || '').split(' ');
+    const vehYear = extractVehicleYear(data.vehicleInfo || '');
+    let cleanVehInfo = (data.vehicleInfo || '').replace(/\(\d{4}\)/g, '').replace(/\b(19[7-9]\d|20[0-2]\d)\b/g, '').trim();
+
+    const vehNameParts = cleanVehInfo.split(' ');
     const brand = vehNameParts[0] || 'Cotización';
     const model = vehNameParts.slice(1).join(' ') || 'IA';
 
@@ -16154,7 +16164,7 @@ window.applyAiChatQuoteState = function(msgIdx) {
       plate: '',
       brand: brand,
       model: model,
-      year: new Date().getFullYear().toString(),
+      year: vehYear || '',
       color: '',
       motor: '',
       client: 'Consumidor Final',
@@ -16197,7 +16207,10 @@ window.downloadAiChatQuotePDF = function(msgIdx) {
   if (!msg || !msg.quoteState) return;
 
   const data = msg.quoteState;
-  const vehNameParts = (data.vehicleInfo || '').split(' ');
+  const vehYear = extractVehicleYear(data.vehicleInfo || '');
+  let cleanVehInfo = (data.vehicleInfo || '').replace(/\(\d{4}\)/g, '').replace(/\b(19[7-9]\d|20[0-2]\d)\b/g, '').trim();
+
+  const vehNameParts = cleanVehInfo.split(' ');
   const brand = vehNameParts[0] || 'Cotización';
   const model = vehNameParts.slice(1).join(' ') || 'IA';
 
@@ -16206,7 +16219,7 @@ window.downloadAiChatQuotePDF = function(msgIdx) {
     plate: 'Sin Patente',
     brand: brand,
     model: model,
-    year: new Date().getFullYear().toString(),
+    year: vehYear || '',
     color: '',
     motor: '',
     client: 'Consumidor Final',
