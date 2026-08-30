@@ -15153,11 +15153,12 @@ window.sendAiChatMessage = async function() {
       const sysPrompt = `${userSystemInstructions}
 
 REGLAS OBLIGATORIAS DE FORMATO DE NÚMEROS Y MONEDA EN ARGENTINA:
-1. La palabra "mil" o la letra "k" multiplica por 1.000 (ej: "230mil" = 230000 pesos, "150mil" = 150000 pesos, "50k" = 50000 pesos).
-2. Los puntos en números como "150.000" o "230.000" son separadores de miles, NO decimales. "150.000" representa el número 150000.
-3. Si el usuario escribe precios entre paréntesis como "(150.000)", asigna ese valor al repuesto o servicio correspondiente.
-4. Distingue claramente entre repuestos ("parts") y mano de obra/servicios ("services").
-5. Identifica modelos de vehículos si son mencionados (ej: "Toyota Hilux", "Gol Power" -> Volkswagen Gol Power 1.6, "Suran" -> Volkswagen Suran 1.6).
+1. En la lista de Repuestos ("parts"), escribe el NOMBRE DEL REPUESTO FÍSICO (ej: "Junta de tapa de válvulas", "Pastillas de freno", "Kit de distribución", "Bomba de agua") y NUNCA la acción (NO escribir "Cambio de junta..." ni agregar "(Repuesto)").
+2. En la lista de Mano de Obra ("services"), escribe el trabajo o servicio realizado (ej: "Mano de obra desarmado y cambio de junta", "Servicio de mantenimiento").
+3. La palabra "mil" o la letra "k" multiplica por 1.000 (ej: "230mil" = 230000 pesos, "150mil" = 150000 pesos, "50k" = 50000 pesos).
+4. Los puntos en números como "150.000" o "230.000" son separadores de miles, NO decimales. "150.000" representa el número 150000.
+5. Si el usuario escribe precios entre paréntesis como "(150.000)", asigna ese valor al repuesto o servicio correspondiente.
+6. Identifica modelos de vehículos si son mencionados (ej: "Toyota Hilux", "Gol Power" -> Volkswagen Gol Power 1.6, "Suran" -> Volkswagen Suran 1.6).
 
 Estado actual del presupuesto: ${JSON.stringify(window.currentAiQuoteState)}
 
@@ -15240,6 +15241,23 @@ Cuando el usuario pida agregar, quitar, modificar precios, aplicar descuentos o 
   }
 };
 
+function cleanRepuestoName(rawName, mainContext) {
+  let text = (rawName && rawName.toLowerCase() !== 'repuesto' && rawName.toLowerCase() !== 'repuestos') ? rawName : (mainContext || 'Repuesto / Insumo');
+  text = text.replace(/\(repuesto\)/gi, '').replace(/repuesto[s]?\s*[\:\-\s]*/gi, '');
+  text = text.replace(/^(el|la|los|las|un|una|cambio de|reemplazo de|colocacion de|instalacion de|reparacion de|service de|arreglo de)\s+/gi, '');
+  text = text.trim();
+  return capitalizeFirst(text) || 'Repuesto / Insumo';
+}
+
+function cleanServiceName(rawName, mainContext) {
+  let text = (rawName && rawName.toLowerCase() !== 'mano de obra' && rawName.toLowerCase() !== 'mano obra') ? rawName : (mainContext || 'Mano de obra y trabajo');
+  text = text.replace(/\(mano de obra\)/gi, '').trim();
+  if (!text.toLowerCase().includes('mano') && !text.toLowerCase().includes('obra') && !text.toLowerCase().includes('servicio')) {
+    text = `Mano de obra ${text}`;
+  }
+  return capitalizeFirst(text);
+}
+
 function runLocalConversationalAiLogic(userText, currentQuote) {
   const lower = userText.toLowerCase();
   const services = [...(currentQuote.services || [])];
@@ -15317,24 +15335,12 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
 
           if (val > 0) {
             let itemName = sub.replace(rawPriceStr, '').replace(/[\(\)\$\:\,\.]/g, '').trim();
-            itemName = itemName.replace(/^(el|la|los|las|un|una|cambio de|mano de obra por|mano de obra|repuesto|repuestos)\s+/i, '').trim();
-
-            if (!itemName || itemName.length < 2 || itemName.toLowerCase() === 'repuesto' || itemName.toLowerCase() === 'mano de obra') {
-              if (subLower.includes('repuesto')) {
-                itemName = mainContextItem ? `${mainContextItem} (Repuesto)` : 'Repuesto / Insumo';
-              } else if (subLower.includes('mano') || subLower.includes('obra') || subLower.includes('desarmar')) {
-                itemName = mainContextItem ? `Mano de obra ${mainContextItem}` : 'Mano de obra y trabajo';
-              } else {
-                itemName = mainContextItem || 'Trabajo / Repuesto';
-              }
-            }
-
             const isService = subLower.includes('mano') || subLower.includes('obra') || subLower.includes('desarmar') || subLower.includes('colocacion') || subLower.includes('instalacion') || subLower.includes('servicio');
 
             if (isService) {
-              services.push({ name: capitalizeFirst(itemName), value: val });
+              services.push({ name: cleanServiceName(itemName, mainContextItem), value: val });
             } else {
-              parts.push({ name: capitalizeFirst(itemName), value: val });
+              parts.push({ name: cleanRepuestoName(itemName, mainContextItem), value: val });
             }
           }
         } else {
