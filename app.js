@@ -14980,3 +14980,290 @@ window.closePhotoLightbox = function() {
   }
 };
 
+// --- 20. COTIZADOR INTELIGENTE IA (GOOGLE GEMINI 1.5 + FUZZY MATCH) ---
+window.lastAiGeneratedQuote = null;
+
+window.openAiQuoteAssistantModal = function(vehicleId = null) {
+  const modal = document.getElementById('ai-quote-modal');
+  if (!modal) return;
+
+  const vehSelect = document.getElementById('ai-quote-vehicle-select');
+  if (vehSelect) {
+    let optsHtml = '<option value="new">+ Crear nueva cotización en borrador</option>';
+    if (Array.isArray(vehicles)) {
+      vehicles.forEach(v => {
+        const idStr = String(v.id);
+        const indexNum = idStr.length >= 2 ? idStr.substring(idStr.length - 2) : '01';
+        optsHtml += `<option value="${v.id}" ${vehicleId && String(vehicleId) === String(v.id) ? 'selected' : ''}>#${indexNum} - ${v.brand || ''} ${v.model || ''} (${v.plate || 'Sin Patente'}) - ${v.client || 'Consumidor Final'}</option>`;
+      });
+    }
+    vehSelect.innerHTML = optsHtml;
+  }
+
+  const keyInput = document.getElementById('ai-gemini-key-input');
+  const savedKey = localStorage.getItem('taller_gemini_api_key') || (typeof workshopConfig !== 'undefined' ? workshopConfig.geminiApiKey : '');
+  if (keyInput) keyInput.value = savedKey || '';
+
+  const resBox = document.getElementById('ai-quote-result-box');
+  if (resBox) resBox.style.display = 'none';
+
+  modal.style.display = 'flex';
+  if (typeof initLucide === 'function') initLucide();
+};
+
+window.closeAiQuoteModal = function() {
+  const modal = document.getElementById('ai-quote-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.setAiPromptText = function(text) {
+  const input = document.getElementById('ai-quote-prompt-input');
+  if (input) {
+    input.value = text;
+    input.focus();
+  }
+};
+
+window.saveGeminiApiKeyFromModal = function() {
+  const keyInput = document.getElementById('ai-gemini-key-input');
+  if (!keyInput) return;
+  const val = keyInput.value.trim();
+  localStorage.setItem('taller_gemini_api_key', val);
+  if (typeof workshopConfig !== 'undefined') {
+    workshopConfig.geminiApiKey = val;
+    localStorage.setItem('taller_workshop_config', JSON.stringify(workshopConfig));
+    if (typeof syncWithSupabase === 'function') {
+      syncWithSupabase('taller_config', [{ id: 'workshop_config', ...workshopConfig }]);
+    }
+  }
+  alert('✅ Clave API de Google Gemini guardada exitosamente.');
+};
+
+window.processAiQuoteGeneration = async function() {
+  const promptInput = document.getElementById('ai-quote-prompt-input');
+  const text = promptInput ? promptInput.value.trim() : '';
+  if (!text) {
+    alert('Por favor, ingresá una descripción del trabajo o presupuesto que querés armar.');
+    return;
+  }
+
+  const btnText = document.getElementById('btn-generate-ai-quote-text');
+  const btn = document.getElementById('btn-generate-ai-quote');
+  if (btnText) btnText.textContent = 'Analizando catálogo con IA...';
+  if (btn) btn.disabled = true;
+
+  try {
+    const apiKey = localStorage.getItem('taller_gemini_api_key') || (typeof workshopConfig !== 'undefined' ? workshopConfig.geminiApiKey : '');
+
+    const catalogServices = Array.isArray(servicesCatalog) ? servicesCatalog.map(s => ({ id: s.id, name: s.name, price: s.price })) : [];
+    const catalogParts = Array.isArray(partsCatalog) ? partsCatalog.map(p => ({ id: p.id, name: p.name, price: p.price })) : [];
+
+    let resultData = null;
+
+    if (apiKey) {
+      try {
+        const sysInstruction = `Eres el asistente inteligente de cotizaciones del taller mecánico. 
+Dado el pedido del mecánico en español: "${text}".
+Busca y selecciona los mejores repuestos y servicios del catálogo disponible o propone ítems razonables.
+Catálogo de Servicios: ${JSON.stringify(catalogServices.slice(0, 50))}
+Catálogo de Repuestos: ${JSON.stringify(catalogParts.slice(0, 50))}
+
+RESPONDE ÚNICAMENTE UN OBJETO JSON CON ESTE FORMATO EXACTO Y NADA DE TEXTO ADICIONAL:
+{
+  "recognizedVehicle": "información del vehículo si fue mencionada, o vacio",
+  "services": [ {"name": "Nombre exacto del servicio", "value": 150000} ],
+  "parts": [ {"name": "Nombre del repuesto", "value": 85000} ],
+  "explanation": "Breve explicación de los ítems seleccionados"
+}`;
+
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: sysInstruction }] }]
+          })
+        });
+
+        if (resp.ok) {
+          const json = await resp.json();
+          const rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const cleanJsonStr = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+          resultData = JSON.parse(cleanJsonStr);
+        }
+      } catch (err) {
+        console.warn("Fallo llamado API Gemini, usando motor difuso local:", err);
+      }
+    }
+
+    if (!resultData || (!resultData.services && !resultData.parts)) {
+      resultData = runLocalSmartFuzzyQuoteGenerator(text, catalogServices, catalogParts);
+    }
+
+    window.lastAiGeneratedQuote = resultData;
+    renderAiGeneratedResult(resultData);
+
+  } catch (e) {
+    console.error("Error al generar cotización con IA:", e);
+    alert("Ocurrió un error al procesar la cotización con IA. Por favor reintentá.");
+  } finally {
+    if (btnText) btnText.textContent = 'Generar Presupuesto con IA';
+    if (btn) btn.disabled = false;
+  }
+};
+
+function runLocalSmartFuzzyQuoteGenerator(promptText, services, parts) {
+  const lower = promptText.toLowerCase();
+  const matchedServices = [];
+  const matchedParts = [];
+
+  if (Array.isArray(services)) {
+    services.forEach(s => {
+      const sName = (s.name || '').toLowerCase();
+      const words = sName.split(/\s+/).filter(w => w.length > 3);
+      if (words.some(w => lower.includes(w)) || lower.includes(sName)) {
+        matchedServices.push({ name: s.name, value: Number(s.price) || 50000 });
+      }
+    });
+  }
+
+  if (Array.isArray(parts)) {
+    parts.forEach(p => {
+      const pName = (p.name || '').toLowerCase();
+      const words = pName.split(/\s+/).filter(w => w.length > 3);
+      if (words.some(w => lower.includes(w)) || lower.includes(pName)) {
+        matchedParts.push({ name: p.name, value: Number(p.price) || 45000 });
+      }
+    });
+  }
+
+  if (matchedServices.length === 0 && matchedParts.length === 0) {
+    if (lower.includes('distribucion') || lower.includes('correa') || lower.includes('bomba')) {
+      matchedServices.push({ name: 'Mano de obra kit de distribución y puesta a punto', value: 180000 });
+      matchedParts.push({ name: 'Kit de distribución (Correa y Tensor)', value: 120000 });
+      matchedParts.push({ name: 'Bomba de Agua', value: 65000 });
+      matchedParts.push({ name: 'Líquido Refrigerante concentrado (2L)', value: 18000 });
+    } else if (lower.includes('aceite') || lower.includes('service') || lower.includes('filtro')) {
+      matchedServices.push({ name: 'Servicio de mantenimiento: Cambio de aceite y filtros', value: 45000 });
+      matchedParts.push({ name: 'Aceite Semisintético 10w40 (4 Litros)', value: 48000 });
+      matchedParts.push({ name: 'Filtro de Aceite', value: 12000 });
+      matchedParts.push({ name: 'Filtro de Aire', value: 15000 });
+    } else if (lower.includes('freno') || lower.includes('pastilla') || lower.includes('disco')) {
+      matchedServices.push({ name: 'Mano de obra cambio de pastillas y discos delanteros', value: 75000 });
+      matchedParts.push({ name: 'Juego de Pastillas de Freno Delanteras', value: 38000 });
+      matchedParts.push({ name: 'Juego de Discos de Freno Delanteros', value: 72000 });
+    } else if (lower.includes('embrague') || lower.includes('placa') || lower.includes('disco embrague')) {
+      matchedServices.push({ name: 'Mano de obra sacar y poner caja de cambios / kit de embrague', value: 250000 });
+      matchedParts.push({ name: 'Kit de Embrague (Placa, Disco y Crapodina)', value: 210000 });
+    } else {
+      matchedServices.push({ name: `Mano de obra: ${promptText}`, value: 90000 });
+      matchedParts.push({ name: `Repuestos y consumibles para ${promptText}`, value: 70000 });
+    }
+  }
+
+  return {
+    recognizedVehicle: promptText.split(',')[0],
+    services: matchedServices,
+    parts: matchedParts,
+    explanation: 'Cotización inteligente armada analizando los trabajos y catálogo del taller.'
+  };
+}
+
+function renderAiGeneratedResult(data) {
+  const box = document.getElementById('ai-quote-result-box');
+  const preview = document.getElementById('ai-quote-items-preview');
+  if (!box || !preview) return;
+
+  let totalServ = (data.services || []).reduce((acc, s) => acc + (Number(s.value) || 0), 0);
+  let totalParts = (data.parts || []).reduce((acc, p) => acc + (Number(p.value) || 0), 0);
+  let grandTotal = totalServ + totalParts;
+
+  let html = `
+    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; font-style: italic;">
+      "${data.explanation || 'Ítems detectados para la cotización'}"
+    </div>
+  `;
+
+  if (data.services && data.services.length > 0) {
+    html += `<div style="font-size: 12px; font-weight: 800; color: var(--color-accent); margin: 8px 0 4px 0;">🛠️ Servicios (${data.services.length})</div>`;
+    html += '<ul style="list-style: none; padding: 0; margin: 0 0 10px 0;">';
+    data.services.forEach(s => {
+      html += `<li style="display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <span>• ${s.name}</span>
+        <strong style="color: var(--text-primary);">${formatCurrency(s.value)}</strong>
+      </li>`;
+    });
+    html += '</ul>';
+  }
+
+  if (data.parts && data.parts.length > 0) {
+    html += `<div style="font-size: 12px; font-weight: 800; color: var(--color-accent); margin: 8px 0 4px 0;">⚙️ Repuestos (${data.parts.length})</div>`;
+    html += '<ul style="list-style: none; padding: 0; margin: 0 0 10px 0;">';
+    data.parts.forEach(p => {
+      html += `<li style="display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <span>• ${p.name}</span>
+        <strong style="color: var(--text-primary);">${formatCurrency(p.value)}</strong>
+      </li>`;
+    });
+    html += '</ul>';
+  }
+
+  html += `
+    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 800; border-top: 1.5px solid var(--border-color); padding-top: 8px; margin-top: 8px; color: var(--text-primary);">
+      <span>Total Estimado:</span>
+      <span style="color: #22c55e; font-size: 16px;">${formatCurrency(grandTotal)}</span>
+    </div>
+  `;
+
+  preview.innerHTML = html;
+  box.style.display = 'block';
+  if (typeof initLucide === 'function') initLucide();
+}
+
+window.applyAiGeneratedQuote = function() {
+  if (!window.lastAiGeneratedQuote) return;
+  const data = window.lastAiGeneratedQuote;
+  const targetVehId = document.getElementById('ai-quote-vehicle-select').value;
+
+  if (targetVehId === 'new') {
+    const newId = 'v-' + Date.now();
+    const newVeh = {
+      id: newId,
+      plate: '',
+      brand: 'Cotización',
+      model: 'IA',
+      year: new Date().getFullYear().toString(),
+      color: '',
+      motor: '',
+      client: 'Consumidor Final',
+      stage: 'cotizacion',
+      value: (data.services || []).reduce((a, b) => a + (Number(b.value) || 0), 0) + (data.parts || []).reduce((a, b) => a + (Number(b.value) || 0), 0),
+      entryDate: formatDateToSlash(new Date()),
+      entryTime: Date.now(),
+      delivered: false,
+      kilometers: 0,
+      services: [],
+      quoteServices: data.services || [],
+      quoteParts: data.parts || [],
+      quoteCompleted: true
+    };
+    vehicles.unshift(newVeh);
+    saveState();
+    if (typeof syncWithSupabase === 'function') syncWithSupabase('taller_vehicles', vehicles);
+    closeAiQuoteModal();
+    if (typeof openDetailedReception === 'function') openDetailedReception(newId);
+    if (typeof switchView === 'function') switchView('cotizaciones');
+  } else {
+    const veh = vehicles.find(v => String(v.id) === String(targetVehId));
+    if (veh) {
+      veh.quoteServices = [...(veh.quoteServices || []), ...(data.services || [])];
+      veh.quoteParts = [...(veh.quoteParts || []), ...(data.parts || [])];
+      veh.quoteCompleted = true;
+      veh.value = veh.quoteServices.reduce((a, b) => a + (Number(b.value) || 0), 0) + veh.quoteParts.reduce((a, b) => a + (Number(b.value) || 0), 0);
+      saveState();
+      if (typeof syncWithSupabase === 'function') syncWithSupabase('taller_vehicles', vehicles);
+      closeAiQuoteModal();
+      if (typeof openDetailedReception === 'function') openDetailedReception(veh.id);
+    }
+  }
+};
+
