@@ -15467,6 +15467,76 @@ function buildPartTitle(tokenLower, workInfo) {
   return 'Repuesto / Insumo';
 }
 
+function extractVehicleInfo(text) {
+  const lower = text.toLowerCase();
+
+  const carMatches = [
+    { regex: /\bnissan frontier\b|\bfrontier\b|\bnisa frintier\b|\bnisa\b|\bfrontie\b/i, name: 'Nissan Frontier' },
+    { regex: /\btoyota hilux\b|\bhilux\b|\bhilu\b/i, name: 'Toyota Hilux' },
+    { regex: /\btoyota corolla\b|\bcorolla\b/i, name: 'Toyota Corolla' },
+    { regex: /\btoyota etios\b|\betios\b/i, name: 'Toyota Etios' },
+    { regex: /\btoyota yaris\b|\byaris\b/i, name: 'Toyota Yaris' },
+    { regex: /\bcitroen c3 aircross\b|\baircross\b|\bc3 aircross\b|\baircros\b|\bairc\b/i, name: 'Citroen C3 Aircross' },
+    { regex: /\bcitroen c3\b|\bc3\b/i, name: 'Citroen C3' },
+    { regex: /\bvolkswagen gol power\b|\bgol power\b|\bgol powr\b|\bgol pow\b/i, name: 'Volkswagen Gol Power 1.6' },
+    { regex: /\bvolkswagen gol trend\b|\bgol trend\b/i, name: 'Volkswagen Gol Trend 1.6' },
+    { regex: /\bvolkswagen gol\b|\bgol\b/i, name: 'Volkswagen Gol' },
+    { regex: /\bvolkswagen suran\b|\bsuran\b/i, name: 'Volkswagen Suran 1.6' },
+    { regex: /\bvolkswagen amarok\b|\bamarok\b|\bamaro\b/i, name: 'Volkswagen Amarok' },
+    { regex: /\bvolkswagen polo\b|\bpolo\b/i, name: 'Volkswagen Polo' },
+    { regex: /\bvolkswagen virtus\b|\bvirtus\b/i, name: 'Volkswagen Virtus' },
+    { regex: /\bvolkswagen nivus\b|\bnivus\b/i, name: 'Volkswagen Nivus' },
+    { regex: /\bfiat palio\b|\bpalio\b/i, name: 'Fiat Palio' },
+    { regex: /\bfiat uno\b|\buno\b/i, name: 'Fiat Uno' },
+    { regex: /\bfiat cronos\b|\bcronos\b|\bcrono\b/i, name: 'Fiat Cronos' },
+    { regex: /\bfiat toro\b|\btoro\b/i, name: 'Fiat Toro' },
+    { regex: /\bfiat argo\b|\bargo\b/i, name: 'Fiat Argo' },
+    { regex: /\bfiat mobi\b|\bmobi\b/i, name: 'Fiat Mobi' },
+    { regex: /\bfiat strada\b|\bstrada\b/i, name: 'Fiat Strada' },
+    { regex: /\bchevrolet corsa\b|\bcorsa\b/i, name: 'Chevrolet Corsa 1.6' },
+    { regex: /\bchevrolet agile\b|\bagile\b/i, name: 'Chevrolet Agile' },
+    { regex: /\bchevrolet onix\b|\bonix\b/i, name: 'Chevrolet Onix' },
+    { regex: /\bchevrolet cruze\b|\bcruze\b/i, name: 'Chevrolet Cruze' },
+    { regex: /\bchevrolet spin\b|\bspin\b/i, name: 'Chevrolet Spin' },
+    { regex: /\bchevrolet tracker\b|\btracker\b/i, name: 'Chevrolet Tracker' },
+    { regex: /\bchevrolet s10\b|\bs10\b/i, name: 'Chevrolet S10' },
+    { regex: /\bpeugeot 208\b|\b208\b/i, name: 'Peugeot 208' },
+    { regex: /\bpeugeot 308\b|\b308\b/i, name: 'Peugeot 308' },
+    { regex: /\bpeugeot 2008\b|\b2008\b/i, name: 'Peugeot 2008' },
+    { regex: /\bpeugeot partner\b|\bpartner\b/i, name: 'Peugeot Partner' },
+    { regex: /\bcitroen berlingo\b|\bberlingo\b/i, name: 'Citroen Berlingo' },
+    { regex: /\brenault kangoo\b|\bkangoo\b/i, name: 'Renault Kangoo' },
+    { regex: /\brenault clio\b|\bclio\b/i, name: 'Renault Clio' },
+    { regex: /\brenault sandero\b|\bsandero\b/i, name: 'Renault Sandero' },
+    { regex: /\brenault duster\b|\bduster\b/i, name: 'Renault Duster' },
+    { regex: /\brenault kwid\b|\bkwid\b/i, name: 'Renault Kwid' },
+    { regex: /\bford ranger\b|\branger\b/i, name: 'Ford Ranger' },
+    { regex: /\bford focus\b|\bfocus\b/i, name: 'Ford Focus' },
+    { regex: /\bford fiesta\b|\bfiesta\b/i, name: 'Ford Fiesta' },
+    { regex: /\bford ka\b|\bka\b/i, name: 'Ford Ka' },
+    { regex: /\bford ecosport\b|\becosport\b/i, name: 'Ford Ecosport' }
+  ];
+
+  for (const car of carMatches) {
+    if (car.regex.test(lower)) {
+      if (car.name === 'Fiat Uno' && lower.includes('cada uno')) {
+        continue;
+      }
+      return car.name;
+    }
+  }
+
+  const brandRegex = /\b(chevrolet|chevy|volkswagen|vw|ford|fiat|peugeot|citroen|citroën|renault|toyota|nissan|honda|hyundai|kia|jeep|ram|audi|bmw|mercedes)\s+([a-z0-9\-\.]+)\b/i;
+  const brandMatch = text.match(brandRegex);
+  if (brandMatch) {
+    const brand = capitalizeFirst(brandMatch[1].toLowerCase());
+    const model = capitalizeFirst(brandMatch[2].toLowerCase());
+    return `${brand} ${model}`;
+  }
+
+  return '';
+}
+
 function runLocalConversationalAiLogic(userText, currentQuote) {
   const text = userText.trim();
   const lower = text.toLowerCase();
@@ -15477,44 +15547,9 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
   let parts = JSON.parse(JSON.stringify(currentQuote.parts || []));
   let discountPercent = Number(currentQuote.discountPercent) || 0;
 
-  const carMatches = [
-    { regex: /\bnissan frontier\b|\bfrontier\b|\bnisa frintier\b|\bnisa\b|\bfrontie\b/i, name: 'Nissan Frontier' },
-    { regex: /\btoyota hilux\b|\bhilux\b|\bhilu\b/i, name: 'Toyota Hilux' },
-    { regex: /\bcitroen c3 aircross\b|\baircross\b|\bc3 aircross\b|\baircros\b|\bairc\b/i, name: 'Citroen C3 Aircross' },
-    { regex: /\bvolkswagen gol power\b|\bgol power\b|\bgol powr\b|\bgol pow\b/i, name: 'Volkswagen Gol Power 1.6' },
-    { regex: /\bvolkswagen gol trend\b|\bgol trend\b/i, name: 'Volkswagen Gol Trend 1.6' },
-    { regex: /\bvolkswagen gol\b|\bgol\b/i, name: 'Volkswagen Gol' },
-    { regex: /\bvolkswagen suran\b|\bsuran\b/i, name: 'Volkswagen Suran 1.6' },
-    { regex: /\bvolkswagen amarok\b|\bamarok\b|\bamaro\b/i, name: 'Volkswagen Amarok' },
-    { regex: /\bfiat palio\b|\bpalio\b/i, name: 'Fiat Palio' },
-    { regex: /\bfiat uno\b|\buno\b/i, name: 'Fiat Uno' },
-    { regex: /\bfiat cronos\b|\bcronos\b|\bcrono\b/i, name: 'Fiat Cronos' },
-    { regex: /\bfiat toro\b|\btoro\b/i, name: 'Fiat Toro' },
-    { regex: /\bchevrolet corsa\b|\bcorsa\b/i, name: 'Chevrolet Corsa 1.6' },
-    { regex: /\bchevrolet onix\b|\bonix\b/i, name: 'Chevrolet Onix' },
-    { regex: /\bchevrolet cruze\b|\bcruze\b/i, name: 'Chevrolet Cruze' },
-    { regex: /\bpeugeot 208\b|\b208\b/i, name: 'Peugeot 208' },
-    { regex: /\bpeugeot 308\b|\b308\b/i, name: 'Peugeot 308' },
-    { regex: /\bpeugeot partner\b|\bpartner\b/i, name: 'Peugeot Partner' },
-    { regex: /\bcitroen berlingo\b|\bberlingo\b/i, name: 'Citroen Berlingo' },
-    { regex: /\brenault kangoo\b|\bkangoo\b/i, name: 'Renault Kangoo' },
-    { regex: /\brenault clio\b|\bclio\b/i, name: 'Renault Clio' },
-    { regex: /\brenault sandero\b|\bsandero\b/i, name: 'Renault Sandero' },
-    { regex: /\brenault duster\b|\bduster\b/i, name: 'Renault Duster' },
-    { regex: /\bford ranger\b|\branger\b/i, name: 'Ford Ranger' },
-    { regex: /\bford focus\b|\bfocus\b/i, name: 'Ford Focus' },
-    { regex: /\bford fiesta\b|\bfiesta\b/i, name: 'Ford Fiesta' },
-    { regex: /\bford ka\b|\bka\b/i, name: 'Ford Ka' }
-  ];
-
-  for (const car of carMatches) {
-    if (car.regex.test(lower)) {
-      if (car.name === 'Fiat Uno' && lower.includes('cada uno')) {
-        continue;
-      }
-      vehicleInfo = car.name;
-      break;
-    }
+  const extractedCar = extractVehicleInfo(text);
+  if (extractedCar) {
+    vehicleInfo = extractedCar;
   }
 
   if (lower.includes('freno') || lower.includes('feno') || lower.includes('pastilla') || lower.includes('pastia') || lower.includes('disco') || lower.includes('delant')) {
@@ -15602,6 +15637,9 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
 
   let textRes = `¡Perfecto! Actualicé el presupuesto:\n`;
   if (vehicleInfo) textRes += `• Vehículo: **${vehicleInfo}**\n`;
+  if (workInfo && (services.length > 0 || parts.length > 0)) {
+    textRes += `• Trabajo: **${workInfo}**\n`;
+  }
   if (services.length > 0) {
     services.forEach(s => {
       textRes += `• ${s.name}: **${formatCurrency(s.value)}**\n`;
@@ -15611,6 +15649,11 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
     parts.forEach(p => {
       textRes += `• ${p.name}: **${formatCurrency(p.value)}**\n`;
     });
+  }
+
+  if (services.length === 0 && parts.length === 0) {
+    if (workInfo) textRes += `• Trabajo a cotizar: **${workInfo}**\n`;
+    textRes += `\nPasame los importes de mano de obra y repuestos (ej: "mano 120k, repuestos 95k") y los iré sumando en tiempo real.`;
   }
 
   return {
