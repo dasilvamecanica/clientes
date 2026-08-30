@@ -3575,7 +3575,7 @@ window.renderWorkshopTables = function() {
   const searchInput = document.getElementById('sidebar-search-input');
   const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-  let activeVehicles = vehicles.filter(v => !v.delivered);
+  let activeVehicles = vehicles.filter(v => !v.delivered && v.stage !== 'cotizacion');
   let historyVehicles = vehicles.filter(v => v.delivered);
 
   if (searchVal) {
@@ -4002,7 +4002,7 @@ function updateMetrics() {
     .reduce((sum, v) => sum + (Number(v.value) || 0), 0);
 
   const totalQuoted = vehicles
-    .filter(v => !v.delivered)
+    .filter(v => !v.delivered && v.stage !== 'cotizacion')
     .reduce((sum, v) => sum + (Number(v.value) || 0), 0);
     
   const deliveredCount = vehicles.filter(v => v.delivered).length;
@@ -7918,8 +7918,8 @@ window.renderVehiclesListTable = function() {
   const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
   const filterStage = stageSelect ? stageSelect.value : 'Todos';
 
-  // Contadores Celestes
-  const activeVehicles = vehicles.filter(v => !v.delivered);
+  // Contadores Celestes (Panel Operativo: Vehículos activos en taller)
+  const activeVehicles = vehicles.filter(v => !v.delivered && v.stage !== 'cotizacion');
   document.getElementById('badge-total-count').textContent = `Total: ${activeVehicles.length}`;
   document.getElementById('badge-quoted-count').textContent = `Con cotización: ${activeVehicles.filter(v => v.quoteCompleted).length}`;
   document.getElementById('badge-ot-count').textContent = `Con OT: ${activeVehicles.filter(v => v.stage === 'reparacion' || v.stage === 'listo').length}`;
@@ -7959,7 +7959,7 @@ window.renderVehiclesListTable = function() {
     if (filterStage === 'Pendientes') {
       list = list.filter(v => v.stage === 'recepcion');
     } else if (filterStage === 'En proceso') {
-      list = list.filter(v => v.stage === 'cotizacion' || v.stage === 'reparacion');
+      list = list.filter(v => v.stage === 'reparacion');
     } else if (filterStage === 'Finalizados') {
       list = list.filter(v => v.stage === 'listo');
     }
@@ -13562,8 +13562,8 @@ window.renderMobileVehicleList = function() {
   const container = document.getElementById('mobile-vehicle-cards-container');
   if (!container) return;
 
-  // Filtrar vehículos entregados
-  const activeVehicles = vehicles.filter(v => !v.delivered);
+  // Filtrar vehículos entregados y cotizaciones (las cotizaciones solo se muestran en la pestaña Cotizaciones)
+  const activeVehicles = vehicles.filter(v => !v.delivered && v.stage !== 'cotizacion');
 
   // Filtrar según etapa seleccionada
   let filtered = activeVehicles;
