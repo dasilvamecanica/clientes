@@ -15161,13 +15161,13 @@ window.sendAiChatMessage = async function() {
     if (apiKey) {
       const sysPrompt = `${userSystemInstructions}
 
-REGLAS OBLIGATORIAS DE FORMATO DE NÚMEROS Y MONEDA EN ARGENTINA:
-1. En la lista de Repuestos ("parts"), escribe el NOMBRE DEL REPUESTO FÍSICO (ej: "Junta de tapa de válvulas", "Pastillas de freno", "Kit de distribución", "Bomba de agua") y NUNCA la acción (NO escribir "Cambio de junta..." ni agregar "(Repuesto)").
-2. En la lista de Mano de Obra ("services"), escribe el trabajo o servicio realizado (ej: "Mano de obra desarmado y cambio de junta", "Servicio de mantenimiento").
-3. La palabra "mil" o la letra "k" multiplica por 1.000 (ej: "230mil" = 230000 pesos, "150mil" = 150000 pesos, "50k" = 50000 pesos).
-4. Los puntos en números como "150.000" o "230.000" son separadores de miles, NO decimales. "150.000" representa el número 150000.
-5. Si el usuario escribe precios entre paréntesis como "(150.000)", asigna ese valor al repuesto o servicio correspondiente.
-6. Identifica modelos de vehículos si son mencionados (ej: "Toyota Hilux", "Gol Power" -> Volkswagen Gol Power 1.6, "Suran" -> Volkswagen Suran 1.6).
+REGLAS OBLIGATORIAS DE FORMATO Y MONEDA EN ARGENTINA:
+1. En la lista de Repuestos ("parts"), escribe ÚNICAMENTE el nombre del repuesto o insumo físico (ej: "Líquido refrigerante", "Junta de tapa de válvulas", "Kit de distribución"). Elimina órdenes o muletillas conversacionales como "Agregale...", "Súmale el precio...", "Cambio de...".
+2. En la lista de Mano de Obra ("services"), escribe el trabajo o servicio realizado (ej: "Mano de obra reemplazo de junta de tapa de válvulas", "Mano de obra distribución y puesta a punto").
+3. La palabra "mil" o la letra "k" multiplica por 1.000 (ej: "230mil" = 230000, "150mil" = 150000, "15mil" = 15000).
+4. Puntos en números como "150.000" o "15.000" son separadores de miles (150000 y 15000 pesos).
+5. Precios entre paréntesis como "(15.000)" se asignan al ítem mencionado.
+6. Identifica modelos de vehículos si son mencionados (ej: "Aircross" -> Citroen C3 Aircross, "Gol Power" -> Volkswagen Gol Power 1.6).
 
 Estado actual del presupuesto: ${JSON.stringify(window.currentAiQuoteState)}
 
@@ -15189,7 +15189,7 @@ Cuando el usuario pida agregar, quitar, modificar precios, aplicar descuentos o 
         parts: [{ text: msg.text }]
       }));
 
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      let resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -15197,6 +15197,17 @@ Cuando el usuario pida agregar, quitar, modificar precios, aplicar descuentos o 
           contents: geminiContents
         })
       });
+
+      if (!resp.ok) {
+        resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: sysPrompt }] },
+            contents: geminiContents
+          })
+        });
+      }
 
       if (resp.ok) {
         const jsonRes = await resp.json();
@@ -15426,12 +15437,22 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
   };
 }
 
+function cleanRepuestoName(rawName, mainContext) {
+  let text = (rawName && rawName.toLowerCase() !== 'repuesto' && rawName.toLowerCase() !== 'repuestos') ? rawName : (mainContext || 'Repuesto / Insumo');
+  text = text.replace(/\(repuesto\)/gi, '').replace(/repuesto[s]?\s*[\:\-\s]*/gi, '');
+  text = text.replace(/^(agregale|agrega|sumale|suma|incluye|incluir|poner|pone|añade|añadir)\s+(en|a|los|las|un|una|el)?\s*(repuesto[s]?)?\s*(el|la|los|las|un|una)?\s*(precio|valor|costo)?\s*(del|de|de los|de las)?\s*/gi, '');
+  text = text.replace(/^(el|la|los|las|un|una|cambio de|reemplazo de|colocacion de|instalacion de|reparacion de|service de|arreglo de|precio del|precio de|el precio del|el precio de|valor del|valor de)\s+/gi, '');
+  text = text.trim();
+  return capitalizeFirst(text) || 'Repuesto / Insumo';
+}
+
 function buildSmartPartName(clause, mainTopic, hasBombaAgua) {
   let clean = clause.replace(/(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/gi, '');
-  clean = clean.replace(/los|las|el|la|repuestos|repuesto|valen|salen|cuestan|son|precio|valor|un|una|unos|unas/gi, '').trim();
-  clean = clean.replace(/^[\,\.\:\-\s]+|[\,\.\:\-\s]+$/g, '');
+  clean = clean.replace(/agregale|agrega|sumale|suma|incluye|incluir|poner|pone|añade|añadir/gi, '');
+  clean = clean.replace(/en|a|los|las|el|la|repuestos|repuesto|valen|salen|cuestan|son|precio|valor|costo|un|una|unos|unas|del|de|de los|de las/gi, ' ').trim();
+  clean = clean.replace(/^[\,\.\:\-\s]+|[\,\.\:\-\s]+$/g, '').trim();
 
-  if (!clean || clean.length < 3 || clean.toLowerCase() === 'valen' || clean.toLowerCase() === 'repuestos') {
+  if (!clean || clean.length < 3 || clean.toLowerCase() === 'valen' || clean.toLowerCase() === 'repuestos' || clean.toLowerCase() === 'd') {
     if (mainTopic === 'distribucion') {
       return hasBombaAgua ? 'Kit de distribución con bomba de agua' : 'Kit de distribución (Correa y Tensor)';
     } else if (mainTopic === 'junta_tapa') {
@@ -15451,7 +15472,7 @@ function buildSmartPartName(clause, mainTopic, hasBombaAgua) {
 function buildSmartServiceName(clause, mainTopic, hasHerramienta) {
   let clean = clause.replace(/(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/gi, '');
   clean = clean.replace(/la|el|los|las|mano|de|obra|por|desarmar|valen|salen|cuestan|son|un|una/gi, '').trim();
-  clean = clean.replace(/^[\,\.\:\-\s]+|[\,\.\:\-\s]+$/g, '');
+  clean = clean.replace(/^[\,\.\:\-\s]+|[\,\.\:\-\s]+$/g, '').trim();
 
   if (!clean || clean.length < 3 || clean.toLowerCase() === 'desarmar') {
     if (mainTopic === 'distribucion') {
@@ -15514,6 +15535,36 @@ function capitalizeFirst(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+window.editAiQuoteItem = function(type, msgIdx, itemIdx) {
+  const msg = window.aiChatConversation[msgIdx];
+  if (!msg || !msg.quoteState) return;
+
+  const items = type === 'service' ? msg.quoteState.services : msg.quoteState.parts;
+  const item = items ? items[itemIdx] : null;
+  if (!item) return;
+
+  const newName = prompt("Editar nombre del ítem:", item.name);
+  if (newName === null) return;
+
+  const newPriceStr = prompt("Editar precio en pesos ($):", item.value);
+  if (newPriceStr === null) return;
+
+  const newPrice = parseFloat(newPriceStr.replace(/\./g, '').replace(',', '.'));
+  if (isNaN(newPrice)) {
+    alert("El precio ingresado no es válido.");
+    return;
+  }
+
+  item.name = newName.trim() || item.name;
+  item.value = newPrice;
+
+  if (msgIdx === window.aiChatConversation.length - 1) {
+    window.currentAiQuoteState = JSON.parse(JSON.stringify(msg.quoteState));
+  }
+
+  renderAiChatMessages();
+};
+
 function renderAiChatMessages() {
   const container = document.getElementById('ai-chat-messages-container');
   if (!container) return;
@@ -15547,9 +15598,14 @@ function renderAiChatMessages() {
             ${msg.quoteState.services && msg.quoteState.services.length > 0 ? `
               <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px;">Mano de Obra / Servicios:</div>
               <ul style="list-style: none; padding: 0; margin: 0 0 8px 0; font-size: 11.5px;">
-                ${msg.quoteState.services.map(s => `
-                  <li style="display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed rgba(255,255,255,0.05);">
-                    <span>• ${escapeHtml(s.name)}</span>
+                ${msg.quoteState.services.map((s, sIdx) => `
+                  <li style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <button type="button" onclick="editAiQuoteItem('service', ${idx}, ${sIdx})" title="Editar ítem" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 2px 4px; display: flex; align-items: center;">
+                        <i data-lucide="pencil" style="width: 12px; height: 12px;"></i>
+                      </button>
+                      <span>• ${escapeHtml(s.name)}</span>
+                    </div>
                     <strong>${formatCurrency(s.value)}</strong>
                   </li>
                 `).join('')}
@@ -15559,9 +15615,14 @@ function renderAiChatMessages() {
             ${msg.quoteState.parts && msg.quoteState.parts.length > 0 ? `
               <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px;">Repuestos e Insumos:</div>
               <ul style="list-style: none; padding: 0; margin: 0 0 8px 0; font-size: 11.5px;">
-                ${msg.quoteState.parts.map(p => `
-                  <li style="display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed rgba(255,255,255,0.05);">
-                    <span>• ${escapeHtml(p.name)}</span>
+                ${msg.quoteState.parts.map((p, pIdx) => `
+                  <li style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <button type="button" onclick="editAiQuoteItem('part', ${idx}, ${pIdx})" title="Editar ítem" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 2px 4px; display: flex; align-items: center;">
+                        <i data-lucide="pencil" style="width: 12px; height: 12px;"></i>
+                      </button>
+                      <span>• ${escapeHtml(p.name)}</span>
+                    </div>
                     <strong>${formatCurrency(p.value)}</strong>
                   </li>
                 `).join('')}
@@ -15666,6 +15727,8 @@ window.applyAiChatQuoteState = function(msgIdx) {
 };
 
 window.downloadAiChatQuotePDF = function(msgIdx) {
+  applyAiChatQuoteState(msgIdx);
+
   const msg = window.aiChatConversation[msgIdx];
   if (!msg || !msg.quoteState) return;
 
