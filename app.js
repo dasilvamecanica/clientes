@@ -15003,6 +15003,7 @@ window.currentAiQuoteState = {
 };
 window.aiChatSessions = [];
 window.activeAiChatSessionId = null;
+window.currentAiRequestId = 0;
 
 window.loadAiChatSessionsFromStorage = function() {
   try {
@@ -15098,6 +15099,7 @@ window.startNewAiChatSession = function(isAuto = false) {
     window.saveCurrentAiChatSession();
   }
 
+  window.currentAiRequestId++; // Cancelar peticiones pendientes de chats anteriores
   window.activeAiChatSessionId = 'session_' + Date.now();
   window.aiChatConversation = [
     {
@@ -15300,7 +15302,9 @@ async function resolveMercadoLibreLink(text) {
 
   if (mlaId) {
     try {
-      const resp = await fetch(`https://api.mercadolibre.com/items/${mlaId}`);
+      const resp = await fetch(`https://api.mercadolibre.com/items/${mlaId}`, {
+        signal: AbortSignal.timeout(4000)
+      });
       if (resp.ok) {
         const item = await resp.json();
         title = item.title || '';
@@ -15330,8 +15334,17 @@ async function resolveMercadoLibreLink(text) {
 
 window.sendAiChatMessage = async function() {
   const input = document.getElementById('ai-chat-user-input');
-  const userText = input ? input.value.trim() : '';
+  let userText = input ? input.value.trim() : '';
   if (!userText) return;
+
+  // Sanitización de typos frecuentes (ej: jutnta -> junta)
+  userText = userText.replace(/\bjutnta[s]?\b|\bjuunta[s]?\b|\bjntas?\b/gi, 'junta');
+  userText = userText.replace(/\bbalbula[s]?\b|\bbalvula[s]?\b/gi, 'válvula');
+  userText = userText.replace(/\bdistribuscion\b|\bdistri\b/gi, 'distribución');
+  userText = userText.replace(/\bamortiguadore[s]?\b|\bamortiguador\b|\bamort\b/gi, 'amortiguadores');
+
+  window.currentAiRequestId++;
+  const requestId = window.currentAiRequestId;
 
   // Auto-Discernimiento: Si se menciona un vehículo diferente o solicita nueva cotización, iniciar nueva sesión
   if (shouldStartNewQuote(userText, window.currentAiQuoteState?.vehicleInfo)) {
@@ -15440,41 +15453,51 @@ FORMATO DE RESPUESTA:
         };
       });
 
-      // 1. Probar con gemini-3.5-flash-lite (Ultra rápido ~1.5s)
-      let resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: sysPrompt }] },
-          contents: geminiContents
-        })
-      });
-
-      // 2. Fallback a gemini-3.6-flash
-      if (!resp.ok) {
-        resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+      // 1. Probar con gemini-3.5-flash-lite (Ultra rápido ~1.5s con Timeout de 6s)
+      let resp = null;
+      try {
+        resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             system_instruction: { parts: [{ text: sysPrompt }] },
             contents: geminiContents
-          })
+          }),
+          signal: AbortSignal.timeout(6000)
         });
+      } catch (e) {}
+
+      // 2. Fallback a gemini-3.6-flash
+      if (!resp || !resp.ok) {
+        try {
+          resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: sysPrompt }] },
+              contents: geminiContents
+            }),
+            signal: AbortSignal.timeout(6000)
+          });
+        } catch (e) {}
       }
 
       // 3. Fallback a gemini-3.5-flash
-      if (!resp.ok) {
-        resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: sysPrompt }] },
-            contents: geminiContents
-          })
-        });
+      if (!resp || !resp.ok) {
+        try {
+          resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: sysPrompt }] },
+              contents: geminiContents
+            }),
+            signal: AbortSignal.timeout(6000)
+          });
+        } catch (e) {}
       }
 
-      if (resp.ok) {
+      if (resp && resp.ok) {
         const jsonRes = await resp.json();
         const rawAiText = jsonRes?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         
@@ -15497,6 +15520,12 @@ FORMATO DE RESPUESTA:
       updatedQuoteData = localResult.quoteData;
     }
 
+    // Cancelar si la petición caducó o fue reemplazada por un nuevo chat
+    if (requestId !== window.currentAiRequestId) {
+      console.warn(`[AI Chat] Respuesta ignorada por desincronización de sesión.`);
+      return;
+    }
+
     if (updatedQuoteData && (updatedQuoteData.services || updatedQuoteData.parts)) {
       window.currentAiQuoteState = {
         services: updatedQuoteData.services || [],
@@ -15514,17 +15543,22 @@ FORMATO DE RESPUESTA:
 
   } catch (err) {
     console.error("Error en chat IA:", err);
-    window.aiChatConversation.push({
-      role: 'model',
-      text: 'Actualicé los ítems del presupuesto con la información ingresada.',
-      quoteState: { ...window.currentAiQuoteState }
-    });
+    if (requestId === window.currentAiRequestId) {
+      const localResult = runLocalConversationalAiLogic(userText, window.currentAiQuoteState);
+      window.aiChatConversation.push({
+        role: 'model',
+        text: localResult.text,
+        quoteState: localResult.quoteData ? { ...window.currentAiQuoteState } : null
+      });
+    }
   } finally {
     const thinkingEl = document.getElementById(thinkingId);
     if (thinkingEl) thinkingEl.remove();
-    renderAiChatMessages();
-    window.saveCurrentAiChatSession();
-    window.renderAiChatHistorySidebar();
+    if (requestId === window.currentAiRequestId) {
+      renderAiChatMessages();
+      window.saveCurrentAiChatSession();
+      window.renderAiChatHistorySidebar();
+    }
   }
 };
 
