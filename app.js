@@ -11989,12 +11989,18 @@ window.downloadQuotePDF = async function(vehicleId, returnBlob = false) {
   const logoWide   = await procesarLogoParaPDF(localStorage.getItem('taller_logo_wide'),   160, 38);
   const logoSquare = await procesarLogoParaPDF(localStorage.getItem('taller_logo_square'), 38, 38);
 
-  const id = vehicleId || activeReceptionVehicleId;
-  if (!id) {
-    alert('No hay ningún vehículo activo para generar el presupuesto.');
-    return;
+  let vehicle = null;
+  if (typeof vehicleId === 'object' && vehicleId !== null) {
+    vehicle = vehicleId;
+  } else {
+    const id = vehicleId || activeReceptionVehicleId;
+    if (!id) {
+      alert('No hay ningún vehículo activo para generar el presupuesto.');
+      return;
+    }
+    vehicle = vehicles.find(v => String(v.id) === String(id));
   }
-  const vehicle = vehicles.find(v => String(v.id) === String(id));
+
   if (!vehicle) {
     alert('Vehículo no encontrado.');
     return;
@@ -12003,7 +12009,10 @@ window.downloadQuotePDF = async function(vehicleId, returnBlob = false) {
   // Obtener ítems activos
   let services = [];
   let parts = [];
-  if (String(activeReceptionVehicleId) === String(vehicle.id)) {
+  if (typeof vehicleId === 'object' && vehicleId !== null) {
+    services = [...(vehicle.quoteServices || [])];
+    parts = [...(vehicle.quoteParts || [])];
+  } else if (String(activeReceptionVehicleId) === String(vehicle.id)) {
     services = [...activeQuoteServices];
     parts = [...activeQuoteParts];
   } else {
@@ -15529,10 +15538,16 @@ function renderAiChatMessages() {
               <span style="color: #22c55e; font-size: 15px;">${formatCurrency(grandTotal)}</span>
             </div>
 
-            <button type="button" onclick="applyAiChatQuoteState(${idx})" style="margin-top: 10px; width: 100%; padding: 10px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 3px 10px rgba(34,197,94,0.35);">
-              <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
-              <span>🚀 Cargar esta cotización en la App</span>
-            </button>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+              <button type="button" onclick="applyAiChatQuoteState(${idx})" style="flex: 1; padding: 10px 6px; background: #22c55e; color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: 0 3px 10px rgba(34,197,94,0.35);">
+                <i data-lucide="check-circle" style="width: 15px; height: 15px;"></i>
+                <span>🚀 Cargar en la App</span>
+              </button>
+              <button type="button" onclick="downloadAiChatQuotePDF(${idx})" style="flex: 1; padding: 10px 6px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: 0 3px 10px rgba(37,99,235,0.35);">
+                <i data-lucide="file-text" style="width: 15px; height: 15px;"></i>
+                <span>📄 Descargar presupuesto</span>
+              </button>
+            </div>
           </div>
         `;
       }
@@ -15605,6 +15620,38 @@ window.applyAiChatQuoteState = function(msgIdx) {
       closeAiQuoteModal();
       if (typeof openDetailedReception === 'function') openDetailedReception(veh.id);
     }
+  }
+};
+
+window.downloadAiChatQuotePDF = function(msgIdx) {
+  const msg = window.aiChatConversation[msgIdx];
+  if (!msg || !msg.quoteState) return;
+
+  const data = msg.quoteState;
+  const vehNameParts = (data.vehicleInfo || '').split(' ');
+  const brand = vehNameParts[0] || 'Cotización';
+  const model = vehNameParts.slice(1).join(' ') || 'IA';
+
+  const tempVeh = {
+    id: 'temp-pdf-' + Date.now(),
+    plate: 'Sin Patente',
+    brand: brand,
+    model: model,
+    year: new Date().getFullYear().toString(),
+    color: '',
+    motor: '',
+    client: 'Consumidor Final',
+    stage: 'cotizacion',
+    entryDate: formatDateToSlash(new Date()),
+    services: [],
+    quoteServices: data.services || [],
+    quoteParts: data.parts || [],
+    discountPercent: data.discountPercent || 0,
+    quoteCompleted: true
+  };
+
+  if (typeof downloadQuotePDF === 'function') {
+    downloadQuotePDF(tempVeh);
   }
 };
 
