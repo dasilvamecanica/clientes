@@ -15343,13 +15343,14 @@ window.sendAiChatMessage = async function() {
   userText = userText.replace(/\bdistribuscion\b|\bdistri\b/gi, 'distribución');
   userText = userText.replace(/\bamortiguadore[s]?\b|\bamortiguador\b|\bamort\b/gi, 'amortiguadores');
 
-  window.currentAiRequestId++;
-  const requestId = window.currentAiRequestId;
-
   // Auto-Discernimiento: Si se menciona un vehículo diferente o solicita nueva cotización, iniciar nueva sesión
   if (shouldStartNewQuote(userText, window.currentAiQuoteState?.vehicleInfo)) {
     window.startNewAiChatSession(true);
   }
+
+  // IMPORTANTE: Capturar requestId DESPUÉS de startNewAiChatSession para evitar desincronización
+  window.currentAiRequestId++;
+  const requestId = window.currentAiRequestId;
 
   window.aiChatConversation.push({
     role: 'user',
@@ -15366,9 +15367,14 @@ window.sendAiChatMessage = async function() {
     thinkingEl.className = 'ai-msg-row ai-msg-model';
     thinkingEl.innerHTML = `
       <div style="display: flex; gap: 10px; max-width: 85%;">
-        <div style="width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0;">🤖</div>
-        <div style="background: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: 14px; padding: 12px 16px; color: var(--text-muted); font-size: 13px; font-style: italic; display: flex; align-items: center; gap: 8px;">
-          <span>Procesando mensaje y consultando Gemini 3.6 Flash...</span>
+        <div style="width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0; animation: ai-avatar-pulse 1.5s ease-in-out infinite;">🤖</div>
+        <div style="background: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: 14px; padding: 12px 16px; color: var(--text-muted); font-size: 13px; display: flex; align-items: center; gap: 10px;">
+          <span class="ai-typing-dots">
+            <span class="ai-dot" style="animation-delay: 0s;"></span>
+            <span class="ai-dot" style="animation-delay: 0.15s;"></span>
+            <span class="ai-dot" style="animation-delay: 0.3s;"></span>
+          </span>
+          <span style="font-style: italic;">Pensando...</span>
         </div>
       </div>
     `;
@@ -15405,6 +15411,7 @@ REGLA: Incorpora este repuesto a la cotización con su nombre y precio correspon
 
 Eres el Asistente Técnico y Cotizador Inteligente del taller mecánico en Argentina.
 Tu tarea es interpretar mensajes informales del usuario para armar, modificar y mantener actualizado un presupuesto en tiempo real.
+También podés responder preguntas técnicas sobre mecánica, consultas generales del usuario, o mantener una conversación amigable.
 
 REGLAS OBLIGATORIAS DE INTERPRETACIÓN Y MEMORIA:
 1. MEMORIA CONTINUA: Acumula la información a lo largo de la conversación para el mismo vehículo.
@@ -15423,13 +15430,19 @@ REGLAS OBLIGATORIAS DE INTERPRETACIÓN Y MEMORIA:
    - "sacá...", "quitá..." -> Elimina el ítem correspondiente.
 5. DISCERNIMIENTO DE NUEVA COTIZACIÓN VS EDITAR EXISTENTE:
    - Si el usuario menciona un vehículo completamente diferente al actual (ej: la cotización activa es para "Chevrolet Agile" y el usuario ingresa "Ahora cotizame un Volkswagen Gol") o solicita explícitamente "nueva cotización", "nuevo presupuesto" u "otro auto", REINICIA la cotización para el nuevo vehículo. NO mezcles repuestos ni mano de obra del vehículo anterior.
+6. PREGUNTAS Y CLARIFICACIÓN:
+   - Si el mensaje del usuario es ambiguo, incompleto o no se entiende, PREGUNTÁ amigablemente para aclarar. Ejemplos: "¿Te referís al repuesto o a la mano de obra?", "¿Podés pasarme el precio?", "¿De qué vehículo se trata?".
+   - Si el usuario hace una pregunta técnica o general (ej: "¿Cada cuánto se cambia la distribución?", "¿Qué aceite lleva un Gol?"), respondé con tu conocimiento técnico de mecánica sin necesidad de incluir el bloque JSON.
+   - Si el usuario saluda, agradece o hace comentarios casuales, respondé amigablemente sin incluir el bloque JSON.
 ${meliContext}
 
 Estado actual del presupuesto: ${JSON.stringify(window.currentAiQuoteState)}
 
 FORMATO DE RESPUESTA:
-1. Responde amigablemente en español conversacional (ej: "Perfecto. Actualicé el presupuesto: ...").
-2. AL FINAL DE TU RESPUESTA, INCLUYE SIEMPRE UN BLOQUE JSON CON EL ESTADO COMPLETO ACTUALIZADO:
+1. Responde SIEMPRE amigablemente en español conversacional argentino.
+2. SOLO cuando el mensaje del usuario modifique, agregue o quite ítems del presupuesto, incluí el bloque JSON actualizado al final.
+3. Si el usuario hace una pregunta, saluda, o su mensaje NO implica cambios en el presupuesto, respondé normalmente SIN incluir el bloque JSON.
+4. Cuando SÍ incluyas el bloque JSON, usá este formato:
 
 <<<JSON_START>>>
 {
@@ -15509,15 +15522,18 @@ FORMATO DE RESPUESTA:
             updatedQuoteData = JSON.parse(jsonSection);
           } catch (e) {}
         } else {
+          // Respuesta conversacional sin JSON (pregunta, saludo, clarificación)
           aiResponseText = rawAiText;
         }
       }
     }
 
-    if (!aiResponseText || !updatedQuoteData) {
-      const localResult = runLocalConversationalAiLogic(userText, window.currentAiQuoteState);
-      aiResponseText = localResult.text;
-      updatedQuoteData = localResult.quoteData;
+    if (!aiResponseText) {
+      if (!updatedQuoteData) {
+        const localResult = runLocalConversationalAiLogic(userText, window.currentAiQuoteState);
+        aiResponseText = localResult.text;
+        updatedQuoteData = localResult.quoteData;
+      }
     }
 
     // Cancelar si la petición caducó o fue reemplazada por un nuevo chat

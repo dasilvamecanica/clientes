@@ -6467,3 +6467,27 @@ aside.sidebar.collapsed .sidebar-user-container {
   pointer-events: all !important;
 }
 
+/* ── Animación de escritura IA (dots) ── */
+@keyframes ai-dot-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+@keyframes ai-avatar-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.5); }
+  50% { box-shadow: 0 0 12px 4px rgba(139, 92, 246, 0.25); }
+}
+
+.ai-typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ai-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  animation: ai-dot-bounce 1.2s ease-in-out infinite;
+}
+
