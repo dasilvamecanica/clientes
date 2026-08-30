@@ -15121,6 +15121,61 @@ window.sendQuickAiChatMessage = function(text) {
   }
 };
 
+function extractSlugFromMeliUrl(url) {
+  try {
+    const parsed = new URL(url);
+    const pathname = parsed.pathname;
+    const cleanPath = pathname.replace(/^\//, '').replace(/_JM$/, '').replace(/\/p\/MLA\d+$/, '');
+    const parts = cleanPath.split('-');
+    if (parts[0] === 'MLA') parts.shift();
+    if (parts[0] && /^\d+$/.test(parts[0])) parts.shift();
+    return parts.join(' ').trim();
+  } catch (e) {
+    return '';
+  }
+}
+
+async function resolveMercadoLibreLink(text) {
+  const urlMatch = text.match(/(https?:\/\/[^\s]*(?:mercadolibre|meli|MLA)[^\s]*)/i);
+  if (!urlMatch) return null;
+
+  const url = urlMatch[0];
+  const mlaMatch = url.match(/MLA[-_]?(\d{7,12})/i);
+  const mlaId = mlaMatch ? `MLA${mlaMatch[1]}` : null;
+
+  let title = '';
+  let price = 0;
+
+  if (mlaId) {
+    try {
+      const resp = await fetch(`https://api.mercadolibre.com/items/${mlaId}`);
+      if (resp.ok) {
+        const item = await resp.json();
+        title = item.title || '';
+        price = item.price || 0;
+      }
+    } catch (e) {}
+  }
+
+  if (!title) {
+    title = extractSlugFromMeliUrl(url);
+  }
+
+  if (price === 0) {
+    const priceTokens = text.match(/(\$?\(?\b\d+(?:[\.\,]\d+)?\s*(?:lucas|luka|lukas|mil|k)\b|\$?\(?\b\d{2,3}(?:\.\d{3})+\b|\$?\(?\b\d{4,6}\b)/i);
+    if (priceTokens) {
+      let raw = priceTokens[1].toLowerCase().replace(/[\$\s]/g, '');
+      if (raw.includes('mil') || raw.includes('k') || raw.includes('lucas')) {
+        price = parseFloat(raw.replace(/mil|k|lucas/g, '')) * 1000;
+      } else {
+        price = parseFloat(raw.replace(/\./g, ''));
+      }
+    }
+  }
+
+  return { url, mlaId, title, price };
+}
+
 window.sendAiChatMessage = async function() {
   const input = document.getElementById('ai-chat-user-input');
   const userText = input ? input.value.trim() : '';
@@ -15143,7 +15198,7 @@ window.sendAiChatMessage = async function() {
       <div style="display: flex; gap: 10px; max-width: 85%;">
         <div style="width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0;">🤖</div>
         <div style="background: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: 14px; padding: 12px 16px; color: var(--text-muted); font-size: 13px; font-style: italic; display: flex; align-items: center; gap: 8px;">
-          <span>Procesando mensaje y actualizando presupuesto en vivo...</span>
+          <span>Procesando mensaje y consultando Mercado Libre...</span>
         </div>
       </div>
     `;
@@ -15154,6 +15209,24 @@ window.sendAiChatMessage = async function() {
   try {
     const apiKey = localStorage.getItem('taller_gemini_api_key') || (typeof workshopConfig !== 'undefined' ? workshopConfig.geminiApiKey : '') || atob('QVEuQWI4Uk42STkyR2JXaGhRSnBjb1RRWUFXTjFzZXlLR1hHUTlTMlFSdWlXU2xTMy15S2c=');
     const userSystemInstructions = localStorage.getItem('taller_gemini_instructions') || (typeof workshopConfig !== 'undefined' ? workshopConfig.geminiSystemInstructions : '') || '';
+
+    // Resolución automática de enlaces de Mercado Libre
+    const meliInfo = await resolveMercadoLibreLink(userText);
+    let meliContext = '';
+    if (meliInfo) {
+      const meliCar = extractVehicleInfo(meliInfo.title);
+      meliContext = `\n\n[DETECCIÓN DE ENLACE DE MERCADO LIBRE DETECTADO]:
+El usuario incluyó el enlace de Mercado Libre: ${meliInfo.url}
+- Producto / Repuesto: "${meliInfo.title}"
+- Precio extraído: $${meliInfo.price}
+- Vehículo compatible identificado: "${meliCar || 'no especificado'}"
+REGLA: Incorpora este repuesto a la cotización con su nombre y precio correspondiente e indica amigablemente al usuario que ingresaste a la publicación de Mercado Libre para obtener los datos.`;
+
+      // Si el vehículo fue detectado y la cotización no tenía vehículo aún, asignarlo
+      if (meliCar && !window.currentAiQuoteState.vehicleInfo) {
+        window.currentAiQuoteState.vehicleInfo = meliCar;
+      }
+    }
 
     let aiResponseText = '';
     let updatedQuoteData = null;
@@ -15179,6 +15252,7 @@ REGLAS OBLIGATORIAS DE INTERPRETACIÓN Y MEMORIA:
    - "bajale 5 mil al repuesto" -> Reduce el repuesto existente (-5000).
    - "el repuesto dejalo en 55" -> Modifica el repuesto a 55000 manteniendo todo lo demás igual.
    - "sacá...", "quitá..." -> Elimina el ítem correspondiente.
+${meliContext}
 
 Estado actual del presupuesto: ${JSON.stringify(window.currentAiQuoteState)}
 
