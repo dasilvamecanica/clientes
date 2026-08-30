@@ -15161,25 +15161,37 @@ window.sendAiChatMessage = async function() {
     if (apiKey) {
       const sysPrompt = `${userSystemInstructions}
 
-REGLAS OBLIGATORIAS DE FORMATO Y MONEDA EN ARGENTINA:
-1. En la lista de Repuestos ("parts"), escribe ÚNICAMENTE el nombre del repuesto o insumo físico (ej: "Líquido refrigerante", "Junta de tapa de válvulas", "Kit de distribución"). Elimina órdenes o muletillas conversacionales como "Agregale...", "Súmale el precio...", "Cambio de...".
-2. En la lista de Mano de Obra ("services"), escribe el trabajo o servicio realizado (ej: "Mano de obra reemplazo de junta de tapa de válvulas", "Mano de obra distribución y puesta a punto").
-3. La palabra "mil" o la letra "k" multiplica por 1.000 (ej: "230mil" = 230000, "150mil" = 150000, "15mil" = 15000).
-4. Puntos en números como "150.000" o "15.000" son separadores de miles (150000 y 15000 pesos).
-5. Precios entre paréntesis como "(15.000)" se asignan al ítem mencionado.
-6. Identifica modelos de vehículos si son mencionados (ej: "Aircross" -> Citroen C3 Aircross, "Gol Power" -> Volkswagen Gol Power 1.6).
+Eres el Asistente Técnico y Cotizador Inteligente del taller mecánico en Argentina.
+Tu tarea es interpretar mensajes informales del usuario para armar, modificar y mantener actualizado un presupuesto en tiempo real.
+
+REGLAS OBLIGATORIAS DE INTERPRETACIONAL Y MEMORIA:
+1. MEMORIA CONTINUA: Acumula la información a lo largo de la conversación. Si el usuario ingresa "Nissan Frontier" en un mensaje, "frenos delanteros" en otro y "mano 80 lucas" en otro, todos los datos pertenecen al MISMO presupuesto. Conserva el vehículo y los ítems anteriores excepto cuando el usuario pida modificar o borrar.
+2. MONEDA Y JERGA ARGENTINA:
+   - "lucas", "luka", "k", "mil" multiplican por 1.000 (ej: "80 lucas" = 80000, "80k" = 80000, "60mil" = 60000, "15k" = 15000).
+   - "mano", "la mano" = Mano de Obra / Servicios ("services").
+   - "repuesto", "juego", "pastillas", "bomba", "junta" = Repuestos e Insumos ("parts").
+3. PRECIO TOTAL VS UNITARIO / LADOS:
+   - "80.000 ambos lados", "80 mil los dos" = $80.000 TOTAL (NO multiplicar por 2).
+   - MULTIPLICA POR 2 únicamente si dice explícitamente "por lado", "cada lado", "cada uno", "c/u".
+4. MODIFICACIONES Y CORRECCIONES (¡NUNCA DUPLICAR ÍTEMS!):
+   - "poné 90", "cambiá a 90", "no eran 80 eran 85", "perdón 85" -> Modifica el precio del ítem existente (no crees un segundo ítem).
+   - "subile 10 lucas a la mano" -> Incrementa la mano de obra existente (+10000).
+   - "bajale 5 mil al repuesto" -> Reduce el repuesto existente (-5000).
+   - "el repuesto dejalo en 55" -> Modifica el repuesto a 55000 manteniendo todo lo demás igual.
+   - "sacá...", "quitá..." -> Elimina el ítem correspondiente.
 
 Estado actual del presupuesto: ${JSON.stringify(window.currentAiQuoteState)}
 
-Cuando el usuario pida agregar, quitar, modificar precios, aplicar descuentos o consulte sobre un modelo de vehículo:
-1. Responde amigablemente en texto en español.
-2. AL FINAL DE TU RESPUESTA, INCLUYE SIEMPRE UN BLOQUE JSON CON EL ESTADO ACTUALIZADO COMPLETO DEL PRESUPUESTO CON ESTE FORMATO EXACTO:
+FORMATO DE RESPUESTA:
+1. Responde amigablemente en español conversacional (ej: "Perfecto. Actualicé el presupuesto: ...").
+2. AL FINAL DE TU RESPUESTA, INCLUYE SIEMPRE UN BLOQUE JSON CON EL ESTADO COMPLETO ACTUALIZADO:
 
 <<<JSON_START>>>
 {
-  "vehicleInfo": "Marca y Modelo del auto si se conoce",
-  "services": [ {"name": "Mano de obra o servicio", "value": 230000} ],
-  "parts": [ {"name": "Repuesto o insumo", "value": 150000} ],
+  "vehicleInfo": "Marca y modelo del auto o string vacio",
+  "workInfo": "Trabajo principal o string vacio",
+  "services": [ {"name": "Mano de obra frenos delanteros (ambos lados)", "value": 80000} ],
+  "parts": [ {"name": "Juego de pastillas de freno delanteras", "value": 60000} ],
   "discountPercent": 0
 }
 <<<JSON_END>>>`;
@@ -15302,14 +15314,95 @@ function cleanServiceName(rawName, mainContext) {
   return capitalizeFirst(rawClean);
 }
 
+function extractExplicitQuantity(text) {
+  const textWithoutPrices = text.replace(/\$?\(?\d[\d\.\,]*\s*(?:lucas|luka|lukas|mil|k|millon|millones|m)?\)?/gi, '');
+  const qtyMatch = textWithoutPrices.toLowerCase().match(/\b(dos|tres|cuatro|cinco|\d{1,2})\s*(juegos|repuestos|piezas|kits|unidades|juego)?\b/);
+  if (!qtyMatch) return 1;
+  const word = qtyMatch[1];
+  if (word === 'dos' || word === '2') return 2;
+  if (word === 'tres' || word === '3') return 3;
+  if (word === 'cuatro' || word === '4') return 4;
+  const num = parseInt(word, 10);
+  return (!isNaN(num) && num > 0 && num < 10) ? num : 1;
+}
+
+function extractAllArgentinePrices(text) {
+  const results = [];
+  const clauses = text.split(/(?<=[a-zA-Z\s])\.\s+|[\,\;\n]+\s*|\s+y\s+/i).map(c => c.trim()).filter(Boolean);
+
+  clauses.forEach(clause => {
+    const matches = [...clause.matchAll(/(\$?\(?\d[\d\.\,]*\s*(?:lucas|luka|lukas|mil|k|millon|millones|m)?\)?)/gi)];
+
+    matches.forEach(m => {
+      const rawFull = m[1].trim();
+      const finalVal = parseArgentinePriceString(rawFull);
+      if (finalVal > 0 && !results.some(r => r.raw === rawFull)) {
+        results.push({
+          raw: rawFull,
+          value: finalVal,
+          context: clause
+        });
+      }
+    });
+  });
+
+  return results;
+}
+
+function buildServiceTitle(workInfo, isPerSide) {
+  let title = 'Mano de obra';
+  if (workInfo) {
+    if (workInfo.toLowerCase().includes('frenos')) {
+      title = 'Mano de obra frenos delanteros';
+    } else if (workInfo.toLowerCase().includes('distribucion')) {
+      title = 'Mano de obra distribución y puesta a punto';
+    } else if (workInfo.toLowerCase().includes('junta')) {
+      title = 'Mano de obra reemplazo de junta de tapa de válvulas';
+    } else if (workInfo.toLowerCase().includes('service')) {
+      title = 'Servicio de mantenimiento general';
+    } else {
+      title = `Mano de obra ${workInfo.toLowerCase()}`;
+    }
+  }
+  if (isPerSide) {
+    title += ' (por lado)';
+  } else if (workInfo && workInfo.toLowerCase().includes('frenos')) {
+    title += ' (ambos lados)';
+  }
+  return title;
+}
+
+function buildPartTitle(tokenLower, workInfo) {
+  if (tokenLower.includes('liquido') || tokenLower.includes('refrigerante')) return 'Líquido refrigerante';
+  if (tokenLower.includes('bomba')) return 'Bomba de agua';
+  if (tokenLower.includes('junta')) return 'Junta de tapa de válvulas';
+  if (tokenLower.includes('pastilla') || tokenLower.includes('juego')) return 'Juego de pastillas de freno delanteras';
+  if (tokenLower.includes('disco')) return 'Juego de discos de freno delanteros';
+  if (tokenLower.includes('aceite')) return 'Aceite de motor';
+  if (tokenLower.includes('filtro')) return 'Filtros (Aire, Aceite, Combustible)';
+
+  if (workInfo) {
+    if (workInfo.toLowerCase().includes('frenos')) return 'Juego de pastillas de freno delanteras';
+    if (workInfo.toLowerCase().includes('distribucion')) return 'Kit de distribución';
+    if (workInfo.toLowerCase().includes('junta')) return 'Junta de tapa de válvulas';
+    if (workInfo.toLowerCase().includes('service')) return 'Filtros y aceite para service';
+  }
+  return 'Repuesto / Insumo';
+}
+
 function runLocalConversationalAiLogic(userText, currentQuote) {
-  const lower = userText.toLowerCase();
-  const services = [...(currentQuote.services || [])];
-  const parts = [...(currentQuote.parts || [])];
+  const text = userText.trim();
+  const lower = text.toLowerCase();
+
   let vehicleInfo = currentQuote.vehicleInfo || '';
-  let discountPercent = currentQuote.discountPercent || 0;
+  let workInfo = currentQuote.workInfo || '';
+  let services = JSON.parse(JSON.stringify(currentQuote.services || []));
+  let parts = JSON.parse(JSON.stringify(currentQuote.parts || []));
+  let discountPercent = Number(currentQuote.discountPercent) || 0;
 
   const carMatches = [
+    { key: 'nissan frontier', name: 'Nissan Frontier' },
+    { key: 'frontier', name: 'Nissan Frontier' },
     { key: 'toyota hilux', name: 'Toyota Hilux' },
     { key: 'hilux', name: 'Toyota Hilux' },
     { key: 'aircross', name: 'Citroen C3 Aircross' },
@@ -15348,88 +15441,101 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
     }
   }
 
-  if (lower.includes('descuento')) {
-    const matchDisc = lower.match(/(\d+)\s*%/);
-    if (matchDisc) discountPercent = parseInt(matchDisc[1]);
-    else discountPercent = 10;
-  }
-
-  // Extraer tema mecánico principal
-  let mainTopic = '';
-  if (lower.includes('distribucion') || lower.includes('correa') || lower.includes('puesta a punto')) {
-    mainTopic = 'distribucion';
-  } else if (lower.includes('junta') || lower.includes('tapa de valvula') || lower.includes('tapa de válvulas')) {
-    mainTopic = 'junta_tapa';
-  } else if (lower.includes('aceite') || lower.includes('service') || lower.includes('filtro')) {
-    mainTopic = 'service';
-  } else if (lower.includes('freno') || lower.includes('pastilla') || lower.includes('disco')) {
-    mainTopic = 'frenos';
+  if (lower.includes('freno') || lower.includes('pastilla') || lower.includes('disco')) {
+    workInfo = 'Frenos delanteros';
+  } else if (lower.includes('distribucion') || lower.includes('correa') || lower.includes('bomba')) {
+    workInfo = 'Distribución';
+  } else if (lower.includes('junta') || lower.includes('tapa de valvula')) {
+    workInfo = 'Junta de tapa de válvulas';
+  } else if (lower.includes('service') || lower.includes('aceite') || lower.includes('filtro')) {
+    workInfo = 'Service de mantenimiento';
   } else if (lower.includes('embrague') || lower.includes('placa')) {
-    mainTopic = 'embrague';
+    workInfo = 'Kit de embrague';
   }
 
-  const hasBombaAgua = lower.includes('bomba') || lower.includes('bomba de agua');
-  const hasHerramienta = lower.includes('herramienta') || lower.includes('puesta a punto');
+  const isIncrement = lower.includes('subile') || lower.includes('sumale') || lower.includes('agregale') || lower.includes('mas');
+  const isDecrement = lower.includes('bajale') || lower.includes('restale') || lower.includes('descuentale');
+  const isCorrection = lower.includes('no eran') || lower.includes('no,') || lower.includes('perdón') || lower.includes('perdon');
+  const isDelete = lower.includes('sacá') || lower.includes('saca') || lower.includes('quitá') || lower.includes('quita') || lower.includes('eliminá') || lower.includes('elimina');
 
-  const priceMatches = [...userText.matchAll(/(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/gi)];
+  const isPerSide = lower.includes('por lado') || lower.includes('cada lado') || lower.includes('cada uno') || lower.includes('c/u');
+  const multiplier = isPerSide ? 2 : 1;
+  const explicitQty = extractExplicitQuantity(text);
 
-  if (priceMatches.length > 0) {
-    const clauses = userText.split(/[\,\.\;\n]+\s*|\s+y\s+/i).map(c => c.trim()).filter(Boolean);
+  const monetaryTokens = extractAllArgentinePrices(text);
 
-    let foundPart = false;
-    let foundService = false;
+  if (isDelete) {
+    if (lower.includes('mano') || lower.includes('obra')) {
+      services = [];
+    } else if (lower.includes('repuesto') || lower.includes('juego') || lower.includes('pastilla')) {
+      parts = [];
+    }
+  } else if ((isIncrement || isDecrement) && monetaryTokens.length > 0) {
+    const delta = monetaryTokens[0].value * (isDecrement ? -1 : 1);
+    if (lower.includes('mano') || lower.includes('obra')) {
+      if (services.length > 0) {
+        services[0].value = Math.max(0, services[0].value + delta);
+      }
+    } else if (lower.includes('repuesto') || lower.includes('juego') || lower.includes('pastilla')) {
+      if (parts.length > 0) {
+        parts[0].value = Math.max(0, parts[0].value + delta);
+      }
+    }
+  } else if (monetaryTokens.length > 0) {
+    monetaryTokens.forEach(token => {
+      const val = token.value * multiplier * explicitQty;
+      const tokenLower = token.context.toLowerCase();
 
-    clauses.forEach(clause => {
-      const clLower = clause.toLowerCase();
-      if (carMatches.some(c => clLower === c.key || clLower === c.name.toLowerCase())) return;
+      const isServiceToken = tokenLower.includes('mano') || tokenLower.includes('obra') || tokenLower.includes('trabajo') || tokenLower.includes('desarmar');
+      const isPartToken = tokenLower.includes('repuesto') || tokenLower.includes('juego') || tokenLower.includes('pastilla') || tokenLower.includes('valvula') || tokenLower.includes('bomba') || tokenLower.includes('filtro') || tokenLower.includes('aceite') || tokenLower.includes('liquido');
 
-      const pMatch = clause.match(/(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/i);
-      if (pMatch) {
-        const val = parseArgentinePriceString(pMatch[1]);
-        if (val > 0) {
-          const isPartClause = clLower.includes('repuesto') || clLower.includes('insumo') || clLower.includes('pieza') || clLower.includes('material');
-          const isServiceClause = clLower.includes('mano') || clLower.includes('obra') || clLower.includes('trabajo') || clLower.includes('desarmar') || clLower.includes('colocacion') || clLower.includes('instalacion') || clLower.includes('servicio');
-
-          if (isPartClause) {
-            foundPart = true;
-            parts.push({ name: buildSmartPartName(clause, mainTopic, hasBombaAgua), value: val });
-          } else if (isServiceClause) {
-            foundService = true;
-            services.push({ name: buildSmartServiceName(clause, mainTopic, hasHerramienta), value: val });
-          } else {
-            if (!foundPart && val > 30000) {
-              foundPart = true;
-              parts.push({ name: buildSmartPartName(clause, mainTopic, hasBombaAgua), value: val });
-            } else {
-              foundService = true;
-              services.push({ name: buildSmartServiceName(clause, mainTopic, hasHerramienta), value: val });
-            }
-          }
+      if (isServiceToken) {
+        const sTitle = buildServiceTitle(workInfo, isPerSide);
+        if (services.length > 0 && (isCorrection || lower.includes('mano') || lower.includes('obra') || lower.includes('subile') || lower.includes('bajale'))) {
+          services[0].value = val;
+          if (sTitle) services[0].name = sTitle;
+        } else {
+          services.push({ name: sTitle || 'Mano de obra y trabajo técnico', value: val });
+        }
+      } else if (isPartToken) {
+        const pTitle = buildPartTitle(tokenLower, workInfo);
+        if (parts.length > 0 && (isCorrection || lower.includes('dejalo') || lower.includes('dejá') || lower.includes('poné') || lower.includes('cambiá'))) {
+          parts[0].value = val;
+          if (pTitle && pTitle !== 'Repuesto / Insumo') parts[0].name = pTitle;
+        } else {
+          parts.push({ name: pTitle || 'Repuesto / Insumo', value: val });
+        }
+      } else {
+        if (isCorrection) {
+          if (parts.length > 0) parts[parts.length - 1].value = val;
+          else if (services.length > 0) services[services.length - 1].value = val;
+        } else if (services.length === 0) {
+          services.push({ name: buildServiceTitle(workInfo, isPerSide) || 'Mano de obra', value: val });
+        } else if (parts.length === 0) {
+          parts.push({ name: buildPartTitle(lower, workInfo) || 'Repuesto / Insumo', value: val });
         }
       }
     });
   }
 
-  if (services.length === 0 && parts.length === 0) {
-    if (mainTopic === 'distribucion') {
-      services.push({ name: 'Mano de obra kit de distribución y puesta a punto', value: 270000 });
-      parts.push({ name: hasBombaAgua ? 'Kit de distribución con bomba de agua' : 'Kit de distribución', value: 150000 });
-    } else if (mainTopic === 'junta_tapa') {
-      services.push({ name: 'Mano de obra reemplazo de junta de tapa de válvulas', value: 230000 });
-      parts.push({ name: 'Junta de tapa de válvulas', value: 150000 });
-    } else {
-      services.push({ name: `Mano de obra: ${userText}`, value: 90000 });
-    }
+  let textRes = `¡Perfecto! Actualicé el presupuesto:\n`;
+  if (vehicleInfo) textRes += `• Vehículo: **${vehicleInfo}**\n`;
+  if (services.length > 0) {
+    services.forEach(s => {
+      textRes += `• ${s.name}: **${formatCurrency(s.value)}**\n`;
+    });
+  }
+  if (parts.length > 0) {
+    parts.forEach(p => {
+      textRes += `• ${p.name}: **${formatCurrency(p.value)}**\n`;
+    });
   }
 
-  let textRes = `¡Entendido! `;
-  if (vehicleInfo) textRes += `Reconocí el vehículo como **${vehicleInfo}**. `;
-  textRes += `Actualicé los ítems y precios en el presupuesto según lo conversado:`;
-
   return {
-    text: textRes,
+    text: textRes.trim(),
     quoteData: {
       vehicleInfo: vehicleInfo,
+      workInfo: workInfo,
       services: services,
       parts: parts,
       discountPercent: discountPercent
