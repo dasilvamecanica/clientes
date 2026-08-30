@@ -109,16 +109,15 @@ window.formatDateToSlash = function(val) {
 
 // Normalizador global de datos para eliminar disparidades en la BD
 window.normalizeAppDatabaseData = function() {
-  if (Array.isArray(window.vehicles)) {
-    window.vehicles.forEach(v => {
-      if (!v.client || v.client === 'Sin cliente asignado' || v.client.trim() === '') {
-        v.client = 'Consumidor Final';
-      }
-      if (v.entryDate) v.entryDate = formatDateToSlash(v.entryDate);
-      if (v.deliveryDate) v.deliveryDate = formatDateToSlash(v.deliveryDate);
-      if (v.date) v.date = formatDateToSlash(v.date);
-    });
-  }
+  const targetList = Array.isArray(vehicles) && vehicles.length > 0 ? vehicles : (Array.isArray(window.vehicles) ? window.vehicles : []);
+  targetList.forEach(v => {
+    if (!v.client || v.client === 'Sin cliente asignado' || v.client.trim() === '') {
+      v.client = 'Consumidor Final';
+    }
+    if (v.entryDate) v.entryDate = formatDateToSlash(v.entryDate);
+    if (v.deliveryDate) v.deliveryDate = formatDateToSlash(v.deliveryDate);
+    if (v.date) v.date = formatDateToSlash(v.date);
+  });
 };
 
 // Debounced auto-save helper
@@ -12019,23 +12018,8 @@ window.downloadQuotePDF = async function(vehicleId, returnBlob = false) {
   const baseNum = isGolMock ? 5 : (matchResult ? parseInt(matchResult[0]) : (vehicles.indexOf(vehicle) + 1));
   const budgetNum = String(99 + baseNum).padStart(8, '0');
 
-  // Formatear fecha robustamente
-  let formattedDate = '';
-  try {
-    const entryDateStr = vehicle.entryDate || new Date().toISOString().split('T')[0];
-    const partsDate = entryDateStr.split('T')[0].replace(/\//g, '-').split('-');
-    if (partsDate.length === 3) {
-      if (partsDate[0].length === 4) {
-        formattedDate = `${partsDate[2]}-${partsDate[1]}-${partsDate[0]}`;
-      } else {
-        formattedDate = `${partsDate[0]}-${partsDate[1]}-${partsDate[2]}`;
-      }
-    } else {
-      formattedDate = entryDateStr;
-    }
-  } catch (e) {
-    formattedDate = new Date().toLocaleDateString('es-ES');
-  }
+  // Formatear fecha limpia en español (DD/MM/YYYY)
+  const formattedDate = formatDateToSlash(vehicle.entryDate || vehicle.entryTime || new Date());
 
   // Calcular totales
   const servSum = services.reduce((s, item) => s + item.value, 0);
