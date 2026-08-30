@@ -1385,6 +1385,35 @@
 
 
 
+      <!-- SECCIÓN: CONFIGURACIÓN DE IA -->
+      <section class="reception-form-card" style="padding: 24px; max-width: 600px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 4px;">
+          <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="bot" style="color: #8b5cf6; width: 20px; height: 20px;"></i>
+            Asistente de Inteligencia Artificial (IA)
+          </h2>
+          <p style="font-size: 13px; color: var(--text-muted); margin: 6px 0 0 0;">
+            Configurá la clave de acceso a Google Gemini y dale instrucciones personalizadas a la IA para armar tus cotizaciones.
+          </p>
+        </div>
+
+        <div>
+          <label style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: block; margin-bottom: 6px;">Clave API de Google Gemini (Gratuita)</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="password" id="config-gemini-api-key" placeholder="AIzaSy..." class="form-input" style="flex: 1; padding: 10px 14px; font-size: 13px;">
+            <button type="button" class="btn-primary" style="background-color: var(--color-accent); color: white; padding: 10px 16px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; border-radius: var(--radius-md);" onclick="saveGeminiApiKeyFromConfig()">Guardar</button>
+          </div>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" style="display: inline-block; margin-top: 6px; font-size: 11.5px; color: #818cf8; text-decoration: underline;">Obtener API Key gratuita en Google AI Studio (1 minuto) &rarr;</a>
+        </div>
+
+        <div style="margin-top: 4px;">
+          <label style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: block; margin-bottom: 6px;">Instrucciones para la IA (Prompt del Sistema)</label>
+          <p style="font-size: 11.5px; color: var(--text-muted); margin: 0 0 8px 0;">Escribí aquí reglas generales sobre cómo querés que la IA cotice en tu taller (moneda, marcas preferidas, mano de obra, etc.):</p>
+          <textarea id="config-gemini-instructions" rows="4" placeholder="Ejemplo: Eres el asesor técnico del taller mecánico. Utiliza siempre precios en pesos argentinos (ARS). Al cotizar distribuciones, incluye siempre líquido refrigerante. Si menciono un modelo de auto por su nombre común (ej: Gol Power, Trend, Palio, Kangoo), identifica automáticamente su marca y motor." class="form-input" style="width: 100%; padding: 10px; font-size: 12.5px; resize: vertical;"></textarea>
+          <button type="button" class="btn-primary" style="margin-top: 10px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; padding: 10px 16px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; border-radius: var(--radius-md);" onclick="saveGeminiInstructionsFromConfig()">Guardar Instrucciones</button>
+        </div>
+      </section>
+
       <!-- SECCIÓN: INTEGRACIÓN CON MERCADO LIBRE -->
       <section class="reception-form-card" style="padding: 24px; max-width: 600px; display: flex; flex-direction: column; gap: 14px;">
         <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 4px;">
@@ -4763,91 +4792,59 @@
   </div>
 
 
-  <!-- MODAL COTIZADOR INTELIGENTE IA -->
+  <!-- MODAL CHAT COTIZADOR INTELIGENTE IA -->
   <div class="modal-overlay" id="ai-quote-modal" style="display: none; z-index: 999990; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; padding: 16px;" onclick="closeAiQuoteModal()">
-    <div class="modal-content" style="max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; background: var(--card-bg, #1a1a1a); border-radius: 16px; border: 1.5px solid var(--border-color, #333); box-shadow: 0 20px 50px rgba(0,0,0,0.6); padding: 24px;" onclick="event.stopPropagation()">
+    <div class="modal-content" style="max-width: 720px; width: 100%; height: 85vh; max-height: 700px; display: flex; flex-direction: column; background: var(--card-bg, #1a1a1a); border-radius: 16px; border: 1.5px solid var(--border-color, #333); box-shadow: 0 20px 50px rgba(0,0,0,0.6); overflow: hidden;" onclick="event.stopPropagation()">
       
-      <!-- Modal Header -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+      <!-- Chat Header -->
+      <div style="padding: 16px 20px; background: var(--bg-main, #121212); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; box-shadow: 0 4px 14px rgba(99,102,241,0.4);">
+          <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; box-shadow: 0 4px 14px rgba(99,102,241,0.4);">
             🤖
           </div>
           <div>
-            <h3 style="font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-              Cotizador Inteligente con IA
-              <span style="font-size: 10px; font-weight: 700; background: rgba(99,102,241,0.2); color: #818cf8; padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(99,102,241,0.3);">Google Gemini 1.5</span>
+            <h3 style="font-family: var(--font-display); font-weight: 800; font-size: 17px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+              Chat Asistente IA de Cotizaciones
+              <span style="font-size: 10px; font-weight: 700; background: rgba(34,197,94,0.15); color: #4ade80; padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(34,197,94,0.3);">Google Gemini + Internet</span>
             </h3>
-            <span style="font-size: 12px; color: var(--text-secondary);">Describí los trabajos o repuestos en español y la IA armará el presupuesto con tu catálogo</span>
+            <span style="font-size: 11.5px; color: var(--text-secondary);">Hablá con la IA para crear o editar tu presupuesto en tiempo real</span>
           </div>
         </div>
-        <button type="button" onclick="closeAiQuoteModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; line-height: 1;">✕</button>
-      </div>
-
-      <!-- Quick Prompt Suggestions / Chips -->
-      <div style="margin-bottom: 16px;">
-        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Ejemplos rápidos de 1 clic:</span>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button type="button" onclick="setAiPromptText('Cambio de kit de distribución con bomba de agua y líquido refrigerante')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 12px; font-size: 12px; color: var(--text-primary); cursor: pointer;">🔧 Distribución con Bomba</button>
-          <button type="button" onclick="setAiPromptText('Cambio de aceite 10w40, filtro de aceite y filtro de aire')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 12px; font-size: 12px; color: var(--text-primary); cursor: pointer;">🛢️ Service de Aceite y Filtros</button>
-          <button type="button" onclick="setAiPromptText('Cambio de pastillas de freno delanteras y rectificado de discos')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 12px; font-size: 12px; color: var(--text-primary); cursor: pointer;">🚗 Pastillas de Freno y Discos</button>
-          <button type="button" onclick="setAiPromptText('Cambio de kit de embrague completo con crapodina')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 12px; font-size: 12px; color: var(--text-primary); cursor: pointer;">⚙️ Kit de Embrague</button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" onclick="resetAiChatConversation()" title="Reiniciar conversación" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Reiniciar
+          </button>
+          <button type="button" onclick="closeAiQuoteModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 4px 8px; line-height: 1;">✕</button>
         </div>
       </div>
 
-      <!-- Textarea Input -->
-      <div style="margin-bottom: 16px;">
-        <label style="font-size: 12px; font-weight: 700; color: var(--text-primary); display: block; margin-bottom: 6px;">¿Qué trabajo o presupuesto querés armar?</label>
-        <textarea id="ai-quote-prompt-input" rows="3" placeholder="Ej: Cambio de correa de distribución para Volkswagen Suran 2013, incluye mano de obra y bomba de agua..." style="width: 100%; background: var(--bg-main, #121212); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; font-size: 13px; color: var(--text-primary); resize: vertical; outline: none;"></textarea>
+      <!-- Target Vehicle Bar -->
+      <div style="padding: 10px 20px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); white-space: nowrap;">Destino:</span>
+        <select id="ai-quote-vehicle-select" class="form-input" style="flex: 1; padding: 6px 10px; font-size: 12px; background: var(--card-bg); border-width: 1px; height: 34px;">
+          <option value="new">+ Crear nueva cotización en borrador</option>
+        </select>
       </div>
 
-      <!-- Target Vehicle Selector -->
-      <div style="display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 200px;">
-          <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Vehículo o Cliente destino (Opcional)</label>
-          <select id="ai-quote-vehicle-select" class="form-input" style="width: 100%; padding: 8px 12px; font-size: 12px; background: var(--bg-main); border-width: 1.5px;">
-            <option value="new">+ Crear nueva cotización en borrador</option>
-          </select>
-        </div>
+      <!-- Chat Messages Scroll Container -->
+      <div id="ai-chat-messages-container" style="flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; background: var(--card-bg);">
+        <!-- Messages rendered dynamically here -->
       </div>
 
-      <!-- Action Button -->
-      <button type="button" id="btn-generate-ai-quote" onclick="processAiQuoteGeneration()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; border-radius: var(--radius-md); font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 16px rgba(99,102,241,0.4);">
-        <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
-        <span id="btn-generate-ai-quote-text">Generar Presupuesto con IA</span>
-      </button>
+      <!-- Quick Chips Suggestion Row -->
+      <div style="padding: 8px 16px; background: var(--bg-main); border-top: 1px solid var(--border-color); overflow-x: auto; display: flex; gap: 6px; white-space: nowrap; scrollbar-width: none;">
+        <button type="button" onclick="sendQuickAiChatMessage('Gol Power: cambio de distribucion completa y bomba de agua')" style="background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); color: #a78bfa; border-radius: 16px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer;">🚗 Gol Power: Distribución</button>
+        <button type="button" onclick="sendQuickAiChatMessage('Cambio de aceite $45.000, filtro de aceite $12.000 y mano de obra $20.000')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 16px; padding: 4px 10px; font-size: 11px; cursor: pointer;">🛢️ Service con mis precios</button>
+        <button type="button" onclick="sendQuickAiChatMessage('Haceme un 10% de descuento en el total')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 16px; padding: 4px 10px; font-size: 11px; cursor: pointer;">🏷️ Aplicar 10% descuento</button>
+        <button type="button" onclick="sendQuickAiChatMessage('Agregale cambio de pastillas de freno delanteras $35.000')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 16px; padding: 4px 10px; font-size: 11px; cursor: pointer;">🔧 Agregar Pastillas Freno</button>
+      </div>
 
-      <!-- Results Container -->
-      <div id="ai-quote-result-box" style="display: none; margin-top: 20px; border-top: 1px dashed var(--border-color); padding-top: 16px;">
-        <h4 style="font-size: 14px; font-weight: 800; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-          <span>📋 Presupuesto Generado por la IA</span>
-          <span id="ai-quote-match-badge" style="font-size: 10px; background: rgba(34,197,94,0.15); color: #4ade80; padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(34,197,94,0.3);">100% Coincidencia</span>
-        </h4>
-
-        <!-- Rendered items table / preview -->
-        <div id="ai-quote-items-preview" style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; margin-bottom: 14px;">
-        </div>
-
-        <!-- Confirm and Create Quote Button -->
-        <button type="button" onclick="applyAiGeneratedQuote()" style="width: 100%; padding: 14px; background: #22c55e; color: white; border: none; border-radius: var(--radius-md); font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 16px rgba(34,197,94,0.4);">
-          <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>
-          <span>🚀 Guardar y Abrir Cotización Creada</span>
+      <!-- Chat Input Footer -->
+      <div style="padding: 12px 16px; background: var(--bg-main); border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center;">
+        <textarea id="ai-chat-user-input" rows="1" placeholder="Escribí tu mensaje para pedir o editar el presupuesto..." style="flex: 1; background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 10px 14px; font-size: 13px; color: var(--text-primary); resize: none; max-height: 80px; outline: none;" onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendAiChatMessage(); }"></textarea>
+        <button type="button" id="btn-send-ai-chat" onclick="sendAiChatMessage()" style="width: 44px; height: 44px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; border-radius: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(99,102,241,0.4); flex-shrink: 0;">
+          <i data-lucide="send" style="width: 18px; height: 18px;"></i>
         </button>
-      </div>
-
-      <!-- Configuración API Key Accordion -->
-      <div style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 12px;">
-        <details style="font-size: 12px; color: var(--text-secondary);">
-          <summary style="cursor: pointer; font-weight: 700; color: var(--text-muted); outline: none;">⚙️ Configuración de Clave API de Google Gemini (Opcional - Gratuita)</summary>
-          <div style="margin-top: 10px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border-color);">
-            <p style="margin: 0 0 8px 0; font-size: 11px; color: var(--text-secondary);">Ingresá tu clave gratuita de Google Gemini para habilitar comprensión avanzada por IA de cualquier texto. Si no tenés una, hacé clic en el botón de abajo:</p>
-            <div style="display: flex; gap: 8px;">
-              <input type="password" id="ai-gemini-key-input" placeholder="Pegá tu API Key (AIzaSy...)" style="flex: 1; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 10px; font-size: 12px; color: var(--text-primary);">
-              <button type="button" onclick="saveGeminiApiKeyFromModal()" style="background: var(--color-accent); color: white; border: none; border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer;">Guardar Clave</button>
-            </div>
-            <a href="https://aistudio.google.com/app/apikey" target="_blank" style="display: inline-block; margin-top: 8px; font-size: 11px; color: #818cf8; text-decoration: underline;">Obtener API Key gratuita en Google AI Studio (1 minuto) &rarr;</a>
-          </div>
-        </details>
       </div>
 
     </div>
@@ -4887,7 +4884,7 @@
   </div>
 
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=20260829_v14"></script>
+  <script src="app.js?v=20260829_v15"></script>
 </body>
 </html>
 <!-- Build trigger commit -->
