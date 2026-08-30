@@ -15635,6 +15635,17 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
     });
   }
 
+  const addKeywords = /\b(agrega|agregale|sumale|suma|incluye|incluir|añade|añadir|ponale|ponele|pone|poné|cambia|cambiá)\b/i;
+  if (addKeywords.test(lower)) {
+    const mentionedPart = buildPartTitle(lower, '');
+    if (mentionedPart && mentionedPart !== 'Repuesto / Insumo') {
+      const alreadyExists = parts.some(p => p.name.toLowerCase() === mentionedPart.toLowerCase());
+      if (!alreadyExists) {
+        parts.push({ name: mentionedPart, value: 0 });
+      }
+    }
+  }
+
   let textRes = `¡Perfecto! Actualicé el presupuesto:\n`;
   if (vehicleInfo) textRes += `• Vehículo: **${vehicleInfo}**\n`;
   if (workInfo && (services.length > 0 || parts.length > 0)) {
