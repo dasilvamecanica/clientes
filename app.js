@@ -15250,12 +15250,36 @@ function cleanRepuestoName(rawName, mainContext) {
 }
 
 function cleanServiceName(rawName, mainContext) {
-  let text = (rawName && rawName.toLowerCase() !== 'mano de obra' && rawName.toLowerCase() !== 'mano obra') ? rawName : (mainContext || 'Mano de obra y trabajo');
-  text = text.replace(/\(mano de obra\)/gi, '').trim();
-  if (!text.toLowerCase().includes('mano') && !text.toLowerCase().includes('obra') && !text.toLowerCase().includes('servicio')) {
-    text = `Mano de obra ${text}`;
+  let taskDesc = (mainContext || '').trim();
+  let rawClean = (rawName || '').trim();
+  rawClean = rawClean.replace(/^(el|la|los|las|un|una)\s+/i, '');
+  rawClean = rawClean.replace(/\(mano de obra\)/gi, '').trim();
+
+  const isGeneric = !rawClean || 
+                    rawClean.toLowerCase() === 'mano de obra' || 
+                    rawClean.toLowerCase() === 'mano obra' || 
+                    rawClean.toLowerCase() === 'por desarmar' || 
+                    rawClean.toLowerCase() === 'mano de obra por desarmar';
+
+  if (isGeneric || (taskDesc && rawClean.toLowerCase().includes('desarmar'))) {
+    if (taskDesc) {
+      let cleanTask = taskDesc.toLowerCase();
+      if (cleanTask.startsWith('cambio de')) {
+        cleanTask = 'reemplazo de ' + cleanTask.replace('cambio de', '').trim();
+      }
+      if (!cleanTask.startsWith('mano')) {
+        return capitalizeFirst(`Mano de obra ${cleanTask}`);
+      }
+      return capitalizeFirst(cleanTask);
+    }
+    return 'Mano de obra y trabajo técnico';
   }
-  return capitalizeFirst(text);
+
+  if (!rawClean.toLowerCase().includes('mano') && !rawClean.toLowerCase().includes('obra') && !rawClean.toLowerCase().includes('servicio')) {
+    rawClean = `Mano de obra ${rawClean}`;
+  }
+
+  return capitalizeFirst(rawClean);
 }
 
 function runLocalConversationalAiLogic(userText, currentQuote) {
