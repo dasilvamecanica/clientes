@@ -14993,7 +14993,7 @@ window.closePhotoLightbox = function() {
   }
 };
 
-// --- 20. COTIZADOR INTELIGENTE IA CONVERSACIONAL (GOOGLE GEMINI 1.5 + MULTI-TURN CHAT) ---
+// --- 20. COTIZADOR INTELIGENTE IA CONVERSACIONAL (GOOGLE GEMINI 3.6 FLASH + MULTI-SESSION CHAT) ---
 window.aiChatConversation = [];
 window.currentAiQuoteState = {
   services: [],
@@ -15001,6 +15001,165 @@ window.currentAiQuoteState = {
   discountPercent: 0,
   vehicleInfo: ''
 };
+window.aiChatSessions = [];
+window.activeAiChatSessionId = null;
+
+window.loadAiChatSessionsFromStorage = function() {
+  try {
+    const raw = localStorage.getItem('taller_ai_chat_sessions');
+    if (raw) {
+      window.aiChatSessions = JSON.parse(raw);
+    }
+  } catch (e) {
+    window.aiChatSessions = [];
+  }
+  if (!Array.isArray(window.aiChatSessions)) window.aiChatSessions = [];
+};
+
+window.saveAiChatSessionsToStorage = function() {
+  try {
+    localStorage.setItem('taller_ai_chat_sessions', JSON.stringify(window.aiChatSessions));
+  } catch (e) {}
+};
+
+window.saveCurrentAiChatSession = function() {
+  if (!window.aiChatConversation || window.aiChatConversation.length <= 1) return;
+  window.loadAiChatSessionsFromStorage();
+
+  const userMsgs = window.aiChatConversation.filter(m => m.role === 'user');
+  if (userMsgs.length === 0) return;
+
+  const vehicleName = window.currentAiQuoteState?.vehicleInfo || extractVehicleInfo(userMsgs[0]?.text || '') || 'Nueva Cotización';
+  const totalVal = (window.currentAiQuoteState?.services || []).reduce((a,b)=>a+b.value,0) + (window.currentAiQuoteState?.parts || []).reduce((a,b)=>a+b.value,0);
+  
+  if (!window.activeAiChatSessionId) {
+    window.activeAiChatSessionId = 'session_' + Date.now();
+  }
+
+  const sessionObj = {
+    id: window.activeAiChatSessionId,
+    title: vehicleName,
+    vehicleInfo: window.currentAiQuoteState?.vehicleInfo || '',
+    updatedAt: new Date().toISOString(),
+    total: totalVal,
+    messages: JSON.parse(JSON.stringify(window.aiChatConversation)),
+    quoteState: JSON.parse(JSON.stringify(window.currentAiQuoteState || {}))
+  };
+
+  const existingIdx = window.aiChatSessions.findIndex(s => s.id === sessionObj.id);
+  if (existingIdx >= 0) {
+    window.aiChatSessions[existingIdx] = sessionObj;
+  } else {
+    window.aiChatSessions.unshift(sessionObj);
+  }
+
+  window.saveAiChatSessionsToStorage();
+};
+
+window.renderAiChatHistorySidebar = function() {
+  window.loadAiChatSessionsFromStorage();
+  const listEl = document.getElementById('ai-chat-history-list');
+  const countEl = document.getElementById('ai-chat-history-count');
+  if (countEl) countEl.textContent = window.aiChatSessions.length;
+  if (!listEl) return;
+
+  if (window.aiChatSessions.length === 0) {
+    listEl.innerHTML = `<div style="padding: 16px 10px; text-align: center; color: var(--text-muted); font-size: 11.5px; font-style: italic;">No hay chats guardados aún</div>`;
+    return;
+  }
+
+  let html = '';
+  window.aiChatSessions.forEach(s => {
+    const isActive = s.id === window.activeAiChatSessionId;
+    const dateStr = s.updatedAt ? new Date(s.updatedAt).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+    const formattedTotal = s.total > 0 ? `$ ${Number(s.total).toLocaleString('es-AR')}` : 'Borrador';
+
+    html += `
+      <div onclick="switchAiChatSession('${s.id}')" style="padding: 10px 12px; border-radius: 10px; background: ${isActive ? 'rgba(139,92,246,0.18)' : 'var(--card-bg)'}; border: 1.5px solid ${isActive ? '#8b5cf6' : 'var(--border-color)'}; cursor: pointer; display: flex; flex-direction: column; gap: 4px; transition: all 0.15s ease; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 700; font-size: 12.5px; color: ${isActive ? '#a78bfa' : 'var(--text-primary)'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">
+            🚗 ${escapeHtml(s.title || 'Cotización')}
+          </span>
+          <button type="button" onclick="deleteAiChatSession('${s.id}', event)" title="Eliminar chat" style="background: transparent; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; padding: 2px 4px; line-height: 1;">✕</button>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: var(--text-muted);">
+          <span>${dateStr}</span>
+          <span style="font-weight: 700; color: #4ade80;">${formattedTotal}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  listEl.innerHTML = html;
+};
+
+window.startNewAiChatSession = function(isAuto = false) {
+  if (window.aiChatConversation.length > 1) {
+    window.saveCurrentAiChatSession();
+  }
+
+  window.activeAiChatSessionId = 'session_' + Date.now();
+  window.aiChatConversation = [
+    {
+      role: 'model',
+      text: '¡Hola! 👋 Soy tu Asistente IA de Cotizaciones conectada a Internet.\n\nEscribime qué auto o qué trabajos necesitás cotizar (ej: *"Gol Power: cambio de distribución y bomba de agua"*) o pasame tus precios de mano de obra y repuestos y los iré armando en tiempo real.',
+      quoteState: null
+    }
+  ];
+  window.currentAiQuoteState = { services: [], parts: [], discountPercent: 0, vehicleInfo: '' };
+  
+  renderAiChatMessages();
+  window.renderAiChatHistorySidebar();
+};
+
+window.switchAiChatSession = function(sessionId) {
+  if (window.activeAiChatSessionId === sessionId) return;
+  if (window.aiChatConversation.length > 1) {
+    window.saveCurrentAiChatSession();
+  }
+
+  window.loadAiChatSessionsFromStorage();
+  const session = window.aiChatSessions.find(s => s.id === sessionId);
+  if (session) {
+    window.activeAiChatSessionId = session.id;
+    window.aiChatConversation = JSON.parse(JSON.stringify(session.messages || []));
+    window.currentAiQuoteState = JSON.parse(JSON.stringify(session.quoteState || { services: [], parts: [], discountPercent: 0, vehicleInfo: '' }));
+    renderAiChatMessages();
+    window.renderAiChatHistorySidebar();
+  }
+};
+
+window.deleteAiChatSession = function(sessionId, event) {
+  if (event) event.stopPropagation();
+  window.loadAiChatSessionsFromStorage();
+  window.aiChatSessions = window.aiChatSessions.filter(s => s.id !== sessionId);
+  window.saveAiChatSessionsToStorage();
+
+  if (window.activeAiChatSessionId === sessionId) {
+    window.startNewAiChatSession(true);
+  } else {
+    window.renderAiChatHistorySidebar();
+  }
+};
+
+function shouldStartNewQuote(userText, currentVehicleInfo) {
+  if (!userText) return false;
+  const lower = userText.toLowerCase();
+  
+  const explicitNew = lower.includes('nueva cotizacion') || lower.includes('nueva cotización') || lower.includes('nuevo presupuesto') || lower.includes('cotizame otro auto') || lower.includes('otro auto') || lower.includes('otro vehiculo') || lower.includes('otro vehículo');
+  if (explicitNew) return true;
+
+  const detectedCar = extractVehicleInfo(userText);
+  if (detectedCar && currentVehicleInfo) {
+    const car1 = detectedCar.toLowerCase().trim();
+    const car2 = currentVehicleInfo.toLowerCase().trim();
+    if (car1 !== car2 && !car2.includes(car1) && !car1.includes(car2)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 window.loadAiConfigIntoForm = function() {
   const apiKeyInput = document.getElementById('config-gemini-api-key');
@@ -15075,9 +15234,10 @@ window.openAiQuoteAssistantModal = function(vehicleId = null) {
     }
 
     if (window.aiChatConversation.length === 0) {
-      resetAiChatConversation();
+      startNewAiChatSession();
     } else {
       renderAiChatMessages();
+      window.renderAiChatHistorySidebar();
     }
 
     modal.style.display = 'flex';
@@ -15102,15 +15262,7 @@ window.closeAiQuoteModal = function() {
 };
 
 window.resetAiChatConversation = function() {
-  window.aiChatConversation = [
-    {
-      role: 'model',
-      text: '¡Hola! 👋 Soy tu Asistente IA de Cotizaciones conectada a Internet.\n\nEscribime qué auto o qué trabajos necesitás cotizar (ej: *"Gol Power: cambio de distribución y bomba de agua"*) o pasame tus precios de mano de obra y repuestos y los iré armando en tiempo real.',
-      quoteState: null
-    }
-  ];
-  window.currentAiQuoteState = { services: [], parts: [], discountPercent: 0, vehicleInfo: '' };
-  renderAiChatMessages();
+  startNewAiChatSession();
 };
 
 window.sendQuickAiChatMessage = function(text) {
@@ -15181,6 +15333,11 @@ window.sendAiChatMessage = async function() {
   const userText = input ? input.value.trim() : '';
   if (!userText) return;
 
+  // Auto-Discernimiento: Si se menciona un vehículo diferente o solicita nueva cotización, iniciar nueva sesión
+  if (shouldStartNewQuote(userText, window.currentAiQuoteState?.vehicleInfo)) {
+    window.startNewAiChatSession(true);
+  }
+
   window.aiChatConversation.push({
     role: 'user',
     text: userText
@@ -15198,7 +15355,7 @@ window.sendAiChatMessage = async function() {
       <div style="display: flex; gap: 10px; max-width: 85%;">
         <div style="width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0;">🤖</div>
         <div style="background: var(--card-bg-hover); border: 1.5px solid var(--border-color); border-radius: 14px; padding: 12px 16px; color: var(--text-muted); font-size: 13px; font-style: italic; display: flex; align-items: center; gap: 8px;">
-          <span>Procesando mensaje y consultando Mercado Libre...</span>
+          <span>Procesando mensaje y consultando Gemini 3.6 Flash...</span>
         </div>
       </div>
     `;
@@ -15222,7 +15379,6 @@ El usuario incluyó el enlace de Mercado Libre: ${meliInfo.url}
 - Vehículo compatible identificado: "${meliCar || 'no especificado'}"
 REGLA: Incorpora este repuesto a la cotización con su nombre y precio correspondiente e indica amigablemente al usuario que ingresaste a la publicación de Mercado Libre para obtener los datos.`;
 
-      // Si el vehículo fue detectado y la cotización no tenía vehículo aún, asignarlo
       if (meliCar && !window.currentAiQuoteState.vehicleInfo) {
         window.currentAiQuoteState.vehicleInfo = meliCar;
       }
@@ -15238,7 +15394,7 @@ Eres el Asistente Técnico y Cotizador Inteligente del taller mecánico en Argen
 Tu tarea es interpretar mensajes informales del usuario para armar, modificar y mantener actualizado un presupuesto en tiempo real.
 
 REGLAS OBLIGATORIAS DE INTERPRETACIÓN Y MEMORIA:
-1. MEMORIA CONTINUA: Acumula la información a lo largo de la conversación. Si el usuario ingresa "Nissan Frontier" en un mensaje, "frenos delanteros" en otro y "mano 80 lucas" en otro, todos los datos pertenecen al MISMO presupuesto. Conserva el vehículo y los ítems anteriores excepto cuando el usuario pida modificar o borrar.
+1. MEMORIA CONTINUA: Acumula la información a lo largo de la conversación para el mismo vehículo.
 2. MONEDA Y JERGA ARGENTINA:
    - "lucas", "luka", "k", "mil" multiplican por 1.000 (ej: "80 lucas" = 80000, "80k" = 80000, "60mil" = 60000, "15k" = 15000).
    - "mano", "la mano" = Mano de Obra / Servicios ("services").
@@ -15252,6 +15408,8 @@ REGLAS OBLIGATORIAS DE INTERPRETACIÓN Y MEMORIA:
    - "bajale 5 mil al repuesto" -> Reduce el repuesto existente (-5000).
    - "el repuesto dejalo en 55" -> Modifica el repuesto a 55000 manteniendo todo lo demás igual.
    - "sacá...", "quitá..." -> Elimina el ítem correspondiente.
+5. DISCERNIMIENTO DE NUEVA COTIZACIÓN VS EDITAR EXISTENTE:
+   - Si el usuario menciona un vehículo completamente diferente al actual (ej: la cotización activa es para "Chevrolet Agile" y el usuario ingresa "Ahora cotizame un Volkswagen Gol") o solicita explícitamente "nueva cotización", "nuevo presupuesto" u "otro auto", REINICIA la cotización para el nuevo vehículo. NO mezcles repuestos ni mano de obra del vehículo anterior.
 ${meliContext}
 
 Estado actual del presupuesto: ${JSON.stringify(window.currentAiQuoteState)}
@@ -15365,6 +15523,8 @@ FORMATO DE RESPUESTA:
     const thinkingEl = document.getElementById(thinkingId);
     if (thinkingEl) thinkingEl.remove();
     renderAiChatMessages();
+    window.saveCurrentAiChatSession();
+    window.renderAiChatHistorySidebar();
   }
 };
 

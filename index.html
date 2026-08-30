@@ -4792,59 +4792,81 @@
   </div>
 
 
-  <!-- MODAL CHAT COTIZADOR INTELIGENTE IA -->
-  <div class="modal-overlay" id="ai-quote-modal" style="display: none; z-index: 999990; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; padding: 16px;" onclick="closeAiQuoteModal()">
-    <div class="modal-content" style="max-width: 720px; width: 100%; height: 85vh; max-height: 700px; display: flex; flex-direction: column; background: var(--card-bg, #1a1a1a); border-radius: 16px; border: 1.5px solid var(--border-color, #333); box-shadow: 0 20px 50px rgba(0,0,0,0.6); overflow: hidden;" onclick="event.stopPropagation()">
+  <!-- MODAL CHAT COTIZADOR INTELIGENTE IA (2 COLUMNAS: HISTORIAL + CHAT) -->
+  <div class="modal-overlay" id="ai-quote-modal" style="display: none; z-index: 999990; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; padding: 16px;" onclick="closeAiQuoteModal()">
+    <div class="modal-content" style="max-width: 1060px; width: 100%; height: 88vh; max-height: 740px; display: flex; background: var(--card-bg, #1a1a1a); border-radius: 18px; border: 1.5px solid var(--border-color, #333); box-shadow: 0 20px 50px rgba(0,0,0,0.7); overflow: hidden;" onclick="event.stopPropagation()">
       
-      <!-- Chat Header -->
-      <div style="padding: 16px 20px; background: var(--bg-main, #121212); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; box-shadow: 0 4px 14px rgba(99,102,241,0.4);">
-            🤖
-          </div>
-          <div>
-            <h3 style="font-family: var(--font-display); font-weight: 800; font-size: 17px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
-              Chat Asistente IA de Cotizaciones
-              <span style="font-size: 10px; font-weight: 700; background: rgba(34,197,94,0.15); color: #4ade80; padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(34,197,94,0.3);">Google Gemini + Internet</span>
-            </h3>
-            <span style="font-size: 11.5px; color: var(--text-secondary);">Hablá con la IA para crear o editar tu presupuesto en tiempo real</span>
-          </div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <button type="button" onclick="resetAiChatConversation()" title="Reiniciar conversación" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-            <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Reiniciar
+      <!-- SIDEBAR RECTANGULAR: HISTORIAL DE CHATS -->
+      <div id="ai-chat-sidebar" style="width: 270px; background: var(--bg-main, #121212); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0;">
+        <!-- Sidebar Header: Boton + Nuevo Chat -->
+        <div style="padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" onclick="startNewAiChatSession()" style="width: 100%; height: 42px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 13.5px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 14px rgba(99,102,241,0.4); transition: transform 0.15s ease;">
+            <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i>
+            + Nuevo Chat
           </button>
-          <button type="button" onclick="closeAiQuoteModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 4px 8px; line-height: 1;">✕</button>
+        </div>
+
+        <!-- Sidebar Section Title -->
+        <div style="padding: 12px 16px 6px 16px; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+          <span>Historial de Chats</span>
+          <span id="ai-chat-history-count" style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 8px; font-size: 10px; color: var(--text-secondary);">0</span>
+        </div>
+
+        <!-- History Sessions List -->
+        <div id="ai-chat-history-list" style="flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px;">
+          <!-- Sesiones de chat dinámicas aquí -->
         </div>
       </div>
 
-      <!-- Target Vehicle Bar -->
-      <div style="padding: 10px 20px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); white-space: nowrap;">Destino:</span>
-        <select id="ai-quote-vehicle-select" class="form-input" style="flex: 1; padding: 6px 10px; font-size: 12px; background: var(--card-bg); border-width: 1px; height: 34px;">
-          <option value="new">+ Crear nueva cotización en borrador</option>
-        </select>
-      </div>
+      <!-- PANEL PRINCIPAL DE CHAT -->
+      <div style="flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--card-bg);">
+        <!-- Chat Header -->
+        <div style="padding: 14px 20px; background: var(--bg-main, #121212); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; box-shadow: 0 4px 14px rgba(99,102,241,0.4);">
+              🤖
+            </div>
+            <div>
+              <h3 style="font-family: var(--font-display); font-weight: 800; font-size: 16px; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                Chat Asistente IA de Cotizaciones
+                <span style="font-size: 10px; font-weight: 700; background: rgba(34,197,94,0.15); color: #4ade80; padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(34,197,94,0.3);">Gemini 3.6 Flash</span>
+              </h3>
+              <span style="font-size: 11px; color: var(--text-secondary);">Hablá con la IA para crear o editar tu presupuesto en tiempo real</span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" onclick="closeAiQuoteModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 4px 8px; line-height: 1;">✕</button>
+          </div>
+        </div>
 
-      <!-- Chat Messages Scroll Container -->
-      <div id="ai-chat-messages-container" style="flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; background: var(--card-bg);">
-        <!-- Messages rendered dynamically here -->
-      </div>
+        <!-- Target Vehicle Bar -->
+        <div style="padding: 10px 20px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); white-space: nowrap;">Destino:</span>
+          <select id="ai-quote-vehicle-select" class="form-input" style="flex: 1; padding: 6px 10px; font-size: 12px; background: var(--card-bg); border-width: 1px; height: 34px;">
+            <option value="new">+ Crear nueva cotización en borrador</option>
+          </select>
+        </div>
 
-      <!-- Quick Chips Suggestion Row -->
-      <div style="padding: 8px 16px; background: var(--bg-main); border-top: 1px solid var(--border-color); overflow-x: auto; display: flex; gap: 6px; white-space: nowrap; scrollbar-width: none;">
-        <button type="button" onclick="sendQuickAiChatMessage('Gol Power: cambio de distribucion completa y bomba de agua')" style="background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); color: #a78bfa; border-radius: 16px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer;">🚗 Gol Power: Distribución</button>
-        <button type="button" onclick="sendQuickAiChatMessage('Cambio de aceite $45.000, filtro de aceite $12.000 y mano de obra $20.000')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 16px; padding: 4px 10px; font-size: 11px; cursor: pointer;">🛢️ Service con mis precios</button>
-        <button type="button" onclick="sendQuickAiChatMessage('Haceme un 10% de descuento en el total')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 16px; padding: 4px 10px; font-size: 11px; cursor: pointer;">🏷️ Aplicar 10% descuento</button>
-        <button type="button" onclick="sendQuickAiChatMessage('Agregale cambio de pastillas de freno delanteras $35.000')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 16px; padding: 4px 10px; font-size: 11px; cursor: pointer;">🔧 Agregar Pastillas Freno</button>
-      </div>
+        <!-- Chat Messages Scroll Container -->
+        <div id="ai-chat-messages-container" style="flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; background: var(--card-bg);">
+          <!-- Messages rendered dynamically here -->
+        </div>
 
-      <!-- Chat Input Footer -->
-      <div style="padding: 12px 16px; background: var(--bg-main); border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center;">
-        <textarea id="ai-chat-user-input" rows="1" placeholder="Escribí tu mensaje para pedir o editar el presupuesto..." style="flex: 1; background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 10px 14px; font-size: 13px; color: var(--text-primary); resize: none; max-height: 80px; outline: none;" onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendAiChatMessage(); }"></textarea>
-        <button type="button" id="btn-send-ai-chat" onclick="sendAiChatMessage()" style="width: 44px; height: 44px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; border-radius: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(99,102,241,0.4); flex-shrink: 0;">
-          <i data-lucide="send" style="width: 18px; height: 18px;"></i>
-        </button>
+        <!-- Quick Chips Suggestion Row -->
+        <div style="padding: 8px 16px; background: var(--bg-main); border-top: 1px solid var(--border-color); overflow-x: auto; display: flex; gap: 6px; white-space: nowrap; scrollbar-width: none;">
+          <button type="button" onclick="sendQuickAiChatMessage('Gol Power: cambio de distribucion completa y bomba de agua')" style="background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); color: #a78bfa; border-radius: 16px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer;">🚗 Gol Power: Distribución</button>
+          <button type="button" onclick="sendQuickAiChatMessage('Cambio de aceite $45.000, filtro de aceite $12.000 y mano de obra $20.000')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 16px; padding: 4px 10px; font-size: 11px; cursor: pointer;">🛢️ Service con mis precios</button>
+          <button type="button" onclick="sendQuickAiChatMessage('Haceme un 10% de descuento en el total')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 16px; padding: 4px 10px; font-size: 11px; cursor: pointer;">🏷️ Aplicar 10% descuento</button>
+          <button type="button" onclick="sendQuickAiChatMessage('Agregale cambio de pastillas de freno delanteras $35.000')" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 16px; padding: 4px 10px; font-size: 11px; cursor: pointer;">🔧 Agregar Pastillas Freno</button>
+        </div>
+
+        <!-- Chat Input Footer -->
+        <div style="padding: 12px 16px; background: var(--bg-main); border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center;">
+          <textarea id="ai-chat-user-input" rows="1" placeholder="Escribí tu mensaje para pedir o editar el presupuesto..." style="flex: 1; background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 10px 14px; font-size: 13px; color: var(--text-primary); resize: none; max-height: 80px; outline: none;" onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendAiChatMessage(); }"></textarea>
+          <button type="button" id="btn-send-ai-chat" onclick="sendAiChatMessage()" style="width: 44px; height: 44px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; border-radius: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(99,102,241,0.4); flex-shrink: 0;">
+            <i data-lucide="send" style="width: 18px; height: 18px;"></i>
+          </button>
+        </div>
       </div>
 
     </div>
@@ -4884,7 +4906,7 @@
   </div>
 
   <!-- Lógica JavaScript Principal -->
-  <script src="app.js?v=20260829_v30"></script>
+  <script src="app.js?v=20260829_v31"></script>
 </body>
 </html>
 <!-- Build trigger commit -->
