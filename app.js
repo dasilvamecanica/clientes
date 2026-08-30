@@ -15152,18 +15152,24 @@ window.sendAiChatMessage = async function() {
     if (apiKey) {
       const sysPrompt = `${userSystemInstructions}
 
-Tu objetivo es mantener un chat conversacional continuo con el usuario para construir y editar un presupuesto de taller mecánico.
+REGLAS OBLIGATORIAS DE FORMATO DE NÚMEROS Y MONEDA EN ARGENTINA:
+1. La palabra "mil" o la letra "k" multiplica por 1.000 (ej: "230mil" = 230000 pesos, "150mil" = 150000 pesos, "50k" = 50000 pesos).
+2. Los puntos en números como "150.000" o "230.000" son separadores de miles, NO decimales. "150.000" representa el número 150000.
+3. Si el usuario escribe precios entre paréntesis como "(150.000)", asigna ese valor al repuesto o servicio correspondiente.
+4. Distingue claramente entre repuestos ("parts") y mano de obra/servicios ("services").
+5. Identifica modelos de vehículos si son mencionados (ej: "Toyota Hilux", "Gol Power" -> Volkswagen Gol Power 1.6, "Suran" -> Volkswagen Suran 1.6).
+
 Estado actual del presupuesto: ${JSON.stringify(window.currentAiQuoteState)}
 
-Cuando el usuario pida agregar, quitar, modificar precios, aplicar descuentos o consulte sobre un modelo de vehículo (ej: "Gol Power" -> Volkswagen Gol Power):
-1. Responde amigablemente en texto.
+Cuando el usuario pida agregar, quitar, modificar precios, aplicar descuentos o consulte sobre un modelo de vehículo:
+1. Responde amigablemente en texto en español.
 2. AL FINAL DE TU RESPUESTA, INCLUYE SIEMPRE UN BLOQUE JSON CON EL ESTADO ACTUALIZADO COMPLETO DEL PRESUPUESTO CON ESTE FORMATO EXACTO:
 
 <<<JSON_START>>>
 {
   "vehicleInfo": "Marca y Modelo del auto si se conoce",
-  "services": [ {"name": "Mano de obra o servicio", "value": 50000} ],
-  "parts": [ {"name": "Repuesto o insumo", "value": 45000} ],
+  "services": [ {"name": "Mano de obra o servicio", "value": 230000} ],
+  "parts": [ {"name": "Repuesto o insumo", "value": 150000} ],
   "discountPercent": 0
 }
 <<<JSON_END>>>`;
@@ -15241,46 +15247,120 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
   let vehicleInfo = currentQuote.vehicleInfo || '';
   let discountPercent = currentQuote.discountPercent || 0;
 
-  if (lower.includes('gol power')) vehicleInfo = 'Volkswagen Gol Power 1.6';
-  else if (lower.includes('gol trend') || lower.includes('gol')) vehicleInfo = 'Volkswagen Gol Trend';
-  else if (lower.includes('suran')) vehicleInfo = 'Volkswagen Suran 1.6';
-  else if (lower.includes('palio')) vehicleInfo = 'Fiat Palio';
-  else if (lower.includes('uno')) vehicleInfo = 'Fiat Uno';
-  else if (lower.includes('corsa')) vehicleInfo = 'Chevrolet Corsa';
-  else if (lower.includes('208') || lower.includes('peugeot')) vehicleInfo = 'Peugeot 208';
-  else if (lower.includes('kangoo')) vehicleInfo = 'Renault Kangoo';
-  else if (lower.includes('aircross')) vehicleInfo = 'Citroen C3 Aircross';
+  const carMatches = [
+    { key: 'toyota hilux', name: 'Toyota Hilux' },
+    { key: 'hilux', name: 'Toyota Hilux' },
+    { key: 'gol power', name: 'Volkswagen Gol Power 1.6' },
+    { key: 'gol trend', name: 'Volkswagen Gol Trend 1.6' },
+    { key: 'gol', name: 'Volkswagen Gol' },
+    { key: 'suran', name: 'Volkswagen Suran 1.6' },
+    { key: 'amarok', name: 'Volkswagen Amarok' },
+    { key: 'palio', name: 'Fiat Palio' },
+    { key: 'uno', name: 'Fiat Uno' },
+    { key: 'cronos', name: 'Fiat Cronos' },
+    { key: 'toro', name: 'Fiat Toro' },
+    { key: 'corsa', name: 'Chevrolet Corsa 1.6' },
+    { key: 'onix', name: 'Chevrolet Onix' },
+    { key: 'cruze', name: 'Chevrolet Cruze' },
+    { key: 'peugeot 208', name: 'Peugeot 208' },
+    { key: '208', name: 'Peugeot 208' },
+    { key: '308', name: 'Peugeot 308' },
+    { key: 'partner', name: 'Peugeot Partner' },
+    { key: 'aircross', name: 'Citroen C3 Aircross' },
+    { key: 'berlingo', name: 'Citroen Berlingo' },
+    { key: 'kangoo', name: 'Renault Kangoo' },
+    { key: 'clio', name: 'Renault Clio' },
+    { key: 'sandero', name: 'Renault Sandero' },
+    { key: 'duster', name: 'Renault Duster' },
+    { key: 'ranger', name: 'Ford Ranger' },
+    { key: 'focus', name: 'Ford Focus' },
+    { key: 'fiesta', name: 'Ford Fiesta' },
+    { key: 'ka', name: 'Ford Ka' }
+  ];
 
-  if (lower.includes('descuento')) {
-    const matchDisc = lower.match(/(\d+)\s*%/);
-    if (matchDisc) {
-      discountPercent = parseInt(matchDisc[1]);
-    } else {
-      discountPercent = 10;
+  for (const car of carMatches) {
+    if (lower.includes(car.key)) {
+      vehicleInfo = car.name;
+      break;
     }
   }
 
-  const priceMatches = [...userText.matchAll(/([a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+)\s*\$?\s*(\d[\d\.\,]*\d|\d+)/g)];
+  if (lower.includes('descuento')) {
+    const matchDisc = lower.match(/(\d+)\s*%/);
+    if (matchDisc) discountPercent = parseInt(matchDisc[1]);
+    else discountPercent = 10;
+  }
 
-  if (priceMatches.length > 0) {
-    priceMatches.forEach(m => {
-      const itemName = m[1].replace(/cambio de|para|con|el|la|los|las|de|y/gi, '').trim();
-      const rawPrice = m[2].replace(/\./g, '').replace(',', '.');
-      const val = parseFloat(rawPrice);
-      if (itemName.length > 2 && !isNaN(val) && val > 100) {
-        if (itemName.toLowerCase().includes('mano') || itemName.toLowerCase().includes('obra') || itemName.toLowerCase().includes('servicio') || itemName.toLowerCase().includes('trabajo')) {
-          services.push({ name: itemName, value: val });
+  const sentences = userText.split(/[\.\n\;\:]+/).map(s => s.trim()).filter(Boolean);
+  let mainContextItem = '';
+
+  sentences.forEach(sentence => {
+    const sentLower = sentence.toLowerCase();
+
+    if (carMatches.some(c => sentLower.includes(c.key)) && sentLower.length < 25) {
+      return;
+    }
+
+    const priceRegex = /(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/gi;
+    const priceTokens = [...sentence.matchAll(priceRegex)];
+
+    if (priceTokens.length > 0) {
+      const subPhrases = sentence.split(/\s+y\s+|\s*,\s*/i);
+
+      subPhrases.forEach(sub => {
+        const subLower = sub.toLowerCase();
+        const subPriceMatch = sub.match(/(\(?\$?\s*\d[\d\.\,]*\s*(?:mil|k|millon|millones|m)?\)?)/i);
+
+        if (subPriceMatch) {
+          const rawPriceStr = subPriceMatch[1];
+          const val = parseArgentinePriceString(rawPriceStr);
+
+          if (val > 0) {
+            let itemName = sub.replace(rawPriceStr, '').replace(/[\(\)\$\:\,\.]/g, '').trim();
+            itemName = itemName.replace(/^(el|la|los|las|un|una|cambio de|mano de obra por|mano de obra|repuesto|repuestos)\s+/i, '').trim();
+
+            if (!itemName || itemName.length < 2 || itemName.toLowerCase() === 'repuesto' || itemName.toLowerCase() === 'mano de obra') {
+              if (subLower.includes('repuesto')) {
+                itemName = mainContextItem ? `${mainContextItem} (Repuesto)` : 'Repuesto / Insumo';
+              } else if (subLower.includes('mano') || subLower.includes('obra') || subLower.includes('desarmar')) {
+                itemName = mainContextItem ? `Mano de obra ${mainContextItem}` : 'Mano de obra y trabajo';
+              } else {
+                itemName = mainContextItem || 'Trabajo / Repuesto';
+              }
+            }
+
+            const isService = subLower.includes('mano') || subLower.includes('obra') || subLower.includes('desarmar') || subLower.includes('colocacion') || subLower.includes('instalacion') || subLower.includes('servicio');
+
+            if (isService) {
+              services.push({ name: capitalizeFirst(itemName), value: val });
+            } else {
+              parts.push({ name: capitalizeFirst(itemName), value: val });
+            }
+          }
         } else {
-          parts.push({ name: itemName, value: val });
+          let textClean = sub.replace(/^(el|la|los|las|un|una)\s+/i, '').trim();
+          if (textClean.length > 4) {
+            mainContextItem = textClean;
+          }
         }
+      });
+
+    } else {
+      if (sentLower.length > 4) {
+        mainContextItem = sentence.trim();
       }
-    });
-  } else {
+    }
+  });
+
+  if (services.length === 0 && parts.length === 0) {
     if (lower.includes('distribucion') || lower.includes('correa') || lower.includes('bomba')) {
       services.push({ name: 'Mano de obra kit de distribución y puesta a punto', value: 180000 });
       parts.push({ name: 'Kit de distribución (Correa y Tensor)', value: 120000 });
       parts.push({ name: 'Bomba de Agua', value: 65000 });
       parts.push({ name: 'Líquido Refrigerante concentrado (2L)', value: 18000 });
+    } else if (lower.includes('junta') || lower.includes('tapa') || lower.includes('valvulas')) {
+      services.push({ name: 'Mano de obra desarmado y cambio de junta de tapa de válvulas', value: 230000 });
+      parts.push({ name: 'Junta de tapa de válvulas', value: 150000 });
     } else if (lower.includes('aceite') || lower.includes('service') || lower.includes('filtro')) {
       services.push({ name: 'Servicio de mantenimiento: Cambio de aceite y filtros', value: 45000 });
       parts.push({ name: 'Aceite Semisintético 10w40 (4 Litros)', value: 48000 });
@@ -15293,8 +15373,8 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
     } else if (lower.includes('embrague') || lower.includes('placa')) {
       services.push({ name: 'Mano de obra sacar y poner caja / kit de embrague', value: 250000 });
       parts.push({ name: 'Kit de Embrague (Placa, Disco y Crapodina)', value: 210000 });
-    } else if (userText.length > 3) {
-      services.push({ name: `Mano de obra: ${userText}`, value: 85000 });
+    } else {
+      services.push({ name: `Mano de obra: ${userText}`, value: 90000 });
     }
   }
 
@@ -15311,6 +15391,46 @@ function runLocalConversationalAiLogic(userText, currentQuote) {
       discountPercent: discountPercent
     }
   };
+}
+
+function parseArgentinePriceString(str) {
+  if (!str) return 0;
+  let clean = str.trim().toLowerCase();
+  
+  let multiplier = 1;
+  if (clean.includes('mil') || clean.endsWith('k')) {
+    multiplier = 1000;
+    clean = clean.replace(/mil|k/g, '');
+  } else if (clean.includes('millon') || clean.includes('millones') || clean.endsWith('m')) {
+    multiplier = 1000000;
+    clean = clean.replace(/millones|millon|m/g, '');
+  }
+
+  clean = clean.replace(/[\(\)\$\s]/g, '');
+
+  if (clean.includes('.')) {
+    const parts = clean.split('.');
+    if (parts.length > 1 && parts[parts.length - 1].length === 3) {
+      clean = clean.replace(/\./g, '');
+    }
+  }
+
+  clean = clean.replace(',', '.');
+  let val = parseFloat(clean);
+  if (isNaN(val)) return 0;
+
+  val = Math.round(val * multiplier);
+
+  if (val > 0 && val < 1000 && !str.includes('.')) {
+    val = val * 1000;
+  }
+
+  return val;
+}
+
+function capitalizeFirst(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function renderAiChatMessages() {
